@@ -49,10 +49,27 @@ module powerbi.extensibility.visual {
 
         public update(options: VisualUpdateOptions) {
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
-            console.log('Visual update', options);
+            
+            /** Initial debugging for visual update */
+                let debug = this.settings.about.debugMode && this.settings.about.debugVisualUpdate;
+                if (debug) {
+                    console.clear();
+                    console.log('\n====================');
+                    console.log('Visual Update');
+                    console.log('====================');
+                    console.log('|\tSettings', this.settings);
+                    console.log('|\tViewport (pre-legend)', options.viewport);
+                }
+
             if (typeof this.textNode !== "undefined") {
                 this.textNode.textContent = (this.updateCount++).toString();
             }
+
+            /** Success! */
+                if (debug) {
+                    console.log('|\tVisual fully rendered!');
+                    console.log('====================');
+                }   
         }
 
         private static parseSettings(dataView: DataView): VisualSettings {
@@ -64,8 +81,30 @@ module powerbi.extensibility.visual {
          * objects and properties you want to expose to the users in the property pane.
          * 
          */
-        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
-            return VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options);
+        public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
+            const instances: VisualObjectInstance[] = (VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options) as VisualObjectInstanceEnumerationObject).instances;
+            let objectName = options.objectName;
+
+            /** Initial debugging for properties update */
+                let debug = this.settings.about.debugMode && this.settings.about.debugProperties;
+                if (debug) {
+                    console.log('\n====================');
+                    console.log(`Properties Update: ${objectName}`);
+                    console.log('====================');
+                }
+
+            /** TODO: instances */
+
+            /** Output all transformed instance info if we're debugging */
+                if (debug) {
+                    instances.map(function(instance) {
+                        console.log(`|\t${instance.objectName}`, instance);
+                    });
+                    console.log('|\tProperties fully processed!');
+                    console.log('====================');                
+                }
+
+            return instances;
         }
     }
 }

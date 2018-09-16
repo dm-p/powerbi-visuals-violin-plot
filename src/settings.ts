@@ -30,7 +30,18 @@ module powerbi.extensibility.visual {
 
     export class VisualSettings extends DataViewObjectsParser {
       public dataPoint: dataPointSettings = new dataPointSettings();
-      }
+      public about: aboutSettings = new aboutSettings();
+    }
+
+    // Used to hold about info
+    export class aboutSettings {
+      public visualName: string = 'Violin Plot';
+      public version: string = '1.0.0';
+      public debugMode: boolean = false;
+      public debugVisualUpdate: boolean = false;
+      public debugProperties: boolean = false;
+      public development: boolean = true; /** SET TO false FOR RELEASE */
+    }
 
     export class dataPointSettings {
      // Default color

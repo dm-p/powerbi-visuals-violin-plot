@@ -12,6 +12,41 @@
         }
     ],
     "objects": {
+        "about": {
+            "displayName": "About",
+            "properties": {
+                "visualName": {
+                    "displayName": "Visual Name",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "version": {
+                    "displayName": "Version",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "debugMode": {
+                    "displayName": "Debug",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "debugVisualUpdate": {
+                    "displayName": "Visual Update",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "debugProperties": {
+                    "displayName": "Properties",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "dataPoint": {
             "displayName": "Data colors",
             "properties": {
