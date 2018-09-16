@@ -29,7 +29,6 @@ module powerbi.extensibility.visual {
     import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
     export class VisualSettings extends DataViewObjectsParser {
-      public dataPoint: dataPointSettings = new dataPointSettings();
       public about: aboutSettings = new aboutSettings();
     }
 
@@ -42,18 +41,5 @@ module powerbi.extensibility.visual {
       public debugProperties: boolean = false;
       public development: boolean = true; /** SET TO false FOR RELEASE */
     }
-
-    export class dataPointSettings {
-     // Default color
-      public defaultColor: string = "";
-     // Show all
-      public showAllDataPoints: boolean = true;
-     // Fill
-      public fill: string = "";
-     // Color saturation
-      public fillRule: string = "";
-     // Text Size
-      public fontSize: number = 12;
-     }
 
 }
