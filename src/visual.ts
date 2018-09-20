@@ -2063,6 +2063,9 @@ module powerbi.extensibility.visual {
                 }
             ];
 
+            /** Clear down existing plot */
+            this.container.selectAll('*').remove();
+            
             /** Size our initial container to match the viewport */
             this.container.attr({
                 width: `${options.viewport.width}`,
