@@ -2061,8 +2061,8 @@ module powerbi.extensibility.visual {
 
             /** Size our initial container to match the viewport */
             this.container.attr({
-                width: `${options.viewport.width}%`,
-                height: `${options.viewport.height}%`,
+                width: `${options.viewport.width}`,
+                height: `${options.viewport.height}`,
             });
 
             /** Success! */
