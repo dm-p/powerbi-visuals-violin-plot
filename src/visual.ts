@@ -2072,6 +2072,45 @@ module powerbi.extensibility.visual {
                 height: `${options.viewport.height}`,
             });
 
+            /** Simple view model - for now we'll just group by year from static data and then add values */
+            let simpleViewModel = d3.nest<IStaticData>()
+                .key((d) => {
+                    return d.date.toString()
+                })
+                .rollup(function(v) {
+                    return {
+                        min: d3.min(v, (d) => {
+                            return d.value
+                        }),
+                        max: d3.max(v, (d) => {
+                            return d.value
+                        }),
+                        mean: d3.mean(v, (d) => {
+                            return d.value
+                        }),
+                        median: d3.median(v, (d) => {
+                            return d.value
+                        }),
+                        dataPoints: d3.entries(v).map((d) => {
+                            return d.value.value;
+                        })
+                    }
+                })
+                .sortKeys(d3.ascending)
+                .entries(staticData);
+
+            /** Set y-axis domain */
+                let yMin = d3.min(staticData, (d) => {
+                        return d.value;
+                    }),
+                    yMax = d3.max(staticData, (d) => {
+                        return d.value;
+                    });
+
+                if (debug) {
+                    console.log('|\tY-Domain', yMin, yMax);
+                }
+
             /** Success! */
             if (debug) {
                 console.log('|\tVisual fully rendered!');
