@@ -2080,7 +2080,7 @@ module powerbi.extensibility.visual {
                 .rollup(function(v) {
                     let dataPoints = d3.entries(v).map((d) => {
                         return d.value.value;
-                    }).sort();
+                    }).sort(d3.ascending);
                     return {
                         min: d3.min(v, (d) => {
                             return d.value
