@@ -2078,6 +2078,9 @@ module powerbi.extensibility.visual {
                     return d.date.toString()
                 })
                 .rollup(function(v) {
+                    let dataPoints = d3.entries(v).map((d) => {
+                        return d.value.value;
+                    }).sort();
                     return {
                         min: d3.min(v, (d) => {
                             return d.value
@@ -2091,13 +2094,14 @@ module powerbi.extensibility.visual {
                         median: d3.median(v, (d) => {
                             return d.value
                         }),
-                        dataPoints: d3.entries(v).map((d) => {
-                            return d.value.value;
-                        })
+                        quartile1: d3.quantile(dataPoints, 0.25),
+                        quartile3: d3.quantile(dataPoints, 0.75),
+                        dataPoints: dataPoints
                     }
                 })
                 .sortKeys(d3.ascending)
                 .entries(staticData);
+            console.log(simpleViewModel);
 
             /** Set y-axis domain */
                 let yMin = d3.min(staticData, (d) => {
