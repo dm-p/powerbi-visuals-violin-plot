@@ -56,7 +56,11 @@ module powerbi.extensibility.visual {
                 console.log('|\tViewport (pre-legend)', options.viewport);
             }
 
-            let staticData = [
+            interface IStaticData {
+                date: number,
+                value: number
+            }
+            let staticData: IStaticData[] = [
                 {
                     "date": 2000,
                     "value": 208.4968974
