@@ -27,6 +27,10 @@
 module powerbi.extensibility.visual {
     'use strict';
 
+    import axisHelper = powerbi.extensibility.utils.chart.axis;
+    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
+    import ValueType = powerbi.extensibility.utils.type.ValueType;
+
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
         private container: d3.Selection<{}>;
@@ -2103,17 +2107,53 @@ module powerbi.extensibility.visual {
                 .entries(staticData);
             console.log(simpleViewModel);
 
-            /** Set y-axis domain */
-                let yMin = d3.min(staticData, (d) => {
-                        return d.value;
-                    }),
-                    yMax = d3.max(staticData, (d) => {
-                        return d.value;
-                    });
+            /** Set y-axis domain - TODO: See if we can map this out when we process the data the first time */
+            let yMin = d3.min(staticData, (d) => {
+                    return d.value;
+                }),
+                yMax = d3.max(staticData, (d) => {
+                    return d.value;
+                });
 
-                if (debug) {
-                    console.log('|\tY-Domain', yMin, yMax);
-                }
+            if (debug) {
+                console.log('|\tY-Domain', yMin, yMax);
+            }
+
+            /** Create a Y axis */
+            
+                /** Placeholder metadata column and format strings */
+                let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
+                    objectName: 'general',
+                    propertyName: 'formatString',
+                };
+                let metaDataColumnFormatted: powerbi.DataViewMetadataColumn = {
+                    displayName: 'Column',
+                    type: ValueType.fromDescriptor({ numeric: true }),
+                    objects: {
+                        general: {
+                            formatString: '#,##0',
+                        }
+                    }
+                };
+
+                var os = axisHelper.createAxis({
+                    pixelSpan: options.viewport.height,
+                    dataDomain: [yMin, yMax],
+                    metaDataColumn: metaDataColumnFormatted,
+                    formatString: valueFormatter.getFormatString(metaDataColumnFormatted, formatStringProp),
+                    outerPadding: 10, /** Probably font size-based to keep things nice */
+                    isScalar: true,
+                    isVertical: true,
+                });
+
+                let yAxis = os.axis;
+                yAxis.orient('left');
+                this.container
+                    .append('g')
+                        .attr('transform', 'translate(100,0)')
+                    .call(yAxis);
+
+                console.log(os);
 
             /** Success! */
             if (debug) {
