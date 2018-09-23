@@ -1,2 +1,31 @@
 @import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
+
+.grid .tick {
+    stroke-opacity: 1;
+}
+
+.grid path {
+    stroke-width: 0;
+}
+
+.grid .tick line.dashed {
+    stroke-dasharray: 5, 5;
+}
+
+.grid .tick line.dotted {
+    stroke-dasharray: 1, 5;
+}
+
+.grid .tick line.dotdash {
+    stroke-dasharray: 5, 5, 1, 5;
+}
+
+.yAxis path {
+    fill: none;
+}
+
+/** This prevents fuzzing of the text if we have gridlines */
+.yAxis .tick text {
+    stroke: none
+}
