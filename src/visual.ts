@@ -2136,24 +2136,46 @@ module powerbi.extensibility.visual {
                     }
                 };
 
-                var os = axisHelper.createAxis({
+                var y = axisHelper.createAxis({
                     pixelSpan: options.viewport.height,
                     dataDomain: [yMin, yMax],
                     metaDataColumn: metaDataColumnFormatted,
                     formatString: valueFormatter.getFormatString(metaDataColumnFormatted, formatStringProp),
-                    outerPadding: 10, /** Probably font size-based to keep things nice */
+                    outerPadding: 10, /** TODO: Probably font size-based to keep things nice */
                     isScalar: true,
                     isVertical: true,
                 });
 
-                let yAxis = os.axis;
-                yAxis.orient('left');
-                this.container
+                let yAxisContainer = this.container
                     .append('g')
-                        .attr('transform', 'translate(100,0)')
-                    .call(yAxis);
+                        .classed('yAxisContainer', true)
+                        .style({
+                            'stroke-width' : 1 /** TODO: Config */
+                        });
 
-                console.log(os);
+                let yAxis = y.axis;
+                yAxis.orient('left');
+                yAxis.tickSize(-options.viewport.width + 50); /** TODO: Fix for Y axis width */
+                
+                let yAxisTicks = yAxisContainer
+                    .append('g')
+                        .classed({
+                            'yAxis': true,
+                            'grid': true
+                        })
+                        .attr('transform', 'translate(50,0)') /** TODO: Translate by correct width, based on axis labels and lines */
+                    .call(yAxis)
+                    ;
+
+                
+                 /** Apply gridline styling */
+                 yAxisTicks.selectAll('line')
+                    .attr({
+                        stroke: 'grey',
+                        'stroke-width': 1
+                    });
+
+                console.log(y);
 
             /** Success! */
             if (debug) {
