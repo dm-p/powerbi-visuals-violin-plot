@@ -2179,29 +2179,44 @@ module powerbi.extensibility.visual {
                 console.log(yAxis);
 
             /** Create an X-axis */
-                let xScale = d3.scale.ordinal()
-                    .domain(simpleViewModel.map(d => d.key))
-                    .rangeRoundBands([0, options.viewport.width - yAxisWidth])
+            let xScale = d3.scale.ordinal()
+                .domain(simpleViewModel.map(d => d.key))
+                .rangeRoundBands([0, options.viewport.width - yAxisWidth])
 
-                let xAxis = d3.svg.axis()
-                    .scale(xScale)
-                    .orient('bottom')
-                
-                let xAxisContainer = this.container
-                    .append('g')
-                    .classed('xAxisContainer', true)
-                        .style({
-                            'stroke-width' : 1 /** TODO: Config */
-                        });
-                
-                let xAxisTicks = xAxisContainer
-                    .append('g')
-                        .classed({
-                            'xAxis': true,
-                            'grid': true
-                        })
-                        .attr('transform', `translate(${yAxisWidth}, ${options.viewport.height - xAxisHeight})`)
-                    .call(xAxis);
+            let xAxis = d3.svg.axis()
+                .scale(xScale)
+                .orient('bottom')
+            
+            let xAxisContainer = this.container
+                .append('g')
+                .classed('xAxisContainer', true)
+                    .style({
+                        'stroke-width' : 1 /** TODO: Config */
+                    });
+            
+            console.log(xAxis);
+            
+            let xAxisTicks = xAxisContainer
+                .append('g')
+                    .classed({
+                        'xAxis': true,
+                        'grid': true
+                    })
+                    .attr('transform', `translate(${yAxisWidth}, ${options.viewport.height - xAxisHeight})`)
+                .call(xAxis);
+
+            let seriesContainer = this.container.selectAll('.violinPlotContainer')
+                .data(simpleViewModel)
+                .enter()
+                .append('g')
+                    .classed({
+                        'violinPlotSeries': true
+                    })
+                    .attr({
+                        'transform': (d) => `translate(${xScale(d.key.toString()) + yAxisWidth}, 0)`,
+                        'width': xScale.rangeBand()
+                    });
+
 
             /** Success! */
             if (debug) {
