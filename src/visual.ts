@@ -2136,8 +2136,11 @@ module powerbi.extensibility.visual {
                     }
                 };
 
-                var y = axisHelper.createAxis({
-                    pixelSpan: options.viewport.height,
+                let yAxisWidth = 50;
+                let xAxisHeight = 30;
+
+                let yAxis = axisHelper.createAxis({
+                    pixelSpan: options.viewport.height - xAxisHeight,
                     dataDomain: [yMin, yMax],
                     metaDataColumn: metaDataColumnFormatted,
                     formatString: valueFormatter.getFormatString(metaDataColumnFormatted, formatStringProp),
@@ -2153,9 +2156,8 @@ module powerbi.extensibility.visual {
                             'stroke-width' : 1 /** TODO: Config */
                         });
 
-                let yAxis = y.axis;
-                yAxis.orient('left');
-                yAxis.tickSize(-options.viewport.width + 50); /** TODO: Fix for Y axis width */
+                yAxis.axis.orient('left');
+                yAxis.axis.tickSize(-options.viewport.width + yAxisWidth);
                 
                 let yAxisTicks = yAxisContainer
                     .append('g')
@@ -2163,19 +2165,43 @@ module powerbi.extensibility.visual {
                             'yAxis': true,
                             'grid': true
                         })
-                        .attr('transform', 'translate(50,0)') /** TODO: Translate by correct width, based on axis labels and lines */
-                    .call(yAxis)
-                    ;
+                        .attr('transform', `translate(${yAxisWidth},0)`)
+                    .call(yAxis.axis);
 
                 
                  /** Apply gridline styling */
                  yAxisTicks.selectAll('line')
                     .attr({
-                        stroke: 'grey',
+                        stroke: '#EAEAEA',
                         'stroke-width': 1
                     });
 
-                console.log(y);
+                console.log(yAxis);
+
+            /** Create an X-axis */
+                let xScale = d3.scale.ordinal()
+                    .domain(simpleViewModel.map(d => d.key))
+                    .rangeRoundBands([0, options.viewport.width - yAxisWidth])
+
+                let xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient('bottom')
+                
+                let xAxisContainer = this.container
+                    .append('g')
+                    .classed('xAxisContainer', true)
+                        .style({
+                            'stroke-width' : 1 /** TODO: Config */
+                        });
+                
+                let xAxisTicks = xAxisContainer
+                    .append('g')
+                        .classed({
+                            'xAxis': true,
+                            'grid': true
+                        })
+                        .attr('transform', `translate(${yAxisWidth}, ${options.viewport.height - xAxisHeight})`)
+                    .call(xAxis);
 
             /** Success! */
             if (debug) {
