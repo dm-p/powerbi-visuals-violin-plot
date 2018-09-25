@@ -2245,7 +2245,11 @@ module powerbi.extensibility.visual {
                 whiskerClasses = {
                     'violinPlotBoxPlot': true,
                     'whisker': true
-                };
+                },
+                medianStyle = {
+                    'fill': 'white',
+                    'stroke': 'white'
+                }
 
             seriesContainer.append('line')
                 .classed(whiskerClasses)
@@ -2278,7 +2282,52 @@ module powerbi.extensibility.visual {
                     'y1': (d) => yAxis.scale(d.values.confidenceLower),
                     'y2': (d) => yAxis.scale(d.values.confidenceUpper)
                 })
-                .style(whiskerStyle)
+                .style(whiskerStyle);
+
+            /** Mean and median */
+            seriesContainer.append('line')
+                .classed({
+                    'violinPlotBoxPlot': true,
+                    'median': true
+                })
+                .attr({
+                    'x1': xLeft,
+                    'x2': xRight,
+                    'y1': (d) => yAxis.scale(d.values.median),
+                    'y2': (d) => yAxis.scale(d.values.median)
+                })
+                .style(medianStyle);
+
+            seriesContainer.append('circle')
+                .classed({
+                    'violinPlotBoxPlot': true,
+                    'mean': true,
+                    'outer': true
+                })
+                .attr({
+                    'cx': (xScale.rangeBand() / 2),
+                    'cy': (d) => yAxis.scale(d.values.mean),
+                    'r': boxPlotWidth / 5
+                })
+                .style({
+                    'fill': 'white',
+                    'stroke': 'none'
+                });
+            seriesContainer.append('circle')
+                .classed({
+                    'violinPlotBoxPlot': true,
+                    'mean': true,
+                    'inner': true
+                })
+                .attr({
+                    'cx': (xScale.rangeBand() / 2),
+                    'cy': (d) => yAxis.scale(d.values.mean),
+                    'r': boxPlotWidth / 10
+                })
+                .style({
+                    'fill': 'black',
+                    'stroke': 'none'
+                });
 
 
             /** Success! */
