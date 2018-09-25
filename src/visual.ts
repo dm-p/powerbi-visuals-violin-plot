@@ -2217,6 +2217,20 @@ module powerbi.extensibility.visual {
                         'width': xScale.rangeBand()
                     });
 
+            /** Box plot */
+            let boxPlotWidth = 15; /** TODO: We'll size this based on series */
+
+            seriesContainer.append('rect')
+                .classed({
+                    'violinPlotBoxPlot': true
+                })
+                .attr({
+                    x: (xScale.rangeBand() / 2) - (boxPlotWidth / 2),
+                    y: (d) => yAxis.scale(d.values.quartile3),
+                    width: boxPlotWidth,
+                    height: (d) => -yAxis.scale(d.values.quartile3) + yAxis.scale(d.values.quartile1)
+                })
+
 
             /** Success! */
             if (debug) {
