@@ -2098,8 +2098,10 @@ module powerbi.extensibility.visual {
                         median: d3.median(v, (d) => {
                             return d.value
                         }),
+                        confidenceLower: d3.quantile(dataPoints, 0.05),
                         quartile1: d3.quantile(dataPoints, 0.25),
                         quartile3: d3.quantile(dataPoints, 0.75),
+                        confidenceUpper: d3.quantile(dataPoints, 0.95),
                         dataPoints: dataPoints
                     }
                 })
