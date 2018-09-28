@@ -2364,6 +2364,29 @@ module powerbi.extensibility.visual {
                     'stroke': 'none'
                 });
 
+            /** Violin plot */
+            
+                /** Set up KDE for data series calculation TODO: make this configurable, or find a way to derive optimal resolution and bandwidth */
+                let resolution = 100,
+                    bandwidth = 20,
+                    xVscale = yAxis.scale.copy(),
+                    kde = kernelDensityEstimator(eKernel(bandwidth), xVscale.ticks(resolution));
+            
+                /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
+                simpleViewModel.map((v, i) => {
+                    v.values.kdeData = kde(v.values.dataPoints);
+                    v.values.yVScale = d3.scale.linear()
+                        .range([boxPlotWidth, 0])
+                        .domain([0, d3.max<ISimpleViewModelSeriesValueKde>(v.values.kdeData, d => d.y)])
+                        .clamp(true);
+                });
+
+                let line = d3.svg.line<ISimpleViewModelSeriesValueKde>()
+                    .interpolate('basis')
+                    .x(d => xVscale(d.x))
+                    .y(d => d.y /** TODO: need to fix yVscale to make it accessible! */);
+                
+                console.log(simpleViewModel);
 
             /** Success! */
             if (debug) {
