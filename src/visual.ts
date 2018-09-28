@@ -2085,6 +2085,23 @@ module powerbi.extensibility.visual {
                 }
             ];
 
+            interface ISimpleViewModelSeriesValueKde {
+                x: number,
+                y: number
+            }
+
+            interface ISimpleViewModelSeriesValues {
+                confidenceLower: number;
+                confidenceUpper: number;
+                kdeData: ISimpleViewModelSeriesValueKde[];
+                /** TODO: others */
+            }
+
+            interface ISimpleViewModelSeries {
+                key: string;
+                values: ISimpleViewModelSeriesValues;
+            }
+
             /** Clear down existing plot */
             this.container.selectAll('*').remove();
             
