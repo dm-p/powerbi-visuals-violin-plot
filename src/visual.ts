@@ -2137,10 +2137,6 @@ module powerbi.extensibility.visual {
                         quartile1: d3.quantile(dataPoints, 0.25),
                         quartile3: d3.quantile(dataPoints, 0.75),
                         confidenceUpper: d3.quantile(dataPoints, 0.95),
-                        histogram: d3.layout.histogram()
-                                    .bins(20) /** TODO: make resolution configurable? */
-                                    .frequency(false)
-                                    (dataPoints),
                         dataPoints: dataPoints
                     }
                 })
