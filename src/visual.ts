@@ -31,6 +31,24 @@ module powerbi.extensibility.visual {
     import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
     import ValueType = powerbi.extensibility.utils.type.ValueType;
 
+    /** Kernel density estimator - used to produce smoother estimate than a histogram */
+    function kernelDensityEstimator(kernel, x) {
+        return function (sample) {
+            return x.map(function (x) {
+                return {
+                    x: x, 
+                    y: d3.mean(sample, function (v:number) {return kernel(x - v);})
+                };
+            });
+        };
+    }
+
+    function eKernel(scale) {
+        return function (u) {
+            return Math.abs(u /= scale) <= 1 ? .75 * (1 - u * u) / scale : 0;
+        };
+    }
+
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
         private container: d3.Selection<{}>;
