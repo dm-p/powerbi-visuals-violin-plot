@@ -2213,8 +2213,6 @@ module powerbi.extensibility.visual {
                         'stroke-width': 1
                     });
 
-                console.log(yAxis);
-
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
                 .domain(simpleViewModel.map(d => d.key))
@@ -2230,8 +2228,6 @@ module powerbi.extensibility.visual {
                     .style({
                         'stroke-width' : 1 /** TODO: Config */
                     });
-            
-            console.log(xAxis);
             
             let xAxisTicks = xAxisContainer
                 .append('g')
