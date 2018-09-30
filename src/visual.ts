@@ -2262,7 +2262,10 @@ module powerbi.extensibility.visual {
             
                 /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
                 simpleViewModel.map(v => {
-                    v.values.kdeData = kde(v.values.dataPoints);
+                    v.values.kdeData = kde(v.values.dataPoints)
+                        /** TODO: this clamps to the data but can look ugly and we should offer the option to smooth out the data to a converged point if so desired */
+                        .filter(d => {return !v.values.min || d.x >= v.values.min})
+                        .filter(d => {return !v.values.max || d.x <= v.values.max})
                     v.values.yVScale = d3.scale.linear()
                         .range([boxPlotWidth, 0])
                         .domain([0, d3.max<ISimpleViewModelSeriesValueKde>(v.values.kdeData, d => d.y)])
