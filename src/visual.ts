@@ -2380,8 +2380,46 @@ module powerbi.extensibility.visual {
                 let line = d3.svg.line<ISimpleViewModelSeriesValueKde>()
                     .interpolate('basis')
                     .x(d => xVscale(d.x))
-                    .y(d => d.y /** TODO: need to fix yVscale to make it accessible! */);
-                
+                    .y(d => d.y * 5000 /** TODO: need to fix yVscale to make it accessible! */);
+
+                let gLeft = seriesContainer.append('g')
+                    .classed({
+                        'violinPlotViolin': true,
+                        'left': true
+                    })
+                    .attr({
+                        'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2})`
+                    })
+                    .append('path')
+                        .datum(d => d.values.kdeData)
+                        .classed({
+                            'violinPlotViolinLine': true
+                        })
+                        .attr('d', line)
+                        .style({
+                            'fill': 'none',
+                            'stroke': 'grey'
+                        });
+
+                let gRight = seriesContainer.append('g')
+                    .classed({
+                        'violinPlotViolin': true,
+                        'right': true
+                    })
+                    .attr({
+                        'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2}) scale(1, -1)`
+                    })
+                    .append('path')
+                        .datum(d => d.values.kdeData)
+                        .classed({
+                            'violinPlotViolinLine': true
+                        })
+                        .attr('d', line)
+                        .style({
+                            'fill': 'none',
+                            'stroke': 'grey'
+                        });
+   
                 console.log(simpleViewModel);
 
             /** Success! */
