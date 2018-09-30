@@ -2250,115 +2250,7 @@ module powerbi.extensibility.visual {
                         'width': xScale.rangeBand()
                     });
 
-            /** Box plot */
             let boxPlotWidth = 15; /** TODO: We'll size this based on series */
-
-            let xLeft = (xScale.rangeBand() / 2) - (boxPlotWidth / 2),
-                xRight = (xScale.rangeBand() / 2) + (boxPlotWidth / 2)
-
-            seriesContainer.append('rect')
-                .classed({
-                    'violinPlotBoxPlot': true,
-                    'box': true
-                })
-                .attr({
-                    'x': xLeft,
-                    'y': (d) => yAxis.scale(d.values.quartile3),
-                    'width': boxPlotWidth,
-                    'height': (d) => -yAxis.scale(d.values.quartile3) + yAxis.scale(d.values.quartile1)
-                });
-
-            /** Do the whiskers - we'll repeat this for now and try to optimise later on. We should also allow toggle on the whiskers */
-            let whiskerStyle = {
-                    'fill': 'black',
-                    'stroke': 'black'
-                },
-                whiskerClasses = {
-                    'violinPlotBoxPlot': true,
-                    'whisker': true
-                },
-                medianStyle = {
-                    'fill': 'white',
-                    'stroke': 'white'
-                }
-
-            seriesContainer.append('line')
-                .classed(whiskerClasses)
-                .classed('upper', true)
-                .attr({
-                    'x1': xLeft,
-                    'x2': xRight,
-                    'y1': (d) => yAxis.scale(d.values.confidenceUpper),
-                    'y2': (d) => yAxis.scale(d.values.confidenceUpper)
-                })
-                .style(whiskerStyle);
-
-            seriesContainer.append('line')
-                .classed(whiskerClasses)
-                .classed('lower', true)
-                .attr({
-                    'x1': xLeft,
-                    'x2': xRight,
-                    'y1': (d) => yAxis.scale(d.values.confidenceLower),
-                    'y2': (d) => yAxis.scale(d.values.confidenceLower)
-                })
-                .style(whiskerStyle)
-
-            seriesContainer.append('line')
-                .classed(whiskerClasses)
-                .classed('range', true)
-                .attr({
-                    'x1': (xScale.rangeBand() / 2),
-                    'x2': (xScale.rangeBand() / 2),
-                    'y1': (d) => yAxis.scale(d.values.confidenceLower),
-                    'y2': (d) => yAxis.scale(d.values.confidenceUpper)
-                })
-                .style(whiskerStyle);
-
-            /** Mean and median */
-            seriesContainer.append('line')
-                .classed({
-                    'violinPlotBoxPlot': true,
-                    'median': true
-                })
-                .attr({
-                    'x1': xLeft,
-                    'x2': xRight,
-                    'y1': (d) => yAxis.scale(d.values.median),
-                    'y2': (d) => yAxis.scale(d.values.median)
-                })
-                .style(medianStyle);
-
-            seriesContainer.append('circle')
-                .classed({
-                    'violinPlotBoxPlot': true,
-                    'mean': true,
-                    'outer': true
-                })
-                .attr({
-                    'cx': (xScale.rangeBand() / 2),
-                    'cy': (d) => yAxis.scale(d.values.mean),
-                    'r': boxPlotWidth / 5
-                })
-                .style({
-                    'fill': 'white',
-                    'stroke': 'none'
-                });
-            seriesContainer.append('circle')
-                .classed({
-                    'violinPlotBoxPlot': true,
-                    'mean': true,
-                    'inner': true
-                })
-                .attr({
-                    'cx': (xScale.rangeBand() / 2),
-                    'cy': (d) => yAxis.scale(d.values.mean),
-                    'r': boxPlotWidth / 10
-                })
-                .style({
-                    'fill': 'black',
-                    'stroke': 'none'
-                });
 
             /** Violin plot */
             
@@ -2419,6 +2311,114 @@ module powerbi.extensibility.visual {
                             'fill': 'none',
                             'stroke': 'grey'
                         });
+
+            /** Box plot */
+                let xLeft = (xScale.rangeBand() / 2) - (boxPlotWidth / 2),
+                    xRight = (xScale.rangeBand() / 2) + (boxPlotWidth / 2)
+
+                seriesContainer.append('rect')
+                    .classed({
+                        'violinPlotBoxPlot': true,
+                        'box': true
+                    })
+                    .attr({
+                        'x': xLeft,
+                        'y': (d) => yAxis.scale(d.values.quartile3),
+                        'width': boxPlotWidth,
+                        'height': (d) => -yAxis.scale(d.values.quartile3) + yAxis.scale(d.values.quartile1)
+                    });
+
+                /** Do the whiskers - we'll repeat this for now and try to optimise later on. We should also allow toggle on the whiskers */
+                let whiskerStyle = {
+                        'fill': 'black',
+                        'stroke': 'black'
+                    },
+                    whiskerClasses = {
+                        'violinPlotBoxPlot': true,
+                        'whisker': true
+                    },
+                    medianStyle = {
+                        'fill': 'white',
+                        'stroke': 'white'
+                    }
+
+                seriesContainer.append('line')
+                    .classed(whiskerClasses)
+                    .classed('upper', true)
+                    .attr({
+                        'x1': xLeft,
+                        'x2': xRight,
+                        'y1': (d) => yAxis.scale(d.values.confidenceUpper),
+                        'y2': (d) => yAxis.scale(d.values.confidenceUpper)
+                    })
+                    .style(whiskerStyle);
+
+                seriesContainer.append('line')
+                    .classed(whiskerClasses)
+                    .classed('lower', true)
+                    .attr({
+                        'x1': xLeft,
+                        'x2': xRight,
+                        'y1': (d) => yAxis.scale(d.values.confidenceLower),
+                        'y2': (d) => yAxis.scale(d.values.confidenceLower)
+                    })
+                    .style(whiskerStyle)
+
+                seriesContainer.append('line')
+                    .classed(whiskerClasses)
+                    .classed('range', true)
+                    .attr({
+                        'x1': (xScale.rangeBand() / 2),
+                        'x2': (xScale.rangeBand() / 2),
+                        'y1': (d) => yAxis.scale(d.values.confidenceLower),
+                        'y2': (d) => yAxis.scale(d.values.confidenceUpper)
+                    })
+                    .style(whiskerStyle);
+
+                /** Mean and median */
+                seriesContainer.append('line')
+                    .classed({
+                        'violinPlotBoxPlot': true,
+                        'median': true
+                    })
+                    .attr({
+                        'x1': xLeft,
+                        'x2': xRight,
+                        'y1': (d) => yAxis.scale(d.values.median),
+                        'y2': (d) => yAxis.scale(d.values.median)
+                    })
+                    .style(medianStyle);
+
+                seriesContainer.append('circle')
+                    .classed({
+                        'violinPlotBoxPlot': true,
+                        'mean': true,
+                        'outer': true
+                    })
+                    .attr({
+                        'cx': (xScale.rangeBand() / 2),
+                        'cy': (d) => yAxis.scale(d.values.mean),
+                        'r': boxPlotWidth / 5
+                    })
+                    .style({
+                        'fill': 'white',
+                        'stroke': 'none'
+                    });
+                seriesContainer.append('circle')
+                    .classed({
+                        'violinPlotBoxPlot': true,
+                        'mean': true,
+                        'inner': true
+                    })
+                    .attr({
+                        'cx': (xScale.rangeBand() / 2),
+                        'cy': (d) => yAxis.scale(d.values.mean),
+                        'r': boxPlotWidth / 10
+                    })
+                    .style({
+                        'fill': 'black',
+                        'stroke': 'none'
+                    });
    
                 console.log(simpleViewModel);
 
