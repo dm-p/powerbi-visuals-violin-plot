@@ -1,14 +1,27 @@
 {
     "dataRoles": [
         {
-            "displayName": "Category Data",
+            "displayName": "Category",
             "name": "category",
-            "kind": "Grouping"
+            "kind": "Grouping",
+            "description": "The category that you wish to group your data into."
+        },
+        {
+            "displayName": "Sampling",
+            "name": "sampling",
+            "kind": "Grouping",
+            "description": "The level you wish to aggregate your measure data at, to prevent incorrect aggregation prior to plotting."
         },
         {
             "displayName": "Measure Data",
             "name": "measure",
-            "kind": "Measure"
+            "kind": "Measure",
+            "description": "The values you wish to observe in your violin plot for each category.",
+            "requiredTypes": [
+                {
+                    "numeric": true
+                }
+            ]
         }
     ],
     "objects": {
