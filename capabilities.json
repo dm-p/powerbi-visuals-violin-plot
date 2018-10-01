@@ -76,23 +76,21 @@
                     }
                 }
             ],
-            "categorical": {
-                "categories": {
+            "matrix": {
+                "columns": {
                     "for": {
                         "in": "category"
-                    },
-                    "dataReductionAlgorithm": {
-                        "top": {}
+                    }
+                },
+                "rows": {
+                    "for": {
+                        "in": "sampling"
                     }
                 },
                 "values": {
-                    "select": [
-                        {
-                            "bind": {
-                                "to": "measure"
-                            }
-                        }
-                    ]
+                    "for": {
+                        "in": "measure"
+                    }
                 }
             }
         }
