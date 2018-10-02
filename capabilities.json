@@ -76,20 +76,22 @@
                     }
                 }
             ],
-            "matrix": {
-                "columns": {
-                    "for": {
-                        "in": "category"
-                    }
-                },
-                "rows": {
+            "categorical": {
+                "categories": {
                     "for": {
                         "in": "sampling"
                     }
                 },
                 "values": {
-                    "for": {
-                        "in": "measure"
+                    "group": {
+                        "by": "category",
+                        "select": [
+                            {
+                                "bind": {
+                                    "to": "measure"
+                                }
+                            }
+                        ]
                     }
                 }
             }
