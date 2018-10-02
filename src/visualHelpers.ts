@@ -128,6 +128,12 @@ module powerbi.extensibility.visual {
                                 .range([boxPlotWidth, 0])
                                 .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                                 .clamp(true);
+
+                            /** Now we have our scaling, we can generate the line function for each series */
+                                v.lineGen = d3.svg.line<IDataPointKde>()
+                                    .interpolate('basis') /** TODO: configurable interpolation (sensible ones) */
+                                    .x(d => viewModel.xVaxis.scale(d.x))
+                                    .y(d => v.yVScale(d.y));
                         });
 
             return viewModel;
