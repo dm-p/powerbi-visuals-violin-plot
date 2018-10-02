@@ -17,6 +17,7 @@
     "node_modules/powerbi-visuals-utils-chartutils/lib/index.d.ts",
     "node_modules/powerbi-models/dist/models-noexports.d.ts",
     "src/viewModels.ts",
+    "src/visualHelpers.ts",
     "src/settings.ts",
     "src/visual.ts"
   ]
