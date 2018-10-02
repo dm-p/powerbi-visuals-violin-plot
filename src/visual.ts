@@ -156,11 +156,6 @@ module powerbi.extensibility.visual {
                     });
 
             /** Violin plot */
-                let line = d3.svg.line<IDataPointKde>()
-                    .interpolate('basis')
-                    .x(d => viewModel.xVaxis.scale(d.x))
-                    .y(d => d.y * 5000 /** TODO: need to fix yVscale to make it accessible! */);
-
                 let gLeft = seriesContainer.append('g')
                     .classed({
                         'violinPlotViolin': true,
@@ -170,11 +165,10 @@ module powerbi.extensibility.visual {
                         'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2})`
                     })
                     .append('path')
-                        .datum(d => d.dataKde)
                         .classed({
                             'violinPlotViolinLine': true
                         })
-                        .attr('d', line)
+                        .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
                             'stroke': 'grey'
@@ -189,11 +183,10 @@ module powerbi.extensibility.visual {
                         'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2}) scale(1, -1)`
                     })
                     .append('path')
-                        .datum(d => d.dataKde)
                         .classed({
                             'violinPlotViolinLine': true
                         })
-                        .attr('d', line)
+                        .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
                             'stroke': 'grey'
