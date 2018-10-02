@@ -125,7 +125,7 @@ module powerbi.extensibility.visual {
                                 .filter(d => !v.statistics.max || d.x <= v.statistics.max)
 
                             v.yVScale = d3.scale.linear()
-                                .range([boxPlotWidth, 0])
+                                .range([0, boxPlotWidth * 2])
                                 .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                                 .clamp(true);
 
