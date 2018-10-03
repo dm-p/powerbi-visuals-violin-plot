@@ -92,7 +92,7 @@ module powerbi.extensibility.visual {
                             'yAxis': true,
                             'grid': true
                         })
-                        .attr('transform', `translate(${yAxisWidth},0)`)
+                        .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth},0)`)
                     .call(viewModel.yAxis.axis);
 
                  /** Apply gridline styling */
@@ -105,7 +105,7 @@ module powerbi.extensibility.visual {
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
                 .domain(viewModel.categories.map(d => d.name))
-                .rangeRoundBands([0, options.viewport.width - yAxisWidth])
+                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.xLabelMaxWidth])
 
             let xAxis = d3.svg.axis()
                 .scale(xScale)
@@ -124,7 +124,7 @@ module powerbi.extensibility.visual {
                         'xAxis': true,
                         'grid': true
                     })
-                    .attr('transform', `translate(${yAxisWidth}, ${options.viewport.height - xAxisHeight})`)
+                    .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth}, ${options.viewport.height - xAxisHeight})`)
                 .call(xAxis);
 
             let seriesContainer = this.container.selectAll('.violinPlotContainer')
@@ -135,7 +135,7 @@ module powerbi.extensibility.visual {
                         'violinPlotSeries': true
                     })
                     .attr({
-                        'transform': (d) => `translate(${xScale(d.name) + yAxisWidth}, 0)`,
+                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.xLabelMaxWidth}, 0)`,
                         'width': xScale.rangeBand()
                     });
 
