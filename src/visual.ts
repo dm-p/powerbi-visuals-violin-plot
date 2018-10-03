@@ -76,14 +76,6 @@ module powerbi.extensibility.visual {
                 console.log('|\tView model', viewModel);
             }
 
-            /** Set y-axis domain - TODO: See if we can map this out when we process the data the first time */
-            let yMin = viewModel.statistics.min,
-                yMax = viewModel.statistics.max;
-
-            if (debug) {
-                console.log('|\tY-Domain', yMin, yMax);
-            }
-
             /** Create a Y axis */
             
                 /** Placeholder metadata column and format strings */
