@@ -77,14 +77,6 @@ module powerbi.extensibility.visual {
             }
 
             /** Create a Y axis */
-            
-                /** Placeholder metadata column and format strings */
-                let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
-                    objectName: 'general',
-                    propertyName: 'formatString',
-                };
-
-                let yAxisWidth = 50;
                 let xAxisHeight = 30;
 
                 let yAxisContainer = this.container
