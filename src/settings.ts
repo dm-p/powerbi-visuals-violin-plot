@@ -28,9 +28,62 @@ module powerbi.extensibility.visual {
     "use strict";
     import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
+    let defaultFontSize: number = 11;
+    let defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif';
+    let defaultFontColor: string = '#777777';
+    let defaultAxisFontColor: string = '#777777';
+    let defaultAxisGridlineColor: string = '#EAEAEA';
+
     export class VisualSettings extends DataViewObjectsParser {
-      public about: aboutSettings = new aboutSettings();
+        public yAxis: yAxisSettings = new yAxisSettings();
+        public about: aboutSettings = new aboutSettings();
     }
+
+    /** Common axis settings */
+    export class axisSettings {
+        /** Show whole axis */
+        public show: boolean = true;
+        /** Labels */
+        public showLabels: boolean = true;
+        /** Font color */
+        public fontColor: string = defaultFontColor;
+        /** Text Size */
+        public fontSize: number = defaultFontSize;
+        /** Font */
+        public fontFamily: string = defaultFontFamily;
+        /** Display Units */
+        public labelDisplayUnits: number = 0;
+        /** Precision */
+        public precision: number = null;
+        /** Show Title */
+        public showTitle: boolean = true;
+        /** Title Style */
+        public titleStyle: string = 'title'
+        /** Title Colour */
+        public titleColor: string = defaultAxisFontColor;
+        /** Title */
+        public titleText: string = null;
+        /** Title Text Size */
+        public titleFontSize: number = defaultFontSize;
+        /** Title Font */
+        public titleFontFamily: string = defaultFontFamily;
+        /** Gridlines Toggle */
+        public gridlines: boolean = true;
+        /** Gridline colour */
+        public gridlineColor: string = defaultAxisGridlineColor;
+        /** Gridline stroke width */
+        public gridlineStrokeWidth: number = 1;
+        /*8 Gridline line style */
+        public gridlineStrokeLineStyle: string = 'solid';
+      }
+  
+      /** Y-axis specific settings */
+      export class yAxisSettings extends axisSettings {
+        /** Axis range start */
+        public start: number = null;
+        /** Axis range end */
+        public end: number = null;
+      }
 
     // Used to hold about info
     export class aboutSettings {
