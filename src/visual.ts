@@ -76,31 +76,44 @@ module powerbi.extensibility.visual {
                 console.log('|\tView model', viewModel);
             }
 
+            let xAxisHeight = 30;
+
             /** Create a Y axis */
-                let xAxisHeight = 30;
+                if (this.settings.yAxis.show) {
 
-                let yAxisContainer = this.container
-                    .append('g')
-                        .classed('yAxisContainer', true)
-                        .style({
-                            'stroke-width' : 1 /** TODO: Config */
-                        });
+                    let yAxisContainer = this.container
+                        .append('g')
+                            .classed('yAxisContainer', true)
+                            .style({
+                                'font-family': this.settings.yAxis.fontFamily,
+                                'fill': this.settings.yAxis.fontColor,
+                                'stroke-width' : 1 /** TODO: Config */
+                            });
                 
-                let yAxisTicks = yAxisContainer
-                    .append('g')
-                        .classed({
-                            'yAxis': true,
-                            'grid': true
-                        })
-                        .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth},0)`)
-                    .call(viewModel.yAxis.axis);
+                    let yAxisTicks = yAxisContainer
+                        .append('g')
+                            .classed({
+                                'yAxis': true,
+                                'grid': true
+                            })
+                            .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth},0)`)
+                        .call(viewModel.yAxis.axis);
 
-                 /** Apply gridline styling */
-                 yAxisTicks.selectAll('line')
-                    .attr({
-                        stroke: '#EAEAEA',
-                        'stroke-width': 1
-                    });
+                    /** Apply gridline styling */
+                        yAxisTicks.selectAll('line')
+                            .attr({
+                                stroke: this.settings.yAxis.gridlineColor,
+                                'stroke-width': this.settings.yAxis.gridlines
+                                    ? this.settings.yAxis.gridlineStrokeWidth
+                                    : 0
+                            })
+                            .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
+
+                }
+
+
+
+
 
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
