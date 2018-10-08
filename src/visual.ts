@@ -307,23 +307,68 @@ module powerbi.extensibility.visual {
             let objectName = options.objectName;
 
             /** Initial debugging for properties update */
-            let debug = this.settings.about.debugMode && this.settings.about.debugProperties;
-            if (debug) {
-                console.log('\n====================');
-                console.log(`Properties Update: ${objectName}`);
-                console.log('====================');
-            }
+                let debug = this.settings.about.debugMode && this.settings.about.debugProperties;
+                if (debug) {
+                    console.log('\n====================');
+                    console.log(`Properties Update: ${objectName}`);
+                    console.log('====================');
+                }
 
-            /** TODO: instances, including hiding debug switches etc. */
+            /** Apply instance-specific transformations */
+                switch (objectName) {
+                    case 'yAxis': {
+                        /** Label toggle */
+                            if (!this.settings.yAxis.showLabels) {
+                                delete instances[0].properties['fontColor'];
+                                delete instances[0].properties['fontSize'];
+                                delete instances[0].properties['fontFamily'];
+                                delete instances[0].properties['labelDisplayUnits'];
+                                delete instances[0].properties['precision'];
+                            }                    
+                        /** Gridline toggle */
+                            if (!this.settings.yAxis.gridlines) {
+                                delete instances[0].properties['gridlineColor'];
+                                delete instances[0].properties['gridlineStrokeWidth'];
+                                delete instances[0].properties['gridlineStrokeLineStyle'];
+                            }
+                        /** Title toggle */
+                            if (!this.settings.yAxis.showTitle) {
+                                delete instances[0].properties['titleStyle'];
+                                delete instances[0].properties['titleColor'];
+                                delete instances[0].properties['titleText'];
+                                delete instances[0].properties['titleFontSize'];
+                                delete instances[0].properties['titleFontFamily'];
+                            }
+                        /** Title style toggle if units are none */
+                            if (this.settings.yAxis.labelDisplayUnits == 1) {
+                                instances[0].properties['titleStyle'] = 'title'; /** TODO: Delete entries from list */
+                            }
+                        /** Range validation on grid line stroke width and precision */
+                            instances[0].validValues = instances[0].validValues || {};
+                            instances[0].validValues.gridlineStrokeWidth = {
+                                numberRange: {
+                                    min: 1,
+                                    max: 5
+                                },
+                            };
+                            instances[0].validValues.precision = {
+                                numberRange: {
+                                    min: 1,
+                                    max: 10
+                                }
+                            };
+                        break;
+                    }
+                }
 
             /** Output all transformed instance info if we're debugging */
-            if (debug) {
-                instances.map(function (instance) {
-                    console.log(`|\t${instance.objectName}`, instance);
-                });
-                console.log('|\tProperties fully processed!');
-                console.log('====================');
-            }
+                if (debug) {
+                    instances.map(function (instance) {
+                        console.log(`|\t${instance.objectName}`, instance);
+                    });
+                    console.log('|\tProperties fully processed!');
+                    console.log('====================');
+                }
 
             return instances;
         }
