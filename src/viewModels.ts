@@ -2,15 +2,33 @@ module powerbi.extensibility.visual {
 
     import axisHelper = powerbi.extensibility.utils.chart.axis;
     import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
+    import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
 
     export module ViolinPlotModels {
 
         export interface IViewModel {
             categories: ICategory[];
             statistics: IStatistics;
-            yAxis: axisHelper.IAxisProperties;
+            xAxis: axisHelper.IAxisProperties;
+            yAxis: IAxis;
             xVaxis: axisHelper.IAxisProperties;
         }
+
+        export interface IAxis {
+            axisProperties: IAxisProperties;
+            labelTextProperties: TextProperties;
+        }
+
+        /**
+         * Raw value and text properties for a chart axis
+         * 
+         * @property {number} value                                     -   Raw axis value
+         * @property {TextProperties} textProperties                    -   Properties for value, including formatted value for supplied font configuration
+         */
+        export interface IAxisValue {
+            value: number;
+            textProperties: TextProperties;
+        }        
 
         export interface ICategory {
             name: string;

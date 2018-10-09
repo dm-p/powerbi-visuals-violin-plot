@@ -4,10 +4,15 @@ module powerbi.extensibility.visual {
 
         import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
         import axisHelper = powerbi.extensibility.utils.chart.axis;
-        import IViewModel = ViolinPlotModels.IViewModel;
-        import ICategory = ViolinPlotModels.ICategory;
-        import IStatistics = ViolinPlotModels.IStatistics;
-        import IDataPointKde = ViolinPlotModels.IDataPointKde;
+        import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
+        import textMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
+
+        /** Internal view models */
+            import IViewModel = ViolinPlotModels.IViewModel;
+            import ICategory = ViolinPlotModels.ICategory;
+            import IStatistics = ViolinPlotModels.IStatistics;
+            import IDataPointKde = ViolinPlotModels.IDataPointKde;
+            import IAxis = ViolinPlotModels.IAxis;
 
         /** Kernel density estimator - used to produce smoother estimate than a histogram */
         function kernelDensityEstimator(kernel, x) {
@@ -27,7 +32,7 @@ module powerbi.extensibility.visual {
             };
         }
 
-        export function visualTransform(options: VisualUpdateOptions, /** settings: VisualSettings */) : IViewModel {
+        export function visualTransform(options: VisualUpdateOptions, settings: VisualSettings) : IViewModel {
 
             let dataViews = options.dataViews;
 
@@ -91,25 +96,32 @@ module powerbi.extensibility.visual {
                         max: d3.max(allDataPoints)
                     } as IStatistics;
 
-                /** Add Y-axis properties */
+                /** Add axis properties */
                     let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
                         objectName: 'general',
                         propertyName: 'formatString',
                     };
-                    viewModel.yAxis = axisHelper.createAxis({
-                        pixelSpan: options.viewport.height - xAxisHeight,
-                        dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
-                        metaDataColumn: measureMetadata,
-                        formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
-                        outerPadding: 10, /** TODO: Probably font size-based to keep things nice */
-                        isScalar: true,
-                        isVertical: true,
-                    });
-                    viewModel.yAxis.axis.orient('left');
-                    viewModel.yAxis.axis.tickSize(-options.viewport.width + yAxisWidth);
+                    /** Y-axis */
+                        viewModel.yAxis = {
+                            labelTextProperties: {
+                                fontFamily: settings.yAxis.fontFamily,
+                                fontSize: PixelConverter.toString(settings.yAxis.fontSize)
+                            }
+                        } as IAxis;
+                        viewModel.yAxis.axisProperties = axisHelper.createAxis({
+                            pixelSpan: options.viewport.height - xAxisHeight,
+                            dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
+                            metaDataColumn: measureMetadata,
+                            formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
+                            outerPadding: settings.yAxis.fontSize / 2,
+                            isScalar: true,
+                            isVertical: true,
+                        });
+                        viewModel.yAxis.axisProperties.axis.orient('left');
+                        viewModel.yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxisWidth);
 
                 /** Add vertical X-axis properties */
-                    viewModel.xVaxis = viewModel.yAxis;
+                    viewModel.xVaxis = viewModel.yAxis.axisProperties;
 
                 /** Do Kernel Density Estimator on the vertical X-axis 
                  *  TODO: optimal (or configurable resolution/bandwidth) */

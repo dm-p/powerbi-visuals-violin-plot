@@ -97,8 +97,8 @@ module powerbi.extensibility.visual {
                                 'yAxis': true,
                                 'grid': true
                             })
-                            .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth},0)`)
-                        .call(viewModel.yAxis.axis);
+                            .attr('transform', `translate(${viewModel.yAxis.axisProperties.xLabelMaxWidth},0)`)
+                        .call(viewModel.yAxis.axisProperties.axis);
 
                     /** Apply gridline styling */
                         yAxisTicks.selectAll('line')
@@ -119,7 +119,7 @@ module powerbi.extensibility.visual {
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
                 .domain(viewModel.categories.map(d => d.name))
-                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.xLabelMaxWidth])
+                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.axisProperties.xLabelMaxWidth])
 
             let xAxis = d3.svg.axis()
                 .scale(xScale)
@@ -138,7 +138,7 @@ module powerbi.extensibility.visual {
                         'xAxis': true,
                         'grid': true
                     })
-                    .attr('transform', `translate(${viewModel.yAxis.xLabelMaxWidth}, ${options.viewport.height - xAxisHeight})`)
+                    .attr('transform', `translate(${viewModel.yAxis.axisProperties.xLabelMaxWidth}, ${options.viewport.height - xAxisHeight})`)
                 .call(xAxis);
 
             let seriesContainer = this.container.selectAll('.violinPlotContainer')
@@ -149,7 +149,7 @@ module powerbi.extensibility.visual {
                         'violinPlotSeries': true
                     })
                     .attr({
-                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.xLabelMaxWidth}, 0)`,
+                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.axisProperties.xLabelMaxWidth}, 0)`,
                         'width': xScale.rangeBand()
                     });
 
@@ -202,9 +202,9 @@ module powerbi.extensibility.visual {
                     })
                     .attr({
                         'x': xLeft,
-                        'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
+                        'y': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.quartile3),
                         'width': boxPlotWidth,
-                        'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1)
+                        'height': (d) => -viewModel.yAxis.axisProperties.scale(d.statistics.quartile3) + viewModel.yAxis.axisProperties.scale(d.statistics.quartile1)
                     });
 
                 /** Do the whiskers - we'll repeat this for now and try to optimise later on. We should also allow toggle on the whiskers */
@@ -227,8 +227,8 @@ module powerbi.extensibility.visual {
                     .attr({
                         'x1': xLeft,
                         'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper)
+                        'y1': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceUpper),
+                        'y2': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceUpper)
                     })
                     .style(whiskerStyle);
 
@@ -238,8 +238,8 @@ module powerbi.extensibility.visual {
                     .attr({
                         'x1': xLeft,
                         'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower)
+                        'y1': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceLower),
+                        'y2': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceLower)
                     })
                     .style(whiskerStyle)
 
@@ -249,8 +249,8 @@ module powerbi.extensibility.visual {
                     .attr({
                         'x1': (xScale.rangeBand() / 2),
                         'x2': (xScale.rangeBand() / 2),
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper)
+                        'y1': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceLower),
+                        'y2': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.confidenceUpper)
                     })
                     .style(whiskerStyle);
 
@@ -263,8 +263,8 @@ module powerbi.extensibility.visual {
                     .attr({
                         'x1': xLeft,
                         'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.median)
+                        'y1': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.median),
+                        'y2': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.median)
                     })
                     .style(medianStyle);
 
@@ -276,7 +276,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr({
                         'cx': (xScale.rangeBand() / 2),
-                        'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                        'cy': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.mean),
                         'r': boxPlotWidth / 5
                     })
                     .style({
@@ -291,7 +291,7 @@ module powerbi.extensibility.visual {
                     })
                     .attr({
                         'cx': (xScale.rangeBand() / 2),
-                        'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                        'cy': (d) => viewModel.yAxis.axisProperties.scale(d.statistics.mean),
                         'r': boxPlotWidth / 10
                     })
                     .style({
