@@ -30,9 +30,45 @@ module powerbi.extensibility.visual {
             return function (u) {
                 return Math.abs(u /= scale) <= 1 ? .75 * (1 - u * u) / scale : 0;
             };
+            
+        }
+
+        export class VisualDebugger {
+            enabled: boolean = false;
+            constructor(condition: boolean) {
+                this.enabled = condition;
+            }
+
+            clear() {
+                if (this.enabled) {
+                    console.clear();
+                }
+            }
+
+            heading(heading: string) {
+                if (this.enabled) {
+                    console.log(`\n====================\n${heading}\n====================`);
+                }
+            }
+
+            footer() {
+                if (this.enabled) {
+                    console.log(`====================`);
+                }
+            }
+
+            log(...args: any[]) {
+                if (this.enabled) {
+                    console.log('|\t', ...args);
+                }
+            }
         }
 
         export function visualTransform(options: VisualUpdateOptions, settings: VisualSettings) : IViewModel {
+
+            /** Set up debugging */
+                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+                debug.log('Running Visual Transform...');
 
             let dataViews = options.dataViews;
 
@@ -47,10 +83,12 @@ module powerbi.extensibility.visual {
                     || !dataViews[0].categorical.values
                     || !dataViews[0].metadata
                 ) {
+                    debug.log('Data mapping conditions not met. Returning bare-minimum view model.');
                     return viewModel;
                 }
 
             /** Otherwise, let's get that data! */
+                debug.log('Data mapping conditions met. Proceeding with view model transform.');
                 let values = dataViews[0].categorical.values,
                     allDataPoints: number[] = [],
                     metadata = dataViews[0].metadata,

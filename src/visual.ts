@@ -31,7 +31,7 @@ module powerbi.extensibility.visual {
     import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
     import ValueType = powerbi.extensibility.utils.type.ValueType;
     import visualTransform = ViolinPlotHelpers.visualTransform;
-    import IDataPointKde = ViolinPlotModels.IDataPointKde;
+    import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
 
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -52,15 +52,11 @@ module powerbi.extensibility.visual {
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
 
             /** Initial debugging for visual update */
-            let debug = this.settings.about.debugMode && this.settings.about.debugVisualUpdate;
-            if (debug) {
-                console.clear();
-                console.log('\n====================');
-                console.log('Visual Update');
-                console.log('====================');
-                console.log('|\tSettings', this.settings);
-                console.log('|\tViewport (pre-legend)', options.viewport);
-            }
+                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
+                debug.clear();
+                debug.heading('Visual Update');
+                debug.log('Settings', this.settings);
+                debug.log('Viewport', options.viewport);
 
             /** Clear down existing plot */
             this.container.selectAll('*').remove();
@@ -71,10 +67,8 @@ module powerbi.extensibility.visual {
                 height: `${options.viewport.height}`,
             });
 
-            let viewModel = visualTransform(options /** TODO settings */);
-            if (debug) {
-                console.log('|\tView model', viewModel);
-            }
+            let viewModel = visualTransform(options, this.settings);
+            debug.log('View model', viewModel);
 
             let xAxisHeight = 30;
 
@@ -301,8 +295,8 @@ module powerbi.extensibility.visual {
 
             /** Success! */
             if (debug) {
-                console.log('|\tVisual fully rendered!');
-                console.log('====================');
+                debug.log('Visual fully rendered!');
+                debug.footer();
             }
 
         }
@@ -321,12 +315,8 @@ module powerbi.extensibility.visual {
             let objectName = options.objectName;
 
             /** Initial debugging for properties update */
-                let debug = this.settings.about.debugMode && this.settings.about.debugProperties;
-                if (debug) {
-                    console.log('\n====================');
-                    console.log(`Properties Update: ${objectName}`);
-                    console.log('====================');
-                }
+                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugProperties);
+                debug.heading(`Properties: ${objectName}`);
 
             /** Apply instance-specific transformations */
                 switch (objectName) {
@@ -376,13 +366,11 @@ module powerbi.extensibility.visual {
                 }
 
             /** Output all transformed instance info if we're debugging */
-                if (debug) {
-                    instances.map(function (instance) {
-                        console.log(`|\t${instance.objectName}`, instance);
-                    });
-                    console.log('|\tProperties fully processed!');
-                    console.log('====================');
-                }
+                instances.map(function (instance) {
+                    debug.log(instance.objectName, instance);
+                });
+                debug.log('Properties fully processed!');
+                debug.footer();
 
             return instances;
         }
