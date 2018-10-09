@@ -85,6 +85,7 @@ module powerbi.extensibility.visual {
                         .append('g')
                             .classed('yAxisContainer', true)
                             .style({
+                                'font-size': viewModel.yAxis.labelTextProperties.fontSize,
                                 'font-family': this.settings.yAxis.fontFamily,
                                 'fill': this.settings.yAxis.fontColor,
                                 'stroke-width' : 1 /** TODO: Config */
