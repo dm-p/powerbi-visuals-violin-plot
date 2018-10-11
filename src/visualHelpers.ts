@@ -148,7 +148,14 @@ module powerbi.extensibility.visual {
                             },
                             axisProperties: axisHelper.createAxis({
                                 pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
-                                dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
+                                dataDomain: [
+                                    settings.yAxis.start !== null
+                                        ? settings.yAxis.start 
+                                        : viewModel.statistics.min, 
+                                    settings.yAxis.end !== null
+                                        ? settings.yAxis.end
+                                        : viewModel.statistics.max
+                                ],
                                 metaDataColumn: measureMetadata,
                                 formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
                                 outerPadding: settings.yAxis.fontSize / 2,
