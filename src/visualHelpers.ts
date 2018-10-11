@@ -96,8 +96,7 @@ module powerbi.extensibility.visual {
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
 
                 /** TODO: Remove this with a suitable calculation of the axis height and width */
-                let xAxisHeight = 30; 
-                let yAxisWidth = 50;
+                let xAxisHeight = 30;
                 let boxPlotWidth = 15; /** TODO: We'll size this based on series */
 
                 /** Assign categorical data and statistics */
