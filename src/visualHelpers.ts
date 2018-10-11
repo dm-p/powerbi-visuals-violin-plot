@@ -150,11 +150,11 @@ module powerbi.extensibility.visual {
                                 pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
                                 dataDomain: [
                                     settings.yAxis.start !== null
-                                        ? settings.yAxis.start 
-                                        : viewModel.statistics.min, 
+                                        ?   settings.yAxis.start 
+                                        :   viewModel.statistics.min, 
                                     settings.yAxis.end !== null
-                                        ? settings.yAxis.end
-                                        : viewModel.statistics.max
+                                        ?   settings.yAxis.end
+                                        :   viewModel.statistics.max
                                 ],
                                 metaDataColumn: measureMetadata,
                                 formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
@@ -170,7 +170,7 @@ module powerbi.extensibility.visual {
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[0]),
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[yAxis.axisProperties.values.length - 1])
                                     )
-                                :   0;
+                                : 0;
 
                         /** Revise Y-axis properties as necessary */
                             yAxis.axisProperties.axis.orient('left');
