@@ -165,7 +165,7 @@ module powerbi.extensibility.visual {
                         } as IAxis;
 
                         /** Find the widest label and use that for our Y-axis width overall */
-                            yAxis.labelWidth = settings.yAxis.show 
+                            yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
                                 ?   Math.max(
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[0]),
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[yAxis.axisProperties.values.length - 1])
