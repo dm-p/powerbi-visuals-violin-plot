@@ -147,7 +147,7 @@ module powerbi.extensibility.visual {
                             }
                         } as IAxis;
                         viewModel.yAxis.axisProperties = axisHelper.createAxis({
-                            pixelSpan: options.viewport.height - xAxisHeight,
+                            pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
                             dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
                             metaDataColumn: measureMetadata,
                             formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
@@ -155,8 +155,30 @@ module powerbi.extensibility.visual {
                             isScalar: true,
                             isVertical: true,
                         });
+                        let yProps = viewModel.yAxis.axisProperties;
+                        viewModel.yAxis.labelWidth = Math.max(
+                            textMeasurementService.measureSvgTextWidth(viewModel.yAxis.labelTextProperties, yProps.values[0]),
+                            textMeasurementService.measureSvgTextWidth(viewModel.yAxis.labelTextProperties, yProps.values[yProps.values.length - 1])
+                        );
                         viewModel.yAxis.axisProperties.axis.orient('left');
-                        viewModel.yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxisWidth);
+                        viewModel.yAxis.axisProperties.axis.tickSize(-options.viewport.width + viewModel.yAxis.labelWidth);
+                        
+                        console.log(axisHelper.getRangeForColumn(values[1]));
+                        console.log(axisHelper.getTickLabelMargins(
+                            options.viewport,
+                            0,
+                            textMeasurementService.measureSvgTextWidth,
+                            textMeasurementService.estimateSvgTextHeight,
+                            {
+                                x: viewModel.yAxis.axisProperties,
+                                y1: viewModel.yAxis.axisProperties
+                            } as axisHelper.CartesianAxisProperties,
+                            0,
+                            viewModel.yAxis.labelTextProperties
+                        ));                       
+                        console.log(axisHelper.getCategoryThickness(viewModel.yAxis.axisProperties.scale));
+
+
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis.axisProperties;

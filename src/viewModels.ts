@@ -17,6 +17,8 @@ module powerbi.extensibility.visual {
         export interface IAxis {
             axisProperties: IAxisProperties;
             labelTextProperties: TextProperties;
+            labelWidth: number;
+            labelHeight: number;
         }
 
         /**
