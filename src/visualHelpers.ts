@@ -100,6 +100,7 @@ module powerbi.extensibility.visual {
                 let boxPlotWidth = 15; /** TODO: We'll size this based on series */
 
                 /** Assign categorical data and statistics */
+                /** TODO: Manage mapping when no category values are supplied (single violin based on all values) */
                     viewModel.categories = values
                         .map(c => {
                             let dataPoints = c.values
@@ -138,46 +139,37 @@ module powerbi.extensibility.visual {
                         objectName: 'general',
                         propertyName: 'formatString',
                     };
+
                     /** Y-axis */
-                        viewModel.yAxis = {
+                        let yAxis = {
                             labelTextProperties: {
                                 fontFamily: settings.yAxis.fontFamily,
                                 fontSize: PixelConverter.toString(settings.yAxis.fontSize)
-                            }
+                            },
+                            axisProperties: axisHelper.createAxis({
+                                pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
+                                dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
+                                metaDataColumn: measureMetadata,
+                                formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
+                                outerPadding: settings.yAxis.fontSize / 2,
+                                isScalar: true,
+                                isVertical: true,
+                            })
                         } as IAxis;
-                        viewModel.yAxis.axisProperties = axisHelper.createAxis({
-                            pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
-                            dataDomain: [viewModel.statistics.min, viewModel.statistics.max],
-                            metaDataColumn: measureMetadata,
-                            formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
-                            outerPadding: settings.yAxis.fontSize / 2,
-                            isScalar: true,
-                            isVertical: true,
-                        });
-                        let yProps = viewModel.yAxis.axisProperties;
-                        viewModel.yAxis.labelWidth = Math.max(
-                            textMeasurementService.measureSvgTextWidth(viewModel.yAxis.labelTextProperties, yProps.values[0]),
-                            textMeasurementService.measureSvgTextWidth(viewModel.yAxis.labelTextProperties, yProps.values[yProps.values.length - 1])
-                        );
-                        viewModel.yAxis.axisProperties.axis.orient('left');
-                        viewModel.yAxis.axisProperties.axis.tickSize(-options.viewport.width + viewModel.yAxis.labelWidth);
-                        
-                        console.log(axisHelper.getRangeForColumn(values[1]));
-                        console.log(axisHelper.getTickLabelMargins(
-                            options.viewport,
-                            0,
-                            textMeasurementService.measureSvgTextWidth,
-                            textMeasurementService.estimateSvgTextHeight,
-                            {
-                                x: viewModel.yAxis.axisProperties,
-                                y1: viewModel.yAxis.axisProperties
-                            } as axisHelper.CartesianAxisProperties,
-                            0,
-                            viewModel.yAxis.labelTextProperties
-                        ));                       
-                        console.log(axisHelper.getCategoryThickness(viewModel.yAxis.axisProperties.scale));
 
+                        /** Find the widest label and use that for our Y-axis width overall */
+                            yAxis.labelWidth = settings.yAxis.show 
+                                ?   Math.max(
+                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[0]),
+                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[yAxis.axisProperties.values.length - 1])
+                                    )
+                                :   0;
 
+                        /** Revise Y-axis properties as necessary */
+                            yAxis.axisProperties.axis.orient('left');
+                            yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxis.labelWidth);
+
+                        viewModel.yAxis = yAxis;
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis.axisProperties;
