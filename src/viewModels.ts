@@ -15,10 +15,14 @@ module powerbi.extensibility.visual {
         }
 
         export interface IAxis {
+            axisDimensions: IDimensions;
             axisProperties: IAxisProperties;
+            titleTextProperties: TextProperties;
+            titleDimensions: IDimensions;
             labelTextProperties: TextProperties;
             labelWidth: number;
             labelHeight: number;
+            padding: IPadding;
         }
 
         /**
@@ -31,6 +35,20 @@ module powerbi.extensibility.visual {
             value: number;
             textProperties: TextProperties;
         }        
+
+        export interface IPadding {
+            bottom?: number;
+            left?: number;
+            right?: number;
+            top?: number;
+        }
+
+        export interface IDimensions {
+            width?: number;
+            height?: number;
+            x?: number;
+            y?: number;
+        }
 
         export interface ICategory {
             name: string;
