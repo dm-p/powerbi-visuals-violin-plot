@@ -20,7 +20,7 @@ module powerbi.extensibility.visual {
                 return x.map(function (x) {
                     return {
                         x: x, 
-                        y: d3.mean(sample, function (v:number) {return kernel(x - v);})
+                        y: d3.mean(sample, (v:number) => kernel(x - v))
                     };
                 });
             };
@@ -142,9 +142,38 @@ module powerbi.extensibility.visual {
 
                     /** Y-axis */
                         let yAxis = {
+                            padding: {
+                                left: 5
+                            },
                             labelTextProperties: {
                                 fontFamily: settings.yAxis.fontFamily,
                                 fontSize: PixelConverter.toString(settings.yAxis.fontSize)
+                            },
+                            titleTextProperties: {
+                                text: function() {            
+                                    /** If we supplied a title, use that, otherwise format our measure names */
+                                        let title = (!settings.yAxis.titleText) 
+                                            ? measureMetadata.displayName
+                                            : settings.yAxis.titleText;
+                
+                                    /** Return the correct title based on our supplied settings */
+                                        if (settings.yAxis.labelDisplayUnits == 1) {
+                                            return title;
+                                        }
+                                        switch (settings.yAxis.titleStyle) {
+                                            case 'title': {
+                                                return title;
+                                            }
+                                            case 'unit': {
+                                                return yFormat.displayUnit.title;
+                                            }
+                                            case 'both': {
+                                                return `${title}`;// (${layout.yAxis.numberFormat.displayUnit.title})`;
+                                            }
+                                        }
+                                }(),
+                                fontFamily: settings.yAxis.titleFontFamily,
+                                fontSize:PixelConverter.toString(settings.yAxis.titleFontSize)
                             },
                             axisProperties: axisHelper.createAxis({
                                 pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
@@ -164,17 +193,37 @@ module powerbi.extensibility.visual {
                             })
                         } as IAxis;
 
+                        /** Resolve the title dimensions */
+                            yAxis.titleDimensions = {
+                                width: (settings.yAxis.show && settings.yAxis.showTitle)
+                                    ?   textMeasurementService.measureSvgTextHeight(
+                                            yAxis.titleTextProperties /** TODO make sure text gets set in the properties above when we figure it out */
+                                        )
+                                    :   0,
+                                height: options.viewport.height, /** TODO: manage categorical axis */
+                                x: -options.viewport.height / 2, /** TODO: manage categorical axis */
+                                y: 0
+                            };
+
                         /** Find the widest label and use that for our Y-axis width overall */
                             yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
                                 ?   Math.max(
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[0]),
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[yAxis.axisProperties.values.length - 1])
                                     )
+                                    + yAxis.padding.left
                                 : 0;
+
+                        /** Solve the axis dimensions */
+                            yAxis.axisDimensions = {
+                                height: options.viewport.height, /** TODO: manage categorical axis */
+                                width: yAxis.labelWidth + yAxis.titleDimensions.width,
+                                x: yAxis.titleDimensions.width
+                            };
 
                         /** Revise Y-axis properties as necessary */
                             yAxis.axisProperties.axis.orient('left');
-                            yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxis.labelWidth);
+                            yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxis.axisDimensions.width);
 
                         viewModel.yAxis = yAxis;
 

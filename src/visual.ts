@@ -84,14 +84,35 @@ module powerbi.extensibility.visual {
                                 'fill': this.settings.yAxis.fontColor,
                                 'stroke-width' : 1 /** TODO: Config */
                             });
-                
+
+                    /** Add title if required */
+                        if (this.settings.yAxis.showTitle && viewModel.yAxis.titleTextProperties) {
+                            yAxisContainer
+                                .append('text')
+                                    .classed('yAxisTitle', true)
+                                    .attr({
+                                        transform: 'rotate(-90)',
+                                        x: viewModel.yAxis.titleDimensions.x,
+                                        y: viewModel.yAxis.titleDimensions.y,
+                                        dy: '1em'
+                                    })
+                                    .style({
+                                        'text-anchor': 'middle',
+                                        'font-size': viewModel.yAxis.titleTextProperties.fontSize,
+                                        'font-family': this.settings.yAxis.titleFontFamily,
+                                        'fill': this.settings.yAxis.titleColor,
+                                    })
+                                    .text(viewModel.yAxis.titleTextProperties.text)
+                                    /** TODO wrap/ellipsis */
+                        }
+
                     let yAxisTicks = yAxisContainer
                         .append('g')
                             .classed({
                                 'yAxis': true,
                                 'grid': true
                             })
-                            .attr('transform', `translate(${viewModel.yAxis.labelWidth},0)`)
+                            .attr('transform', `translate(${viewModel.yAxis.axisDimensions.width}, 0)`)
                         .call(viewModel.yAxis.axisProperties.axis);
 
                     /** Apply gridline styling */
@@ -113,7 +134,7 @@ module powerbi.extensibility.visual {
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
                 .domain(viewModel.categories.map(d => d.name))
-                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.labelWidth])
+                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.axisDimensions.width])
 
             let xAxis = d3.svg.axis()
                 .scale(xScale)
@@ -132,7 +153,7 @@ module powerbi.extensibility.visual {
                         'xAxis': true,
                         'grid': true
                     })
-                    .attr('transform', `translate(${viewModel.yAxis.labelWidth}, ${options.viewport.height - xAxisHeight})`)
+                    .attr('transform', `translate(${viewModel.yAxis.axisDimensions.width}, ${options.viewport.height - xAxisHeight})`)
                 .call(xAxis);
 
             let seriesContainer = this.container.selectAll('.violinPlotContainer')
@@ -143,7 +164,7 @@ module powerbi.extensibility.visual {
                         'violinPlotSeries': true
                     })
                     .attr({
-                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.labelWidth}, 0)`,
+                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.axisDimensions.width}, 0)`,
                         'width': xScale.rangeBand()
                     });
 
