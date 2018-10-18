@@ -43,6 +43,10 @@ module powerbi.extensibility.visual {
     export class axisSettings {
         /** Show whole axis */
         public show: boolean = true;
+        /** Axis range start */
+        public start: number = null;
+        /** Axis range end */
+        public end: number = null;
         /** Labels */
         public showLabels: boolean = true;
         /** Font color */
@@ -79,10 +83,6 @@ module powerbi.extensibility.visual {
   
       /** Y-axis specific settings */
       export class yAxisSettings extends axisSettings {
-        /** Axis range start */
-        public start: number = null;
-        /** Axis range end */
-        public end: number = null;
       }
 
     // Used to hold about info
