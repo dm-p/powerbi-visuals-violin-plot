@@ -141,9 +141,19 @@ module powerbi.extensibility.visual {
                     };
 
                     /** Y-axis */
+                        let yFormat = valueFormatter.create({
+                            format: measureMetadata.format,
+                            value: settings.yAxis.labelDisplayUnits == 0
+                                ?   viewModel.statistics.max
+                                :   settings.yAxis.labelDisplayUnits,
+                            precision: settings.yAxis.precision != null
+                                ?   settings.yAxis.precision
+                                :   null
+                        });
+
                         let yAxis = {
                             padding: {
-                                left: 5
+                                left: 10
                             },
                             labelTextProperties: {
                                 fontFamily: settings.yAxis.fontFamily,
@@ -168,30 +178,47 @@ module powerbi.extensibility.visual {
                                                 return yFormat.displayUnit.title;
                                             }
                                             case 'both': {
-                                                return `${title}`;// (${layout.yAxis.numberFormat.displayUnit.title})`;
+                                                return `${title} (${yFormat.displayUnit.title})`; /** TODO: fix undefined unit */
                                             }
                                         }
                                 }(),
                                 fontFamily: settings.yAxis.titleFontFamily,
                                 fontSize:PixelConverter.toString(settings.yAxis.titleFontSize)
                             },
-                            axisProperties: axisHelper.createAxis({
-                                pixelSpan: options.viewport.height, /** TODO: manage categorical axis */
-                                dataDomain: [
-                                    settings.yAxis.start !== null
-                                        ?   settings.yAxis.start 
-                                        :   viewModel.statistics.min, 
-                                    settings.yAxis.end !== null
-                                        ?   settings.yAxis.end
-                                        :   viewModel.statistics.max
-                                ],
-                                metaDataColumn: measureMetadata,
-                                formatString: valueFormatter.getFormatString(measureMetadata, formatStringProp),
-                                outerPadding: settings.yAxis.fontSize / 2,
-                                isScalar: true,
-                                isVertical: true,
-                            })
+                            domain: [
+                                settings.yAxis.start || settings.yAxis.start == 0
+                                    ?   settings.yAxis.start
+                                    :   viewModel.statistics.min,
+                                    settings.yAxis.end || settings.yAxis.end == 0
+                                    ?   settings.yAxis.end
+                                    :   viewModel.statistics.max,
+                            ]
                         } as IAxis;
+
+                        /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
+                            let yPadVert = settings.yAxis.fontSize / 2,
+                                yHeight = options.viewport.height - yPadVert; /** TODO: manage categorical axis, padding etc. */
+
+                            yAxis.dimensions = {
+                                height: yHeight,
+                                y: yPadVert /** TODO: manage categorical axis, padding etc. */
+                            };
+
+                            yAxis.range = [
+                                yAxis.dimensions.height,
+                                yAxis.dimensions.y
+                            ];
+
+                            yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
+                            yAxis.scale = d3.scale.linear()
+                                .domain(yAxis.domain)
+                                .range(yAxis.range)
+                                .nice(yAxis.ticks);
+                            yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
+                                settings.yAxis.showLabels
+                                    ?   yFormat.format(v)
+                                    :   ''
+                            ));
 
                         /** Resolve the title dimensions */
                             yAxis.titleDimensions = {
@@ -200,35 +227,39 @@ module powerbi.extensibility.visual {
                                             yAxis.titleTextProperties /** TODO make sure text gets set in the properties above when we figure it out */
                                         )
                                     :   0,
-                                height: options.viewport.height, /** TODO: manage categorical axis */
-                                x: -options.viewport.height / 2, /** TODO: manage categorical axis */
+                                height: yHeight, /** TODO: manage categorical axis */
+                                x: -yHeight / 2, /** TODO: manage categorical axis */
                                 y: 0
                             };
 
                         /** Find the widest label and use that for our Y-axis width overall */
                             yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
                                 ?   Math.max(
-                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[0]),
-                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.axisProperties.values[yAxis.axisProperties.values.length - 1])
+                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
+                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1])
                                     )
                                     + yAxis.padding.left
                                 : 0;
 
-                        /** Solve the axis dimensions */
-                            yAxis.axisDimensions = {
-                                height: options.viewport.height, /** TODO: manage categorical axis */
-                                width: yAxis.labelWidth + yAxis.titleDimensions.width,
-                                x: yAxis.titleDimensions.width
-                            };
+                        /** Solve the remaining axis dimensions */
+                            yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
+                            yAxis.dimensions.x = yAxis.titleDimensions.width;
 
                         /** Revise Y-axis properties as necessary */
-                            yAxis.axisProperties.axis.orient('left');
-                            yAxis.axisProperties.axis.tickSize(-options.viewport.width + yAxis.axisDimensions.width);
+                            yAxis.generator = d3.svg.axis()
+                                .scale(yAxis.scale)
+                                .orient('left')
+                                .ticks(yAxis.ticks)
+                                .tickSize(-options.viewport.width + yAxis.dimensions.width)
+                                .tickFormat(d => settings.yAxis.showLabels
+                                    ?   yFormat.format(d)
+                                    :   ''
+                                );
 
                         viewModel.yAxis = yAxis;
 
                 /** Add vertical X-axis properties */
-                    viewModel.xVaxis = viewModel.yAxis.axisProperties;
+                    viewModel.xVaxis = viewModel.yAxis;
 
                 /** Do Kernel Density Estimator on the vertical X-axis 
                  *  TODO: optimal (or configurable resolution/bandwidth) */

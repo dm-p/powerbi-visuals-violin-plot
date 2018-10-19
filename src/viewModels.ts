@@ -11,12 +11,18 @@ module powerbi.extensibility.visual {
             statistics: IStatistics;
             xAxis: axisHelper.IAxisProperties;
             yAxis: IAxis;
-            xVaxis: axisHelper.IAxisProperties;
+            xVaxis: IAxis;
         }
 
         export interface IAxis {
-            axisDimensions: IDimensions;
-            axisProperties: IAxisProperties;
+            range: number[];
+            domain: number[];
+            ticks: number;
+            tickSize: number;
+            ticksFormatted: string[];
+            scale: d3.scale.Linear<number, number>;
+            generator: d3.svg.Axis;
+            dimensions: IDimensions;
             titleTextProperties: TextProperties;
             titleDimensions: IDimensions;
             labelTextProperties: TextProperties;
