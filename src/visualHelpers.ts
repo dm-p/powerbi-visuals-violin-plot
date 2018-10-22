@@ -150,7 +150,7 @@ module powerbi.extensibility.visual {
                                 ?   settings.yAxis.precision
                                 :   null
                         });
-
+console.log(yFormat);
                         let yAxis = {
                             padding: {
                                 left: 10
@@ -167,7 +167,7 @@ module powerbi.extensibility.visual {
                                             : settings.yAxis.titleText;
                 
                                     /** Return the correct title based on our supplied settings */
-                                        if (settings.yAxis.labelDisplayUnits == 1) {
+                                        if (settings.yAxis.labelDisplayUnits == 1 || !yFormat.displayUnit) {
                                             return title;
                                         }
                                         switch (settings.yAxis.titleStyle) {
@@ -178,7 +178,7 @@ module powerbi.extensibility.visual {
                                                 return yFormat.displayUnit.title;
                                             }
                                             case 'both': {
-                                                return `${title} (${yFormat.displayUnit.title})`; /** TODO: fix undefined unit */
+                                                return `${title} (${yFormat.displayUnit.title})`;
                                             }
                                         }
                                 }(),

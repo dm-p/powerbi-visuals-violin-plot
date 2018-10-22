@@ -127,10 +127,6 @@ module powerbi.extensibility.visual {
 
                 }
 
-
-
-
-
             /** Create an X-axis */
             let xScale = d3.scale.ordinal()
                 .domain(viewModel.categories.map(d => d.name))
@@ -370,14 +366,12 @@ module powerbi.extensibility.visual {
                             }
                         /** Range validation on grid line stroke width and precision */
                             instances[0].validValues = instances[0].validValues || {};
-                            // if (this.settings.yAxis.precision) { 
-                                instances[0].validValues.precision = {
-                                    numberRange: {
-                                        min: 0,
-                                        max: 10
-                                    }
-                                };
-                            // }
+                            instances[0].validValues.precision = {
+                                numberRange: {
+                                    min: 0,
+                                    max: 10
+                                }
+                            };
                             instances[0].validValues.gridlineStrokeWidth = {
                                 numberRange: {
                                     min: 1,
