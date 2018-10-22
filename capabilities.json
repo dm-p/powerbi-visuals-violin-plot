@@ -274,24 +274,6 @@
                         ]
                     }
                 },
-                "start": {
-                    "displayName": "Start",
-                    "displayNameKey": "Visual_YAxis_Start",
-                    "type": {
-                        "numeric": true
-                    },
-                    "placeHolderText": "Auto",
-                    "suppressFormatPainterCopy": true
-                },
-                "end": {
-                    "displayName": "End",
-                    "displayNameKey": "Visual_YAxis_End",
-                    "type": {
-                        "numeric": true
-                    },
-                    "placeHolderText": "Auto",
-                    "suppressFormatPainterCopy": true
-                },
                 "fontColor": {
                     "displayName": "Font color",
                     "type": {
