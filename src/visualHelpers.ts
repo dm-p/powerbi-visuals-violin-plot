@@ -81,6 +81,7 @@ module powerbi.extensibility.visual {
                     || !dataViews[0].categorical
                     || !dataViews[0].categorical.categories[0].source
                     || !dataViews[0].categorical.values
+                    || dataViews[0].categorical.values.length < 1
                     || !dataViews[0].metadata
                 ) {
                     debug.log('Data mapping conditions not met. Returning bare-minimum view model.');
@@ -99,10 +100,13 @@ module powerbi.extensibility.visual {
                 let xAxisHeight = 30;
                 let boxPlotWidth = 15; /** TODO: We'll size this based on series */
 
+                /** Determine if the categories are a singleton or not; can be used to drive the behaviour of the x-axis and y-axis height */
+                    viewModel.categoryCount = values.length;
+
                 /** Assign categorical data and statistics */
-                /** TODO: Manage mapping when no category values are supplied (single violin based on all values) */
                     viewModel.categories = values
                         .map(c => {
+
                             let dataPoints = c.values
                                 .filter(v => v !== null)
                                 .map(v => Number(v))
@@ -112,7 +116,9 @@ module powerbi.extensibility.visual {
                                 allDataPoints = allDataPoints.concat(dataPoints);
 
                             return {                    
-                                name: valueFormatter.format(c.source.groupName, categoryMetadata.format),
+                                name: viewModel.categoryCount > 1
+                                    ?   valueFormatter.format(c.source.groupName, categoryMetadata.format)
+                                    :   null,
                                 dataPoints: dataPoints,
                                 statistics: {
                                     min: d3.min(dataPoints),
@@ -150,7 +156,7 @@ module powerbi.extensibility.visual {
                                 ?   settings.yAxis.precision
                                 :   null
                         });
-console.log(yFormat);
+
                         let yAxis = {
                             padding: {
                                 left: 10
