@@ -223,11 +223,8 @@ module powerbi.extensibility.visual {
                             debug.log('X-axis vertical space...');
                             /** TODO: title and padding */
                             xAxis.dimensions = {
-                                height: settings.xAxis.show 
-                                    ?   (   viewModel.categoryNames
-                                                ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
-                                                :   0
-                                        )
+                                height: settings.xAxis.show && viewModel.categoryNames
+                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
                                         +   xAxis.padding.top
                                     :   0
                             };
