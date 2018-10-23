@@ -10,18 +10,15 @@ module powerbi.extensibility.visual {
             categories: ICategory[];
             categoryCount: number;
             statistics: IStatistics;
-            xAxis: IAxis;
-            yAxis: IAxis;
-            xVaxis: IAxis;
+            xAxis: IAxisCategorical;
+            yAxis: IAxisLinear;
+            xVaxis: IAxisLinear;
         }
 
-        export interface IAxis {
-            range: number[];
-            domain: number[] | string[];
+        interface IAxis {
             ticks: number;
             tickSize: number;
             ticksFormatted: string[];
-            scale: d3.scale.Linear<number, number>;
             generator: d3.svg.Axis;
             dimensions: IDimensions;
             titleTextProperties: TextProperties;
@@ -30,6 +27,18 @@ module powerbi.extensibility.visual {
             labelWidth: number;
             labelHeight: number;
             padding: IPadding;
+        }
+
+        export interface IAxisLinear extends IAxis {
+            domain: number[];
+            range: number[];
+            scale: d3.scale.Linear<number, number>;
+        }
+
+        export interface IAxisCategorical extends IAxis {
+            domain: string[];
+            range: [number, number];
+            scale: d3.scale.Ordinal<string, number>;
         }
 
         /**
