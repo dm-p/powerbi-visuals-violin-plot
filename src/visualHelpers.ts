@@ -271,7 +271,8 @@ module powerbi.extensibility.visual {
                                 );
 
                         /** Now we have y-axis width, do remaining x-axis width stuff */
-                            xAxis.range = [0, options.viewport.width - viewModel.yAxis.dimensions.width];
+                            debug.log('X-Axis ticks and scale...');
+                            xAxis.range = [0, options.viewport.width - yAxis.dimensions.width];
                             xAxis.scale = d3.scale.ordinal()
                                 .domain(xAxis.domain)
                                 .rangeRoundBands(xAxis.range);
