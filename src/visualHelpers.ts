@@ -98,7 +98,6 @@ module powerbi.extensibility.visual {
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
 
                 /** TODO: Remove this with a suitable calculation of the axis height and width */
-                let xAxisHeight = 30;
                 let boxPlotWidth = 15; /** TODO: We'll size this based on series */
 
                 /** Determine if the categories are a singleton or not; can be used to drive the behaviour of the x-axis and y-axis height */
@@ -206,15 +205,33 @@ module powerbi.extensibility.visual {
                     /** X-Axis (initial) */
                         debug.log('Initial X-Axis setup...');
                         let xAxis = {
+                            padding: {
+                                top: 10
+                            },
+                            labelTextProperties: {
+                                fontFamily: settings.xAxis.fontFamily,
+                                fontSize: PixelConverter.toString(settings.xAxis.fontSize),
+                                text: viewModel.categories[0].name
+                            },
                             domain: viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
 
                     /** Axis post-processing */
 
+                        /** X-axis height */
+                            debug.log('X-axis vertical space...');
+                            /** TODO: title and padding */
+                            xAxis.dimensions = {
+                                height: settings.xAxis.show 
+                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
+                                        +   xAxis.padding.top
+                                    :   0
+                            };
+
                         /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
                             debug.log('Y-Axis vertical space...');
                             let yPadVert = settings.yAxis.fontSize / 2,
-                                yHeight = options.viewport.height - yPadVert; /** TODO: manage categorical axis, padding etc. */
+                                yHeight = options.viewport.height - yPadVert - xAxis.dimensions.height;
 
                             yAxis.dimensions = {
                                 height: yHeight,
@@ -243,11 +260,11 @@ module powerbi.extensibility.visual {
                             yAxis.titleDimensions = {
                                 width: (settings.yAxis.show && settings.yAxis.showTitle)
                                     ?   textMeasurementService.measureSvgTextHeight(
-                                            yAxis.titleTextProperties /** TODO make sure text gets set in the properties above when we figure it out */
+                                            yAxis.titleTextProperties
                                         )
                                     :   0,
-                                height: yHeight, /** TODO: manage categorical axis */
-                                x: -yHeight / 2, /** TODO: manage categorical axis */
+                                height: yHeight,
+                                x: -yHeight / 2,
                                 y: 0
                             };
 
