@@ -148,6 +148,7 @@ module powerbi.extensibility.visual {
                     };
 
                     /** Y-axis (initial) */
+                        debug.log('Initial Y-Axis setup...');
                         let yFormat = valueFormatter.create({
                             format: measureMetadata.format,
                             value: settings.yAxis.labelDisplayUnits == 0
@@ -203,6 +204,7 @@ module powerbi.extensibility.visual {
                         } as IAxisLinear;
 
                     /** X-Axis (initial) */
+                        debug.log('Initial X-Axis setup...');
                         let xAxis = {
                             domain: viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
@@ -210,6 +212,7 @@ module powerbi.extensibility.visual {
                     /** Axis post-processing */
 
                         /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
+                            debug.log('Y-Axis vertical space...');
                             let yPadVert = settings.yAxis.fontSize / 2,
                                 yHeight = options.viewport.height - yPadVert; /** TODO: manage categorical axis, padding etc. */
 
@@ -223,6 +226,7 @@ module powerbi.extensibility.visual {
                                 yAxis.dimensions.y
                             ];
 
+                            debug.log('Y-Axis ticks and scale...');
                             yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
                             yAxis.scale = d3.scale.linear()
                                 .domain(yAxis.domain)
@@ -235,6 +239,7 @@ module powerbi.extensibility.visual {
                             ));
 
                         /** Resolve the title dimensions */
+                            debug.log('Y-Axis title sizing...');
                             yAxis.titleDimensions = {
                                 width: (settings.yAxis.show && settings.yAxis.showTitle)
                                     ?   textMeasurementService.measureSvgTextHeight(
@@ -247,6 +252,7 @@ module powerbi.extensibility.visual {
                             };
 
                         /** Find the widest label and use that for our Y-axis width overall */
+                            debug.log('Y-Axis label sizing...');
                             yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
                                 ?   Math.max(
                                         textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
@@ -260,6 +266,7 @@ module powerbi.extensibility.visual {
                             yAxis.dimensions.x = yAxis.titleDimensions.width;
 
                         /** Revise Y-axis properties as necessary */
+                            debug.log('Y-Axis generator functions...');
                             yAxis.generator = d3.svg.axis()
                                 .scale(yAxis.scale)
                                 .orient('left')
@@ -288,6 +295,7 @@ module powerbi.extensibility.visual {
 
                 /** Do Kernel Density Estimator on the vertical X-axis 
                  *  TODO: optimal (or configurable resolution/bandwidth) */
+                    debug.log('Calculating KDE over category values...');
                     let resolution = 100,
                         bandwidth = 20,
                         kde = kernelDensityEstimator(eKernel(bandwidth), viewModel.xVaxis.scale.ticks(resolution));
@@ -311,6 +319,7 @@ module powerbi.extensibility.visual {
                                     .y(d => v.yVScale(d.y));
                         });
 
+            debug.log('View model completely mapped!');
             return viewModel;
 
         }
