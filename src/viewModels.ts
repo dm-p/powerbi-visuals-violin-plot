@@ -8,7 +8,7 @@ module powerbi.extensibility.visual {
 
         export interface IViewModel {
             categories: ICategory[];
-            categoryCount: number;
+            categoryNames: boolean;
             statistics: IStatistics;
             xAxis: IAxisCategorical;
             yAxis: IAxisLinear;

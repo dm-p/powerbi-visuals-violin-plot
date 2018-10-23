@@ -82,7 +82,6 @@ module powerbi.extensibility.visual {
                     || !dataViews[0].categorical
                     || !dataViews[0].categorical.categories[0].source
                     || !dataViews[0].categorical.values
-                    || dataViews[0].categorical.values.length < 1
                     || !dataViews[0].metadata
                 ) {
                     debug.log('Data mapping conditions not met. Returning bare-minimum view model.');
@@ -100,8 +99,10 @@ module powerbi.extensibility.visual {
                 /** TODO: Remove this with a suitable calculation of the axis height and width */
                 let boxPlotWidth = 15; /** TODO: We'll size this based on series */
 
-                /** Determine if the categories are a singleton or not; can be used to drive the behaviour of the x-axis and y-axis height */
-                    viewModel.categoryCount = values.length;
+                /** Determine if we don't have catergory names; can be used to drive the behaviour of the x-axis and y-axis height */
+                    viewModel.categoryNames = values[0].source.groupName
+                        ?   true
+                        :   false;
 
                 /** Assign categorical data and statistics */
                     viewModel.categories = values
@@ -116,7 +117,7 @@ module powerbi.extensibility.visual {
                                 allDataPoints = allDataPoints.concat(dataPoints);
 
                             return {                    
-                                name: viewModel.categoryCount > 1
+                                name: viewModel.categoryNames
                                     ?   valueFormatter.format(c.source.groupName, categoryMetadata.format)
                                     :   null,
                                 dataPoints: dataPoints,
@@ -160,7 +161,7 @@ module powerbi.extensibility.visual {
 
                         let yAxis = {
                             padding: {
-                                left: 10
+                                left: 5
                             },
                             labelTextProperties: {
                                 fontFamily: settings.yAxis.fontFamily,
@@ -223,7 +224,10 @@ module powerbi.extensibility.visual {
                             /** TODO: title and padding */
                             xAxis.dimensions = {
                                 height: settings.xAxis.show 
-                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
+                                    ?   (   viewModel.categoryNames
+                                                ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
+                                                :   0
+                                        )
                                         +   xAxis.padding.top
                                     :   0
                             };
