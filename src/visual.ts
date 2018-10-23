@@ -126,15 +126,6 @@ module powerbi.extensibility.visual {
                             .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
 
                 }
-
-            /** Create an X-axis */
-            let xScale = d3.scale.ordinal()
-                .domain(viewModel.categories.map(d => d.name))
-                .rangeRoundBands([0, options.viewport.width - viewModel.yAxis.dimensions.width])
-
-            let xAxis = d3.svg.axis()
-                .scale(xScale)
-                .orient('bottom')
             
             let xAxisContainer = this.container
                 .append('g')
@@ -150,7 +141,7 @@ module powerbi.extensibility.visual {
                         'grid': true
                     })
                     .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - xAxisHeight})`)
-                .call(xAxis);
+                .call(viewModel.xAxis.generator);
 
             let seriesContainer = this.container.selectAll('.violinPlotContainer')
                 .data(viewModel.categories)
@@ -160,8 +151,8 @@ module powerbi.extensibility.visual {
                         'violinPlotSeries': true
                     })
                     .attr({
-                        'transform': (d) => `translate(${xScale(d.name) + viewModel.yAxis.dimensions.width}, 0)`,
-                        'width': xScale.rangeBand()
+                        'transform': (d) => `translate(${viewModel.xAxis.scale(d.name) + viewModel.yAxis.dimensions.width}, 0)`,
+                        'width': viewModel.xAxis.scale.rangeBand()
                     });
 
             /** Violin plot */
@@ -171,7 +162,7 @@ module powerbi.extensibility.visual {
                         'left': true
                     })
                     .attr({
-                        'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2})`
+                        'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2})`
                     })
                     .append('path')
                         .classed({
@@ -189,7 +180,7 @@ module powerbi.extensibility.visual {
                         'right': true
                     })
                     .attr({
-                        'transform': `rotate(90, 0, 0) translate(0, -${xScale.rangeBand() / 2}) scale(1, -1)`
+                        'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) scale(1, -1)`
                     })
                     .append('path')
                         .classed({
@@ -203,8 +194,8 @@ module powerbi.extensibility.visual {
 
             /** Box plot */
                 let boxPlotWidth = 15; /** TODO into view model */
-                let xLeft = (xScale.rangeBand() / 2) - (boxPlotWidth / 2),
-                    xRight = (xScale.rangeBand() / 2) + (boxPlotWidth / 2)
+                let xLeft = (viewModel.xAxis.scale.rangeBand() / 2) - (boxPlotWidth / 2),
+                    xRight = (viewModel.xAxis.scale.rangeBand() / 2) + (boxPlotWidth / 2)
 
                 seriesContainer.append('rect')
                     .classed({
@@ -258,8 +249,8 @@ module powerbi.extensibility.visual {
                     .classed(whiskerClasses)
                     .classed('range', true)
                     .attr({
-                        'x1': (xScale.rangeBand() / 2),
-                        'x2': (xScale.rangeBand() / 2),
+                        'x1': (viewModel.xAxis.scale.rangeBand() / 2),
+                        'x2': (viewModel.xAxis.scale.rangeBand() / 2),
                         'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower),
                         'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper)
                     })
@@ -286,7 +277,7 @@ module powerbi.extensibility.visual {
                         'outer': true
                     })
                     .attr({
-                        'cx': (xScale.rangeBand() / 2),
+                        'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                         'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
                         'r': boxPlotWidth / 5
                     })
@@ -301,7 +292,7 @@ module powerbi.extensibility.visual {
                         'inner': true
                     })
                     .attr({
-                        'cx': (xScale.rangeBand() / 2),
+                        'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                         'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
                         'r': boxPlotWidth / 10
                     })

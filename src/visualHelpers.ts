@@ -12,7 +12,8 @@ module powerbi.extensibility.visual {
             import ICategory = ViolinPlotModels.ICategory;
             import IStatistics = ViolinPlotModels.IStatistics;
             import IDataPointKde = ViolinPlotModels.IDataPointKde;
-            import IAxis = ViolinPlotModels.IAxis;
+            import IAxisLinear = ViolinPlotModels.IAxisLinear;
+            import IAxisCategorical = ViolinPlotModels.IAxisCategorical;
 
         /** Kernel density estimator - used to produce smoother estimate than a histogram */
         function kernelDensityEstimator(kernel, x) {
@@ -146,7 +147,7 @@ module powerbi.extensibility.visual {
                         propertyName: 'formatString',
                     };
 
-                    /** Y-axis */
+                    /** Y-axis (initial) */
                         let yFormat = valueFormatter.create({
                             format: measureMetadata.format,
                             value: settings.yAxis.labelDisplayUnits == 0
@@ -199,7 +200,14 @@ module powerbi.extensibility.visual {
                                     ?   settings.yAxis.end
                                     :   viewModel.statistics.max,
                             ]
-                        } as IAxis;
+                        } as IAxisLinear;
+
+                    /** X-Axis (initial) */
+                        let xAxis = {
+                            domain: viewModel.categories.map(d => d.name)
+                        } as IAxisCategorical;
+
+                    /** Axis post-processing */
 
                         /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
                             let yPadVert = settings.yAxis.fontSize / 2,
@@ -217,7 +225,7 @@ module powerbi.extensibility.visual {
 
                             yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
                             yAxis.scale = d3.scale.linear()
-                                .domain(<number[]>yAxis.domain)
+                                .domain(yAxis.domain)
                                 .range(yAxis.range)
                                 .nice(yAxis.ticks);
                             yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
@@ -262,7 +270,17 @@ module powerbi.extensibility.visual {
                                     :   ''
                                 );
 
+                        /** Now we have y-axis width, do remaining x-axis width stuff */
+                            xAxis.range = [0, options.viewport.width - viewModel.yAxis.dimensions.width];
+                            xAxis.scale = d3.scale.ordinal()
+                                .domain(xAxis.domain)
+                                .rangeRoundBands(xAxis.range);
+                            xAxis.generator = d3.svg.axis()
+                                .scale(xAxis.scale)
+                                .orient('bottom');
+
                         viewModel.yAxis = yAxis;
+                        viewModel.xAxis = xAxis;
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis;
