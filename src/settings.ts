@@ -61,7 +61,7 @@ module powerbi.extensibility.visual {
         /** Precision */
         public precision: number = null;
         /** Show Title */
-        public showTitle: boolean = true;
+        public showTitle: boolean = false;
         /** Title Style */
         public titleStyle: string = 'title'
         /** Title Colour */
