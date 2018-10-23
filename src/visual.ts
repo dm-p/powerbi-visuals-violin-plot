@@ -70,8 +70,6 @@ module powerbi.extensibility.visual {
             let viewModel = visualTransform(options, this.settings);
             debug.log('View model', viewModel);
 
-            let xAxisHeight = 30;
-
             /** Create a Y axis */
                 if (this.settings.yAxis.show) {
 
@@ -145,7 +143,7 @@ module powerbi.extensibility.visual {
                                 'xAxis': true,
                                 'grid': true
                             })
-                            .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - xAxisHeight})`)
+                            .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - viewModel.xAxis.dimensions.height})`)
                         .call(viewModel.xAxis.generator);
                 }
 
