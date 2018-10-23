@@ -127,33 +127,39 @@ module powerbi.extensibility.visual {
 
                 }
             
-            let xAxisContainer = this.container
-                .append('g')
-                .classed('xAxisContainer', true)
-                    .style({
-                        'stroke-width' : 1 /** TODO: Config */
-                    });
-            
-            let xAxisTicks = xAxisContainer
-                .append('g')
-                    .classed({
-                        'xAxis': true,
-                        'grid': true
-                    })
-                    .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - xAxisHeight})`)
-                .call(viewModel.xAxis.generator);
+            /** Create an X-axis */
+                if (this.settings.xAxis.show) {
+                    let xAxisContainer = this.container
+                        .append('g')
+                        .classed('xAxisContainer', true)
+                            .style({
+                                'font-size': viewModel.xAxis.labelTextProperties.fontSize,
+                                'font-family': this.settings.xAxis.fontFamily,
+                                'fill': this.settings.xAxis.fontColor,
+                                'stroke-width' : 1 /** TODO: Config */
+                            });
+                    
+                    let xAxisTicks = xAxisContainer
+                        .append('g')
+                            .classed({
+                                'xAxis': true,
+                                'grid': true
+                            })
+                            .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - xAxisHeight})`)
+                        .call(viewModel.xAxis.generator);
+                }
 
-            let seriesContainer = this.container.selectAll('.violinPlotContainer')
-                .data(viewModel.categories)
-                .enter()
-                .append('g')
-                    .classed({
-                        'violinPlotSeries': true
-                    })
-                    .attr({
-                        'transform': (d) => `translate(${viewModel.xAxis.scale(d.name) + viewModel.yAxis.dimensions.width}, 0)`,
-                        'width': viewModel.xAxis.scale.rangeBand()
-                    });
+                let seriesContainer = this.container.selectAll('.violinPlotContainer')
+                    .data(viewModel.categories)
+                    .enter()
+                    .append('g')
+                        .classed({
+                            'violinPlotSeries': true
+                        })
+                        .attr({
+                            'transform': (d) => `translate(${viewModel.xAxis.scale(d.name) + viewModel.yAxis.dimensions.width}, 0)`,
+                            'width': viewModel.xAxis.scale.rangeBand()
+                        });
 
             /** Violin plot */
                 let gLeft = seriesContainer.append('g')
