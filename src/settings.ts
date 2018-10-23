@@ -36,6 +36,7 @@ module powerbi.extensibility.visual {
 
     export class VisualSettings extends DataViewObjectsParser {
         public yAxis: yAxisSettings = new yAxisSettings();
+        public xAxis: xAxisSettings = new yAxisSettings();
         public about: aboutSettings = new aboutSettings();
     }
 
@@ -83,6 +84,10 @@ module powerbi.extensibility.visual {
   
       /** Y-axis specific settings */
       export class yAxisSettings extends axisSettings {
+      }
+
+      /** X-axis specific settings */
+      export class xAxisSettings extends axisSettings {          
       }
 
     // Used to hold about info
