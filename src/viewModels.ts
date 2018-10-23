@@ -10,14 +10,14 @@ module powerbi.extensibility.visual {
             categories: ICategory[];
             categoryCount: number;
             statistics: IStatistics;
-            xAxis: axisHelper.IAxisProperties;
+            xAxis: IAxis;
             yAxis: IAxis;
             xVaxis: IAxis;
         }
 
         export interface IAxis {
             range: number[];
-            domain: number[];
+            domain: number[] | string[];
             ticks: number;
             tickSize: number;
             ticksFormatted: string[];

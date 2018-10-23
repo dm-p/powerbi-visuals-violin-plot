@@ -217,7 +217,7 @@ module powerbi.extensibility.visual {
 
                             yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
                             yAxis.scale = d3.scale.linear()
-                                .domain(yAxis.domain)
+                                .domain(<number[]>yAxis.domain)
                                 .range(yAxis.range)
                                 .nice(yAxis.ticks);
                             yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
