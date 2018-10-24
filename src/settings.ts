@@ -36,68 +36,72 @@ module powerbi.extensibility.visual {
 
     export class VisualSettings extends DataViewObjectsParser {
         public yAxis: yAxisSettings = new yAxisSettings();
-        public xAxis: xAxisSettings = new yAxisSettings();
+        public xAxis: xAxisSettings = new xAxisSettings();
         public about: aboutSettings = new aboutSettings();
     }
 
     /** Common axis settings */
-    export class axisSettings {
-        /** Show whole axis */
-        public show: boolean = true;
-        /** Axis range start */
-        public start: number = null;
-        /** Axis range end */
-        public end: number = null;
-        /** Labels */
-        public showLabels: boolean = true;
-        /** Font color */
-        public fontColor: string = defaultFontColor;
-        /** Text Size */
-        public fontSize: number = defaultFontSize;
-        /** Font */
-        public fontFamily: string = defaultFontFamily;
-        /** Display Units */
-        public labelDisplayUnits: number = 0;
-        /** Precision */
-        public precision: number = null;
-        /** Show Title */
-        public showTitle: boolean = false;
-        /** Title Style */
-        public titleStyle: string = 'title'
-        /** Title Colour */
-        public titleColor: string = defaultAxisFontColor;
-        /** Title */
-        public titleText: string = null;
-        /** Title Text Size */
-        public titleFontSize: number = defaultFontSize;
-        /** Title Font */
-        public titleFontFamily: string = defaultFontFamily;
-        /** Gridlines Toggle */
-        public gridlines: boolean = true;
-        /** Gridline colour */
-        public gridlineColor: string = defaultAxisGridlineColor;
-        /** Gridline stroke width */
-        public gridlineStrokeWidth: number = 1;
-        /*8 Gridline line style */
-        public gridlineStrokeLineStyle: string = 'solid';
-      }
-  
-      /** Y-axis specific settings */
-      export class yAxisSettings extends axisSettings {
-      }
+        export class axisSettings {
+            /** Show whole axis */
+            public show: boolean = true;
+            /** Labels */
+            public showLabels: boolean = true;
+            /** Font color */
+            public fontColor: string = defaultFontColor;
+            /** Text Size */
+            public fontSize: number = defaultFontSize;
+            /** Font */
+            public fontFamily: string = defaultFontFamily;
+            /** Display Units */
+            public labelDisplayUnits: number = 0;
+            /** Precision */
+            public precision: number = null;
+            /** Show Title */
+            public showTitle: boolean = false;
+            /** Title Style */
+            public titleStyle: string = 'title'
+            /** Title Colour */
+            public titleColor: string = defaultAxisFontColor;
+            /** Title */
+            public titleText: string = null;
+            /** Title Text Size */
+            public titleFontSize: number = defaultFontSize;
+            /** Title Font */
+            public titleFontFamily: string = defaultFontFamily;
+            /** Gridlines Toggle */
+            public gridlines: boolean = true;
+            /** Gridline colour */
+            public gridlineColor: string = defaultAxisGridlineColor;
+            /** Gridline stroke width */
+            public gridlineStrokeWidth: number = 1;
+            /*8 Gridline line style */
+            public gridlineStrokeLineStyle: string = 'solid';
+        }
 
-      /** X-axis specific settings */
-      export class xAxisSettings extends axisSettings {          
-      }
+    /** Y-axis specific settings */
+        export class yAxisSettings extends axisSettings {
+            constructor() {
+                super();
+                this.gridlines = true;
+            }
+        }
 
-    // Used to hold about info
+    /** X-axis specific settings */
+        export class xAxisSettings extends axisSettings {
+            constructor() {
+                super();
+                this.gridlines = false;
+            }
+        }
+
+    /** Used to hold about info and manage debugging */
     export class aboutSettings {
-      public visualName: string = 'Violin Plot';
-      public version: string = '1.0.0';
-      public debugMode: boolean = false;
-      public debugVisualUpdate: boolean = false;
-      public debugProperties: boolean = false;
-      public development: boolean = true; /** SET TO false FOR RELEASE */
+        public visualName: string = 'Violin Plot';
+        public version: string = '1.0.0';
+        public debugMode: boolean = false;
+        public debugVisualUpdate: boolean = false;
+        public debugProperties: boolean = false;
+        public development: boolean = true; /** SET TO false FOR RELEASE */
     }
 
 }

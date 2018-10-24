@@ -194,12 +194,8 @@ module powerbi.extensibility.visual {
                                 fontSize:PixelConverter.toString(settings.yAxis.titleFontSize)
                             },
                             domain: [
-                                settings.yAxis.start || settings.yAxis.start == 0
-                                    ?   settings.yAxis.start
-                                    :   viewModel.statistics.min,
-                                    settings.yAxis.end || settings.yAxis.end == 0
-                                    ?   settings.yAxis.end
-                                    :   viewModel.statistics.max,
+                                viewModel.statistics.min,
+                                viewModel.statistics.max
                             ]
                         } as IAxisLinear;
 

@@ -332,6 +332,36 @@ module powerbi.extensibility.visual {
 
             /** Apply instance-specific transformations */
                 switch (objectName) {
+                    case 'xAxis': {
+                        /** Label toggle */
+                            if (!this.settings.xAxis.showLabels) {
+                                delete instances[0].properties['fontColor'];
+                                delete instances[0].properties['fontSize'];
+                                delete instances[0].properties['fontFamily'];
+                            }     
+                        /** Gridline toggle */
+                            if (!this.settings.xAxis.gridlines) {
+                                delete instances[0].properties['gridlineColor'];
+                                delete instances[0].properties['gridlineStrokeWidth'];
+                                delete instances[0].properties['gridlineStrokeLineStyle'];
+                            }
+                        /** Title toggle */
+                            if (!this.settings.xAxis.showTitle) {
+                                delete instances[0].properties['titleColor'];
+                                delete instances[0].properties['titleText'];
+                                delete instances[0].properties['titleFontSize'];
+                                delete instances[0].properties['titleFontFamily'];
+                            }
+                        /** Range validation on grid line stroke width */
+                            instances[0].validValues = instances[0].validValues || {};
+                            instances[0].validValues.gridlineStrokeWidth = {
+                                numberRange: {
+                                    min: 1,
+                                    max: 5
+                                },
+                            };
+                        break;
+                    }
                     case 'yAxis': {
                         /** Label toggle */
                             if (!this.settings.yAxis.showLabels) {
