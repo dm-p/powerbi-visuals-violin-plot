@@ -299,7 +299,8 @@ module powerbi.extensibility.visual {
                                 .rangeRoundBands(xAxis.range);
                             xAxis.generator = d3.svg.axis()
                                 .scale(xAxis.scale)
-                                .orient('bottom');
+                                .orient('bottom')
+                                .tickSize(-yAxis.dimensions.height);
 
                         viewModel.yAxis = yAxis;
                         viewModel.xAxis = xAxis;

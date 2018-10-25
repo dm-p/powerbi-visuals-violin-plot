@@ -145,6 +145,17 @@ module powerbi.extensibility.visual {
                             })
                             .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - viewModel.xAxis.dimensions.height})`)
                         .call(viewModel.xAxis.generator);
+
+                    /** Apply gridline styling */
+                        xAxisTicks.selectAll('line')
+                            .attr({
+                                stroke: this.settings.xAxis.gridlineColor,
+                                'stroke-width': this.settings.xAxis.gridlines
+                                    ? this.settings.xAxis.gridlineStrokeWidth
+                                    : 0
+                            })
+                            .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
+
                 }
 
                 let seriesContainer = this.container.selectAll('.violinPlotContainer')
