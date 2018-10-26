@@ -60,6 +60,18 @@
                 }
             }
         },
+        "violin": {
+            "displayName": "Violin Options",
+            "properties": {
+                "strokeWidth": {
+                    "displayName": "Stroke width",
+                    "description": "Width of the lines bordering the violin plot",
+                    "type": {
+                        "integer": true
+                    }
+                }
+            }
+        },
         "yAxis": {
             "displayName": "Y-Axis",
             "properties": {

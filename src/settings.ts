@@ -37,6 +37,7 @@ module powerbi.extensibility.visual {
     export class VisualSettings extends DataViewObjectsParser {
         public yAxis: yAxisSettings = new yAxisSettings();
         public xAxis: xAxisSettings = new xAxisSettings();
+        public violin: violinSettings = new violinSettings();
         public about: aboutSettings = new aboutSettings();
     }
 
@@ -93,6 +94,12 @@ module powerbi.extensibility.visual {
                 this.gridlines = false;
             }
         }
+
+    /** Used to hold violin settings */
+    export class violinSettings {
+        /** Violin line stroke width */
+        public strokeWidth: number = 1;
+    }
 
     /** Used to hold about info and manage debugging */
     export class aboutSettings {

@@ -190,7 +190,7 @@ module powerbi.extensibility.visual {
                             'width': viewModel.xAxis.scale.rangeBand()
                         });
 
-            /** Violin plot */
+            /** Violin plot TODO: make into a function */
                 let gLeft = seriesContainer.append('g')
                     .classed({
                         'violinPlotViolin': true,
@@ -206,7 +206,8 @@ module powerbi.extensibility.visual {
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
-                            'stroke': 'grey'
+                            'stroke': 'grey',
+                            'stroke-width': this.settings.violin.strokeWidth
                         });
 
                 let gRight = seriesContainer.append('g')
@@ -224,7 +225,8 @@ module powerbi.extensibility.visual {
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
-                            'stroke': 'grey'
+                            'stroke': 'grey',
+                            'stroke-width': this.settings.violin.strokeWidth
                         });
 
             /** Box plot */
@@ -363,6 +365,16 @@ module powerbi.extensibility.visual {
 
             /** Apply instance-specific transformations */
                 switch (objectName) {
+                    case 'violin': {
+                        /** Range validation on stroke width */
+                        instances[0].validValues = instances[0].validValues || {};
+                        instances[0].validValues.strokeWidth = {
+                            numberRange: {
+                                min: 0,
+                                max: 5
+                            },
+                        };
+                    }
                     case 'xAxis': {
                         /** Label toggle */
                             if (!this.settings.xAxis.showLabels) {
