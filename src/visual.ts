@@ -156,6 +156,26 @@ module powerbi.extensibility.visual {
                             })
                             .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
+                    /** Add title if required */
+                        if (this.settings.xAxis.showTitle && viewModel.xAxis.titleTextProperties) {
+                            xAxisContainer
+                                .append('text')
+                                    .classed('xAxisTitle', true)
+                                    .attr({
+                                        x: viewModel.xAxis.titleDimensions.x,
+                                        y: viewModel.xAxis.titleDimensions.y,
+                                        dy: '1em'
+                                    })
+                                    .style({
+                                        'text-anchor': 'middle',
+                                        'font-size': viewModel.xAxis.titleTextProperties.fontSize,
+                                        'font-family': this.settings.xAxis.titleFontFamily,
+                                        'fill': this.settings.xAxis.titleColor,
+                                    })
+                                    .text(viewModel.xAxis.titleTextProperties.text)
+                                    /** TODO wrap/ellipsis */
+                        }
+
                 }
 
                 let seriesContainer = this.container.selectAll('.violinPlotContainer')

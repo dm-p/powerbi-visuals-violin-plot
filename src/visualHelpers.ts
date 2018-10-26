@@ -210,6 +210,17 @@ module powerbi.extensibility.visual {
                                 fontSize: PixelConverter.toString(settings.xAxis.fontSize),
                                 text: viewModel.categories[0].name
                             },
+                            titleTextProperties: {
+                                text: !categoryMetadata 
+                                    ?   ''
+                                    :   (!settings.xAxis.titleText 
+                                            ?   categoryMetadata.displayName
+                                            :   settings.xAxis.titleText
+                                        ).trim()
+                                ,
+                                fontFamily: settings.xAxis.titleFontFamily,
+                                fontSize:PixelConverter.toString(settings.xAxis.titleFontSize)
+                            },
                             domain: viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
 
@@ -218,9 +229,15 @@ module powerbi.extensibility.visual {
                         /** X-axis height */
                             debug.log('X-axis vertical space...');
                             /** TODO: title and padding */
+                            xAxis.titleDimensions = {
+                                height: settings.xAxis.show && settings.xAxis.showTitle && xAxis.titleTextProperties.text !== ''
+                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
+                                    :   0
+                            };
                             xAxis.dimensions = {
                                 height: settings.xAxis.show && viewModel.categoryNames
                                     ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
+                                        +   xAxis.titleDimensions.height
                                         +   xAxis.padding.top
                                     :   0
                             };
@@ -255,10 +272,8 @@ module powerbi.extensibility.visual {
                         /** Resolve the title dimensions */
                             debug.log('Y-Axis title sizing...');
                             yAxis.titleDimensions = {
-                                width: (settings.yAxis.show && settings.yAxis.showTitle)
-                                    ?   textMeasurementService.measureSvgTextHeight(
-                                            yAxis.titleTextProperties
-                                        )
+                                width: (settings.yAxis.show && settings.yAxis.showTitle && yAxis.titleTextProperties.text !== '')
+                                    ?   textMeasurementService.measureSvgTextHeight(yAxis.titleTextProperties)
                                     :   0,
                                 height: yHeight,
                                 x: -yHeight / 2,
@@ -278,6 +293,9 @@ module powerbi.extensibility.visual {
                         /** Solve the remaining axis dimensions */
                             yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
                             yAxis.dimensions.x = yAxis.titleDimensions.width;
+                            xAxis.dimensions.width = xAxis.titleDimensions.width = options.viewport.width - yAxis.dimensions.width
+                            xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
+                            xAxis.titleDimensions.y = options.viewport.height - xAxis.titleDimensions.height;
 
                         /** Revise Y-axis properties as necessary */
                             debug.log('Y-Axis generator functions...');
@@ -293,7 +311,7 @@ module powerbi.extensibility.visual {
 
                         /** Now we have y-axis width, do remaining x-axis width stuff */
                             debug.log('X-Axis ticks and scale...');
-                            xAxis.range = [0, options.viewport.width - yAxis.dimensions.width];
+                            xAxis.range = [0, xAxis.dimensions.width];
                             xAxis.scale = d3.scale.ordinal()
                                 .domain(xAxis.domain)
                                 .rangeRoundBands(xAxis.range);
