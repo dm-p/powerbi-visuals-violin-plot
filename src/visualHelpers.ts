@@ -203,7 +203,7 @@ module powerbi.extensibility.visual {
                         debug.log('Initial X-Axis setup...');
                         let xAxis = {
                             padding: {
-                                top: 10
+                                top: 5
                             },
                             labelTextProperties: {
                                 fontFamily: settings.xAxis.fontFamily,
@@ -340,8 +340,13 @@ module powerbi.extensibility.visual {
                                 .filter(d => !v.statistics.min || d.x >= v.statistics.min)
                                 .filter(d => !v.statistics.max || d.x <= v.statistics.max)
 
+                            let violinFullWidth = xAxis.scale.rangeBand() / 2;
                             v.yVScale = d3.scale.linear()
-                                .range([0, boxPlotWidth * 2])
+                                .range([
+                                    0, 
+                                    /** Width of x-axis adjusted for inner padding */
+                                    violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
+                                ])
                                 .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                                 .clamp(true);
 

@@ -367,13 +367,20 @@ module powerbi.extensibility.visual {
                 switch (objectName) {
                     case 'violin': {
                         /** Range validation on stroke width */
-                        instances[0].validValues = instances[0].validValues || {};
-                        instances[0].validValues.strokeWidth = {
-                            numberRange: {
-                                min: 0,
-                                max: 5
-                            },
-                        };
+                            instances[0].validValues = instances[0].validValues || {};
+                            instances[0].validValues.strokeWidth = {
+                                numberRange: {
+                                    min: 0,
+                                    max: 5
+                                },
+                            };
+                        /** Range validation on inner padding (0% - 50%) */
+                            instances[0].validValues.innerPadding = {
+                                numberRange: {
+                                    min: 0,
+                                    max: 50
+                                }
+                            };
                     }
                     case 'xAxis': {
                         /** Label toggle */

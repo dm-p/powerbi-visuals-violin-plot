@@ -98,7 +98,8 @@ module powerbi.extensibility.visual {
     /** Used to hold violin settings */
     export class violinSettings {
         /** Violin line stroke width */
-        public strokeWidth: number = 1;
+        public strokeWidth: number = 2;
+        public innerPadding: number = 20;
     }
 
     /** Used to hold about info and manage debugging */

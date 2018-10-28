@@ -69,6 +69,13 @@
                     "type": {
                         "integer": true
                     }
+                },
+                "innerPadding": {
+                    "displayName": "Inner Padding (%)",
+                    "description": "Amount of padding to apply from the edge of the series",
+                    "type": {
+                        "integer": true
+                    }
                 }
             }
         },
