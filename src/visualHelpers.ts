@@ -15,24 +15,9 @@ module powerbi.extensibility.visual {
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import IAxisCategorical = ViolinPlotModels.IAxisCategorical;
 
-        /** Kernel density estimator - used to produce smoother estimate than a histogram */
-        function kernelDensityEstimator(kernel, x) {
-            return function (sample) {
-                return x.map(function (x) {
-                    return {
-                        x: x, 
-                        y: d3.mean(sample, (v:number) => kernel(x - v))
-                    };
-                });
-            };
-        }
-
-        function eKernel(scale) {
-            return function (u) {
-                return Math.abs(u /= scale) <= 1 ? .75 * (1 - u * u) / scale : 0;
-            };
-            
-        }
+        /** KDE helpers */
+            import IKernel = KDE.IKernel;
+            import kernelDensityEstimator = KDE.kernelDensityEstimator;      
 
         export class VisualDebugger {
             enabled: boolean = false;
@@ -96,9 +81,6 @@ module powerbi.extensibility.visual {
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
 
-                /** TODO: Remove this with a suitable calculation of the axis height and width */
-                let boxPlotWidth = 15; /** TODO: We'll size this based on series */
-
                 /** Determine if we don't have catergory names; can be used to drive the behaviour of the x-axis and y-axis height */
                     viewModel.categoryNames = values[0].source.groupName
                         ?   true
@@ -129,7 +111,10 @@ module powerbi.extensibility.visual {
                                     mean: d3.mean(dataPoints),
                                     quartile3: d3.quantile(dataPoints, 0.75),
                                     confidenceUpper: d3.quantile(dataPoints, 0.95),
-                                    max: d3.max(dataPoints)
+                                    max: d3.max(dataPoints),
+                                    deviation: d3.deviation(dataPoints),
+                                    iqr: d3.quantile(dataPoints, 0.75) - d3.quantile(dataPoints, 0.25),
+                                    span: d3.max(dataPoints) - d3.min(dataPoints)
                                 }
                             } as ICategory;
                         });
@@ -138,8 +123,44 @@ module powerbi.extensibility.visual {
                     allDataPoints.sort(d3.ascending);
                     viewModel.statistics = {
                         min: d3.min(allDataPoints),
-                        max: d3.max(allDataPoints)
+                        max: d3.max(allDataPoints),
+                        deviation: d3.deviation(allDataPoints),
+                        iqr: d3.quantile(allDataPoints, 0.75) - d3.quantile(allDataPoints, 0.25),
+                        span: d3.max(allDataPoints) - d3.min(allDataPoints)
                     } as IStatistics;
+
+                /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
+                 *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking
+                 *  at potentially different sub-ranges of data in groups). Also, if we wish to apply a manual override for bandwidth,
+                 *  then the custom viz framework doesn't let us tailor this per series very easily.
+                 * 
+                 *  Sources: 
+                 *      - https://core.ac.uk/download/pdf/6591111.pdf
+                 *      - https://www.bauer.uh.edu/rsusmel/phd/ec1-26.pdf
+                 *      - https://en.wikipedia.org/wiki/Kernel_density_estimation#A_rule-of-thumb_bandwidth_estimator
+                 *      - https://stats.stackexchange.com/a/6671
+                 *      - https://www.ssc.wisc.edu/~bhansen/718/NonParametrics1.pdf
+                */
+                    let kernel = {} as IKernel;
+                    if (settings.violin.type == 'line') {
+                    
+                        /** Sigma function to account for outliers */
+                            let bwSigma = Math.min(viewModel.statistics.deviation, viewModel.statistics.iqr / 1.349);
+                            
+                        /** Allocate the selected kernel from the properties pane */
+                            debug.log(`Using ${settings.violin.kernel} kernel`);
+                            kernel = KDE.kernels[settings.violin.kernel];
+
+                        /** Because bandwidth is subjective, we use Silverman's rule-of-thumb to try and predict the bandwidth based on the spread of data.
+                            *  The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
+                            *  to obtain from the tooltip, should they wish to 
+                            */
+                            viewModel.statistics.bandwidthSilverman = kernel.factor * bwSigma * Math.pow(allDataPoints.length, -1/5);
+                            viewModel.statistics.bandwidthActual = settings.violin.specifyBandwidth && settings.violin.bandwidth
+                                ?   settings.violin.bandwidth
+                                :   viewModel.statistics.bandwidthSilverman;
+
+                    }
 
                 /** Add axis properties */
                     let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
@@ -228,7 +249,6 @@ module powerbi.extensibility.visual {
 
                         /** X-axis height */
                             debug.log('X-axis vertical space...');
-                            /** TODO: title and padding */
                             xAxis.titleDimensions = {
                                 height: settings.xAxis.show && settings.xAxis.showTitle && xAxis.titleTextProperties.text !== ''
                                     ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
@@ -326,36 +346,44 @@ module powerbi.extensibility.visual {
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis;
 
-                /** Do Kernel Density Estimator on the vertical X-axis 
-                 *  TODO: optimal (or configurable resolution/bandwidth) */
-                    debug.log('Calculating KDE over category values...');
-                    let resolution = 100,
-                        bandwidth = 20,
-                        kde = kernelDensityEstimator(eKernel(bandwidth), viewModel.xVaxis.scale.ticks(resolution));
+                /** Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin */
+                    if (settings.violin.type == 'line') {
+                    
+                        debug.log('Kernel Density Estimation...');
 
-                    /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
-                        viewModel.categories.map(v => {
-                            v.dataKde = kde(v.dataPoints)
-                                /** TODO: this clamps to the data but can look ugly we should offer the option to smooth out the data to a converged point if so desired */
-                                .filter(d => !v.statistics.min || d.x >= v.statistics.min)
-                                .filter(d => !v.statistics.max || d.x <= v.statistics.max)
+                        /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
+                            viewModel.categories.map(v => {
 
-                            let violinFullWidth = xAxis.scale.rangeBand() / 2;
-                            v.yVScale = d3.scale.linear()
-                                .range([
-                                    0, 
-                                    /** Width of x-axis adjusted for inner padding */
-                                    violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
-                                ])
-                                .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
-                                .clamp(true);
+                                /** Through analysis, the resolution seems to matter at approximately 2%, 5%, 10%, 20% and 60% of the range. 
+                                 *  This may cause problems at high value ranges, as the amount of sampling gets somewhat crazy for not much tradeoff, so 
+                                 */
+                                    let kde = kernelDensityEstimator(
+                                            kernel.window(viewModel.statistics.bandwidthActual),
+                                            viewModel.xVaxis.scale.ticks(parseInt(settings.violin.resolution))
+                                        );
 
-                            /** Now we have our scaling, we can generate the line function for each series */
-                                v.lineGen = d3.svg.line<IDataPointKde>()
-                                    .interpolate('basis') /** TODO: configurable interpolation (sensible ones) */
-                                    .x(d => viewModel.xVaxis.scale(d.x))
-                                    .y(d => v.yVScale(d.y));
-                        });
+                                    v.dataKde = kde(v.dataPoints)
+                                        /** TODO: this clamps to the data but can look ugly we should offer the option to smooth out the data to a converged point if so desired */
+                                        .filter(d => !v.statistics.min || d.x >= v.statistics.min)
+                                        .filter(d => !v.statistics.max || d.x <= v.statistics.max)
+                                        
+                                    let violinFullWidth = xAxis.scale.rangeBand() / 2;
+                                    v.yVScale = d3.scale.linear()
+                                        .range([
+                                            0, 
+                                            /** Width of x-axis adjusted for inner padding */
+                                            violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
+                                        ])
+                                        .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
+                                        .clamp(true);
+
+                                    /** Now we have our scaling, we can generate the line function for each series */
+                                        v.lineGen = d3.svg.line<IDataPointKde>()
+                                            .interpolate('basis') /** TODO: configurable interpolation (sensible ones) */
+                                            .x(d => viewModel.xVaxis.scale(d.x))
+                                            .y(d => v.yVScale(d.y));
+                            });
+                    }
 
             debug.log('View model completely mapped!');
             return viewModel;

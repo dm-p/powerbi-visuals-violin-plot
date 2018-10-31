@@ -191,43 +191,47 @@ module powerbi.extensibility.visual {
                         });
 
             /** Violin plot TODO: make into a function */
-                let gLeft = seriesContainer.append('g')
-                    .classed({
-                        'violinPlotViolin': true,
-                        'left': true
-                    })
-                    .attr({
-                        'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2})`
-                    })
-                    .append('path')
-                        .classed({
-                            'violinPlotViolinLine': true
-                        })
-                        .attr('d', d => d.lineGen(d.dataKde))
-                        .style({
-                            'fill': 'none',
-                            'stroke': 'grey',
-                            'stroke-width': this.settings.violin.strokeWidth
-                        });
+                if (this.settings.violin.type == 'line') {
 
-                let gRight = seriesContainer.append('g')
-                    .classed({
-                        'violinPlotViolin': true,
-                        'right': true
-                    })
-                    .attr({
-                        'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) scale(1, -1)`
-                    })
-                    .append('path')
+                    let gLeft = seriesContainer.append('g')
                         .classed({
-                            'violinPlotViolinLine': true
+                            'violinPlotViolin': true,
+                            'left': true
                         })
-                        .attr('d', d => d.lineGen(d.dataKde))
-                        .style({
-                            'fill': 'none',
-                            'stroke': 'grey',
-                            'stroke-width': this.settings.violin.strokeWidth
-                        });
+                        .attr({
+                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2})`
+                        })
+                        .append('path')
+                            .classed({
+                                'violinPlotViolinLine': true
+                            })
+                            .attr('d', d => d.lineGen(d.dataKde))
+                            .style({
+                                'fill': 'none',
+                                'stroke': 'grey',
+                                'stroke-width': this.settings.violin.strokeWidth
+                            });
+
+                    let gRight = seriesContainer.append('g')
+                        .classed({
+                            'violinPlotViolin': true,
+                            'right': true
+                        })
+                        .attr({
+                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) scale(1, -1)`
+                        })
+                        .append('path')
+                            .classed({
+                                'violinPlotViolinLine': true
+                            })
+                            .attr('d', d => d.lineGen(d.dataKde))
+                            .style({
+                                'fill': 'none',
+                                'stroke': 'grey',
+                                'stroke-width': this.settings.violin.strokeWidth
+                            });
+
+                }
 
             /** Box plot */
                 let boxPlotWidth = 15; /** TODO into view model */
@@ -380,6 +384,17 @@ module powerbi.extensibility.visual {
                                     min: 0,
                                     max: 50
                                 }
+                            };
+                        /** Range validation on resolution */
+                            instances[0].validValues.resolution = {
+                                numberRange: {
+                                    min: 10,
+                                    max: 100
+                                }
+                            };
+                        /** Manual bandwidth toggle */
+                            if (!this.settings.violin.specifyBandwidth) {
+                                delete instances[0].properties['bandwidth'];
                             };
                     }
                     case 'xAxis': {

@@ -84,6 +84,11 @@ module powerbi.extensibility.visual {
             quartile3: number;
             confidenceUpper: number;
             max: number;
+            deviation: number;
+            iqr: number;
+            span: number;
+            bandwidthSilverman: number;
+            bandwidthActual: number;
         }
 
         export interface IDataPointKde {
