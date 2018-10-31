@@ -99,7 +99,18 @@ module powerbi.extensibility.visual {
     export class violinSettings {
         /** Violin line stroke width */
         public strokeWidth: number = 2;
+        /** how far to pad the violin from the outside of the x-range band */
         public innerPadding: number = 20;
+        /** Violin type - currently `line` only */
+        public type: string = 'line';
+        /** Resolution to use when binning the violin plot */
+        public resolution: string = '25';
+        /** Kernel to use for line generation */
+        public kernel: string = 'gaussian';
+        /** Specify manual bandwidth */
+        public specifyBandwidth: boolean = false;
+        /** Manual bandwidth */
+        public bandwidth: number = 10;
     }
 
     /** Used to hold about info and manage debugging */
