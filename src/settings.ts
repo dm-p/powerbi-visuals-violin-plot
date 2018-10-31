@@ -106,7 +106,7 @@ module powerbi.extensibility.visual {
         /** Resolution to use when binning the violin plot */
         public resolution: string = '25';
         /** Kernel to use for line generation */
-        public kernel: string = 'gaussian';
+        public kernel: string = 'epanechnikov';
         /** Specify manual bandwidth */
         public specifyBandwidth: boolean = false;
         /** Manual bandwidth */

@@ -361,7 +361,8 @@ module powerbi.extensibility.visual {
                                  *  process sufficiently straigthforward for the end-user...
                                  */
                                     let kde = kernelDensityEstimator(
-                                            kernel.window(viewModel.statistics.bandwidthActual),
+                                            kernel,
+                                            viewModel.statistics.bandwidthActual,
                                             viewModel.xVaxis.scale.ticks(parseInt(settings.violin.resolution))
                                         );
 

@@ -82,6 +82,10 @@
                             {
                                 "displayName": "Quartic",
                                 "value": "quartic"
+                            },
+                            {
+                                "displayName": "Triweight",
+                                "value": "triweight"
                             }
                         ]
                     }
