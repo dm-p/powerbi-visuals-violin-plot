@@ -354,8 +354,11 @@ module powerbi.extensibility.visual {
                         /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
                             viewModel.categories.map(v => {
 
-                                /** Through analysis, the resolution seems to matter at approximately 2%, 5%, 10%, 20% and 60% of the range. 
-                                 *  This may cause problems at high value ranges, as the amount of sampling gets somewhat crazy for not much tradeoff, so 
+                                /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
+                                 *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
+                                 *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
+                                 *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the 
+                                 *  process sufficiently straigthforward for the end-user...
                                  */
                                     let kde = kernelDensityEstimator(
                                             kernel.window(viewModel.statistics.bandwidthActual),
