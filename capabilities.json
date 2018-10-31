@@ -25,41 +25,6 @@
         }
     ],
     "objects": {
-        "about": {
-            "displayName": "About",
-            "properties": {
-                "visualName": {
-                    "displayName": "Visual Name",
-                    "type": {
-                        "text": true
-                    }
-                },
-                "version": {
-                    "displayName": "Version",
-                    "type": {
-                        "text": true
-                    }
-                },
-                "debugMode": {
-                    "displayName": "Debug",
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "debugVisualUpdate": {
-                    "displayName": "Visual Update",
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "debugProperties": {
-                    "displayName": "Properties",
-                    "type": {
-                        "bool": true
-                    }
-                }
-            }
-        },
         "violin": {
             "displayName": "Violin Options",
             "properties": {
@@ -75,6 +40,63 @@
                     "description": "Amount of padding to apply from the edge of the series",
                     "type": {
                         "integer": true
+                    }
+                },
+                "resolution": {
+                    "displayName": "Sampling Resolution",
+                    "description": "TBD",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Low",
+                                "value": "10"
+                            },
+                            {
+                                "displayName": "Standard",
+                                "value": "25"
+                            },
+                            {
+                                "displayName": "High",
+                                "value": "50"
+                            },
+                            {
+                                "displayName": "Very High",
+                                "value": "100"
+                            }
+                        ]
+                    }
+                },
+                "kernel": {
+                    "displayName": "Kernel",
+                    "description": "TBD",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Epanechnikov",
+                                "value": "epanechnikov"
+                            },
+                            {
+                                "displayName": "Gaussian",
+                                "value": "gaussian"
+                            },
+                            {
+                                "displayName": "Quartic",
+                                "value": "quartic"
+                            }
+                        ]
+                    }
+                },
+                "specifyBandwidth": {
+                    "displayName": "Specify bandwidth",
+                    "placeHolderText": "Specify Number",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "bandwidth": {
+                    "displayName": "Bandwidth",
+                    "type": {
+                        "numeric": true
                     }
                 }
             }
@@ -750,6 +772,41 @@
                     }
                 }
             }
+        },
+        "about": {
+            "displayName": "About",
+            "properties": {
+                "visualName": {
+                    "displayName": "Visual Name",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "version": {
+                    "displayName": "Version",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "debugMode": {
+                    "displayName": "Debug",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "debugVisualUpdate": {
+                    "displayName": "Visual Update",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "debugProperties": {
+                    "displayName": "Properties",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -787,5 +844,10 @@
                 }
             }
         }
-    ]
+    ],
+    "sorting": {
+        "default": {
+            
+        }
+    }
 }
