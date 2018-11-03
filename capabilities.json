@@ -28,6 +28,13 @@
         "violin": {
             "displayName": "Violin Options",
             "properties": {
+                "innerPadding": {
+                    "displayName": "Inner padding (%)",
+                    "description": "Amount of padding to apply from the edge of the series",
+                    "type": {
+                        "integer": true
+                    }
+                },
                 "strokeWidth": {
                     "displayName": "Stroke width",
                     "description": "Width of the lines bordering the violin plot",
@@ -35,15 +42,15 @@
                         "integer": true
                     }
                 },
-                "innerPadding": {
-                    "displayName": "Inner Padding (%)",
-                    "description": "Amount of padding to apply from the edge of the series",
+                "clamp": {
+                    "displayName": "Clamp to min/max",
+                    "description": "TBD",
                     "type": {
-                        "integer": true
+                        "bool": true
                     }
                 },
                 "resolution": {
-                    "displayName": "Sampling Resolution",
+                    "displayName": "Sampling resolution",
                     "description": "TBD",
                     "type": {
                         "enumeration": [
@@ -92,6 +99,7 @@
                 },
                 "specifyBandwidth": {
                     "displayName": "Specify bandwidth",
+                    "description": "TBD",
                     "placeHolderText": "Specify Number",
                     "type": {
                         "bool": true
@@ -99,6 +107,7 @@
                 },
                 "bandwidth": {
                     "displayName": "Bandwidth",
+                    "description": "TBD",
                     "type": {
                         "numeric": true
                     }

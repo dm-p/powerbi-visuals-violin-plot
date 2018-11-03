@@ -392,6 +392,14 @@ module powerbi.extensibility.visual {
                                     max: 100
                                 }
                             };
+                        /** Enable options for different violin types (currently only line) */
+                            if (this.settings.violin.type !== 'line') {
+                                delete instances[0].properties['strokeWidth'];
+                                delete instances[0].properties['clamp'];
+                                delete instances[0].properties['resolution'];
+                                delete instances[0].properties['kernel'];
+                                delete instances[0].properties['specifyBandwidth'];
+                            }
                         /** Manual bandwidth toggle */
                             if (!this.settings.violin.specifyBandwidth) {
                                 delete instances[0].properties['bandwidth'];
