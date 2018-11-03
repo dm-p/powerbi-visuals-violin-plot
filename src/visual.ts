@@ -209,7 +209,8 @@ module powerbi.extensibility.visual {
                             .style({
                                 'fill': 'none',
                                 'stroke': 'grey',
-                                'stroke-width': this.settings.violin.strokeWidth
+                                'stroke-width': this.settings.violin.strokeWidth,
+                                'stroke-linecap': 'round'
                             });
 
                     let gRight = seriesContainer.append('g')
