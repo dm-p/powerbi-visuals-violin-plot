@@ -14,17 +14,30 @@ module powerbi.extensibility.visual {
             triweight: IKernel;
         }
 
+        /** We get some funky floating point issues when calculating KDE when the result gets near to,
+         *  but not quite, zero and this gives us some issues when attempting to converge the extremes
+         *  into a nice point. This will allow us to treat sufficient small values as zero. 
+         *  Courtesy of http://www.jacklmoore.com/notes/rounding-in-javascript/
+         */
+            export function round(value: number, decimals: number) {
+                return Number(Math.round(Number(value + 'e' + decimals)) + 'e-' + decimals);             
+            }
+
         /** Kernel density estimator - used to produce smoother estimate than a histogram */
             export function kernelDensityEstimator(kernel, bandwidth: number, values: number[]) {
                 return (sample) => {
                     return values.map((x) => {
+                        let y = round(
+                            d3.mean(sample, (v:number) => kernel.window((x - v) / bandwidth)),
+                            3
+                        );
                         return {
                             x: x, 
-                            y: d3.mean(sample, (v:number) => kernel.window((x - v) / bandwidth))
+                            y: isNaN(y) ? 0 : y
                         };
                     });
-                };            
-            }  
+                };
+            }
 
         export var kernels: IKernels = {
             epanechnikov: {
