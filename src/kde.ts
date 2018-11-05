@@ -43,6 +43,12 @@ module powerbi.extensibility.visual {
                     }
                 }
 
+            /** Enum specifying which values are acceptable for using limits */
+                export enum ELimit {
+                    min,
+                    max
+                }
+
             /**
              * Recursively call the specified `kernelDensityRoot` function until a suitable interpolation/convergence
              * point is found. If not, jump out before we get too far away from our data's min/max values.
@@ -51,11 +57,6 @@ module powerbi.extensibility.visual {
              * @param limit         Whether the limit is a `min` or `max`
              * @param kdeRoot 
              */
-                export enum ELimit {
-                    min,
-                    max
-                }
-
                 export function kernelDensityInterpolator(value: number, limit: ELimit, kdeRoot) {
                     let interY = kdeRoot(value),
                         interX = value,
