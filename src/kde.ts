@@ -71,9 +71,6 @@ module powerbi.extensibility.visual {
                                 interX -= 1;
                                 break;
                             }
-                            default: {
-                                count = 0;
-                            }
                         }
                         interY = kdeRoot(interX);
                         count -= 1;
