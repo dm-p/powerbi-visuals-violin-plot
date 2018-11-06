@@ -98,8 +98,10 @@ module powerbi.extensibility.visual {
 
     /** Used to hold violin settings */
     export class violinSettings {
-        /** how far to pad the violin from the outside of the x-range band */
+        /** How far to pad the violin from the outside of the x-range band */
         public innerPadding: number = 20;
+        /** How transparent the violin fill should be */
+        public transparency: number = 40;
         /** Violin type - currently `line` only */
         public type: string = 'line';
         /** Violin line stroke width */
