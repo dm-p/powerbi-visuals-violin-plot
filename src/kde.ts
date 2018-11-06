@@ -108,7 +108,11 @@ module powerbi.extensibility.visual {
                 gaussian: {
                     factor: 1.059,
                     window: function(u) {
-                        return 1 / Math.sqrt(2 * Math.PI) * Math.exp(-.5 * u * u);
+                        /** With gaussian, we get a number tending towards zero but never reaching it for some distributions of data,
+                         *  which can cause the interpolation to go on forever as it will never find a zero value. To mitigate this,
+                         *  we cap the result at 4 decimal places, which is not great but preserves a representative violin shape.
+                         */
+                        return parseFloat((1 / Math.sqrt(2 * Math.PI) * Math.exp(-.5 * u * u)).toFixed(4));
                     }
                 },
                 quartic: {
