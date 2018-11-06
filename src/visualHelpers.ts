@@ -553,38 +553,67 @@ module powerbi.extensibility.visual {
 
         }
 
-        function renderViolinLine(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, side: EViolinSide) {
-            seriesContainer.append('g')
-                .classed({
-                    'violinPlotViolin': true
-                })
-                .classed(`${side}`, true)
-                .attr({
-                    'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`
-                })
-                .append('path')
-                    .classed({
-                        'violinPlotViolinLine': true
-                    })
-                    .attr('d', d => d.lineGen(d.dataKde))
-                    .style({
-                        'fill': 'none',
-                        'stroke': 'grey',
-                        'stroke-width': settings.violin.strokeWidth,
-                        'stroke-linecap': 'round'
-                    });
-        }
+        /**
+         * Render SVG line and area for a given violin series
+         * 
+         * @param seriesContainer   The element to apply the SVG rendering to
+         * @param viewModel         The view model object to use
+         * @param settings          Visual settings
+         * @param side              The side to render the plot on (we need two plots per series for a violin)
+         */
+            function renderViolinLine(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, side: EViolinSide) {
+                
+                /** Add the violin side container */
+                    let violinContainer = seriesContainer.append('g')
+                        .classed({
+                            'violinPlotViolin': true
+                        })
+                        .classed(`${EViolinSide[side]}`, true)
+                        .attr({
+                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`
+                        });
 
-        export function renderViolin(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+                /** Area - no point bothering if we're fully transparent */
+                    if (settings.violin.transparency != 100) {
+                        violinContainer.append('path')
+                            .classed('violinPlotViolinArea', true)
+                            .attr('d', d => d.areaGen(d.dataKde))
+                            .style({
+                                'fill': 'rgb(1, 184, 170)',
+                                'fill-opacity': 1 - (settings.violin.transparency / 100),
+                            });
+                    }
 
-            if (settings.violin.type == 'line') {
-
-                renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.left);
-                renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.right);
+                /** Line  */
+                    violinContainer.append('path')
+                        .classed('violinPlotViolinLine', true)
+                        .attr('d', d => d.lineGen(d.dataKde))
+                        .style({
+                            'fill': 'none',
+                            'stroke': 'rgb(1, 184, 170)',
+                            'stroke-width': settings.violin.strokeWidth,
+                            'stroke-linecap': 'round'
+                        });
 
             }
 
-        }
+        /**
+         * Handle rendering of the violin based on the selected type
+         * 
+         * @param seriesContainer   The element to apply the SVG rendering to
+         * @param viewModel         The view model object to use
+         * @param settings          Visual settings
+         */
+            export function renderViolin(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+
+                if (settings.violin.type == 'line') {
+
+                    renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.left);
+                    renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.right);
+
+                }
+
+            }
 
     }
 }
