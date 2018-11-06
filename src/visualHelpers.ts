@@ -509,15 +509,16 @@ module powerbi.extensibility.visual {
                                                     .filter(d => !interpolateMax || (d.x <= interpolateMax && d.y != 0));
                                         }
                                         
-                                    let violinFullWidth = xAxis.scale.rangeBand() / 2;
-                                    v.yVScale = d3.scale.linear()
-                                        .range([
-                                            0, 
-                                            /** Width of x-axis adjusted for inner padding */
-                                            violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
-                                        ])
-                                        .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
-                                        .clamp(true);
+                                    /** Adjust violin scale to account for inner padding preferences */
+                                        let violinFullWidth = xAxis.scale.rangeBand() / 2;
+                                        v.yVScale = d3.scale.linear()
+                                            .range([
+                                                0, 
+                                                /** Width of x-axis adjusted for inner padding */
+                                                violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
+                                            ])
+                                            .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
+                                            .clamp(true);
 
                                     /** Now we have our scaling, we can generate the line function for each series */
                                         v.lineGen = d3.svg.line<IDataPointKde>()
