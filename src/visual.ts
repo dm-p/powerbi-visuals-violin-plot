@@ -27,11 +27,9 @@
 module powerbi.extensibility.visual {
     'use strict';
 
-    import axisHelper = powerbi.extensibility.utils.chart.axis;
-    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
-    import ValueType = powerbi.extensibility.utils.type.ValueType;
     import visualTransform = ViolinPlotHelpers.visualTransform;
     import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
+    import renderViolin = ViolinPlotHelpers.renderViolin;
 
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -193,49 +191,7 @@ module powerbi.extensibility.visual {
                         });
 
             /** Violin plot TODO: make into a function */
-                if (this.settings.violin.type == 'line') {
-
-                    let gLeft = seriesContainer.append('g')
-                        .classed({
-                            'violinPlotViolin': true,
-                            'left': true
-                        })
-                        .attr({
-                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2})`
-                        })
-                        .append('path')
-                            .classed({
-                                'violinPlotViolinLine': true
-                            })
-                            .attr('d', d => d.lineGen(d.dataKde))
-                            .style({
-                                'fill': 'none',
-                                'stroke': 'grey',
-                                'stroke-width': this.settings.violin.strokeWidth,
-                                'stroke-linecap': 'round'
-                            });
-
-                    let gRight = seriesContainer.append('g')
-                        .classed({
-                            'violinPlotViolin': true,
-                            'right': true
-                        })
-                        .attr({
-                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) scale(1, -1)`
-                        })
-                        .append('path')
-                            .classed({
-                                'violinPlotViolinLine': true
-                            })
-                            .attr('d', d => d.lineGen(d.dataKde))
-                            .style({
-                                'fill': 'none',
-                                'stroke': 'grey',
-                                'stroke-width': this.settings.violin.strokeWidth,
-                                'stroke-linecap': 'round'
-                            });
-
-                }
+                renderViolin(seriesContainer, viewModel, this.settings);
 
             /** Box plot */
                 if (this.settings.boxPlot.show) {

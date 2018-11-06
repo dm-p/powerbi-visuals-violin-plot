@@ -14,6 +14,7 @@ module powerbi.extensibility.visual {
             import IDataPointKde = ViolinPlotModels.IDataPointKde;
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import IAxisCategorical = ViolinPlotModels.IAxisCategorical;
+            import EViolinSide = ViolinPlotModels.EViolinSide;
 
         /** KDE helpers */
             import IKernel = KDE.IKernel;
@@ -543,6 +544,39 @@ module powerbi.extensibility.visual {
 
             debug.log('View model completely mapped!');
             return viewModel;
+
+        }
+
+        function renderViolinLine(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, side: EViolinSide) {
+            seriesContainer.append('g')
+                .classed({
+                    'violinPlotViolin': true
+                })
+                .classed(`${side}`, true)
+                .attr({
+                    'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`
+                })
+                .append('path')
+                    .classed({
+                        'violinPlotViolinLine': true
+                    })
+                    .attr('d', d => d.lineGen(d.dataKde))
+                    .style({
+                        'fill': 'none',
+                        'stroke': 'grey',
+                        'stroke-width': settings.violin.strokeWidth,
+                        'stroke-linecap': 'round'
+                    });
+        }
+
+        export function renderViolin(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+
+            if (settings.violin.type == 'line') {
+
+                renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.left);
+                renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.right);
+
+            }
 
         }
 

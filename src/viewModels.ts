@@ -97,6 +97,11 @@ module powerbi.extensibility.visual {
             remove: boolean;
         }
 
+        export enum EViolinSide {
+            left,
+            right
+        }
+
     }
 
 }
