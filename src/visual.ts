@@ -351,7 +351,7 @@ module powerbi.extensibility.visual {
                             instances[0].validValues = instances[0].validValues || {};
                             instances[0].validValues.strokeWidth = {
                                 numberRange: {
-                                    min: 0,
+                                    min: 1,
                                     max: 5
                                 },
                             };
@@ -360,13 +360,6 @@ module powerbi.extensibility.visual {
                                 numberRange: {
                                     min: 0,
                                     max: 50
-                                }
-                            };
-                        /** Range validation on resolution */
-                            instances[0].validValues.resolution = {
-                                numberRange: {
-                                    min: 10,
-                                    max: 100
                                 }
                             };
                         /** Enable options for different violin types (currently only line) */
