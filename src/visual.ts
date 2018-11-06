@@ -366,6 +366,7 @@ module powerbi.extensibility.visual {
                             if (this.settings.violin.type !== 'line') {
                                 delete instances[0].properties['strokeWidth'];
                                 delete instances[0].properties['clamp'];
+                                delete instances[0].properties['lineType'];
                                 delete instances[0].properties['resolution'];
                                 delete instances[0].properties['kernel'];
                                 delete instances[0].properties['specifyBandwidth'];

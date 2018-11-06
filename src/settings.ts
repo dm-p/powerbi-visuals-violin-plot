@@ -108,6 +108,8 @@ module powerbi.extensibility.visual {
         public strokeWidth: number = 2;
         /** Clamp values to min/max or converge */
         public clamp: boolean = false;
+        /** Line interpolation */
+        public lineType: string = 'basis';
         /** Resolution to use when binning the violin plot */
         public resolution: string = '25';
         /** Kernel to use for line generation */

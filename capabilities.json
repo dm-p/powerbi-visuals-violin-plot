@@ -56,6 +56,22 @@
                         "bool": true
                     }
                 },
+                "lineType": {
+                    "displayName": "Line type",
+                    "description": "Specify how the violin line points are plotted",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Curved",
+                                "value": "basis"
+                            },
+                            {
+                                "displayName": "Straight",
+                                "value": "linear"
+                            }
+                        ]
+                    }
+                },
                 "resolution": {
                     "displayName": "Sampling resolution",
                     "description": "TBD",

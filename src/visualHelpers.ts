@@ -523,13 +523,12 @@ module powerbi.extensibility.visual {
 
                                     /** Now we have our scaling, we can generate the functions for each series */
                                         v.lineGen = d3.svg.line<IDataPointKde>()
-                                            .interpolate('basis') /** TODO: configurable interpolation (sensible ones) */
+                                            .interpolate(settings.violin.lineType)
                                             .x(d => viewModel.xVaxis.scale(d.x))
                                             .y(d => v.yVScale(d.y));
                                         v.areaGen = d3.svg.area<IDataPointKde>()
-                                            .interpolate('basis')
+                                            .interpolate(settings.violin.lineType)
                                             .x(d => viewModel.xVaxis.scale(d.x))
-                                            .y0(0)
                                             .y1(d => v.yVScale(d.y));
 
                             });
