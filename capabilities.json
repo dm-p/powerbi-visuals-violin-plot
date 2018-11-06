@@ -114,6 +114,17 @@
                 }
             }
         },
+        "boxPlot": {
+            "displayName": "Box Plot",
+            "properties": {
+                "show": {
+                    "displayName": "Enable/disable Y-Axis",
+                    "type": {
+                        "bool": true
+                    }
+                }                
+            }
+        },
         "yAxis": {
             "displayName": "Y-Axis",
             "properties": {

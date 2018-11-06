@@ -38,6 +38,7 @@ module powerbi.extensibility.visual {
         public yAxis: yAxisSettings = new yAxisSettings();
         public xAxis: xAxisSettings = new xAxisSettings();
         public violin: violinSettings = new violinSettings();
+        public boxPlot: boxPlotSetings = new boxPlotSetings();
         public about: aboutSettings = new aboutSettings();
     }
 
@@ -113,6 +114,12 @@ module powerbi.extensibility.visual {
         public specifyBandwidth: boolean = false;
         /** Manual bandwidth */
         public bandwidth: number = 10;
+    }
+
+    /** Used to hold box plot settings */
+    export class boxPlotSetings{
+        /** Show box plot */
+        public show: boolean = true;
     }
 
     /** Used to hold about info and manage debugging */
