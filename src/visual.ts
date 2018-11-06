@@ -37,6 +37,7 @@ module powerbi.extensibility.visual {
         private element: HTMLElement;
         private container: d3.Selection<{}>;
         private settings: VisualSettings;
+        private options: VisualUpdateOptions;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
@@ -49,6 +50,7 @@ module powerbi.extensibility.visual {
         }
 
         public update(options: VisualUpdateOptions) {
+            this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
 
             /** Initial debugging for visual update */
@@ -371,6 +373,21 @@ module powerbi.extensibility.visual {
 
             /** Apply instance-specific transformations */
                 switch (objectName) {
+                    case 'about' : {
+                        /** Switch off and hide debug mode if development flag is disabled */
+                            if(!this.settings.about.development) {
+                                delete instances[0].properties['debugMode'];
+                                delete instances[0].properties['debugVisualUpdate'];
+                                delete instances[0].properties['debugProperties'];
+                            }
+                        /** Reset the individual flags if debug mode switched off */
+                            if(!this.settings.about.debugMode) {
+                                instances[0].properties['debugMode'] = false;
+                                instances[0].properties['debugVisualUpdate'] = false;
+                                instances[0].properties['debugProperties'] = false;
+                            }
+                            break;
+                    }
                     case 'violin': {
                         /** Range validation on stroke width */
                             instances[0].validValues = instances[0].validValues || {};
@@ -406,6 +423,7 @@ module powerbi.extensibility.visual {
                             if (!this.settings.violin.specifyBandwidth) {
                                 delete instances[0].properties['bandwidth'];
                             };
+                        break;
                     }
                     case 'xAxis': {
                         /** Label toggle */
