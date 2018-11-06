@@ -71,6 +71,7 @@ module powerbi.extensibility.visual {
             dataPoints: number[];
             dataKde: IDataPointKde[];
             lineGen: d3.svg.Line<IDataPointKde>;
+            areaGen: d3.svg.Area<IDataPointKde>;
             statistics: IStatistics;
             yVScale: d3.scale.Linear<number, number>;
         }

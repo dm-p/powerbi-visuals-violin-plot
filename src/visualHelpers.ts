@@ -521,11 +521,17 @@ module powerbi.extensibility.visual {
                                             .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                                             .clamp(true);
 
-                                    /** Now we have our scaling, we can generate the line function for each series */
+                                    /** Now we have our scaling, we can generate the functions for each series */
                                         v.lineGen = d3.svg.line<IDataPointKde>()
                                             .interpolate('basis') /** TODO: configurable interpolation (sensible ones) */
                                             .x(d => viewModel.xVaxis.scale(d.x))
                                             .y(d => v.yVScale(d.y));
+                                        v.areaGen = d3.svg.area<IDataPointKde>()
+                                            .interpolate('basis')
+                                            .x(d => viewModel.xVaxis.scale(d.x))
+                                            .y0(0)
+                                            .y1(d => v.yVScale(d.y));
+
                             });
 
                         /** This adjusts the domain of each axis to match any adjustments we made earlier on.
