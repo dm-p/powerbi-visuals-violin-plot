@@ -94,6 +94,7 @@ module powerbi.extensibility.visual {
         export interface IDataPointKde {
             x: number;
             y: number;
+            remove: boolean;
         }
 
     }

@@ -21,7 +21,8 @@ module powerbi.extensibility.visual {
                                 x: x, 
                                 y: d3.mean(sample, function(v: number) { 
                                     return kernel((x - v) / bandwidth); 
-                                })
+                                }),
+                                remove: false
                             };
                         });
                     };
