@@ -137,11 +137,27 @@
                 }
             }
         },
+        "dataColours": {
+            "displayName": "Data Colors",
+            "description": "Color settings for the violin",
+            "properties": {
+                "defaultFillColour":{
+                    "displayName": "Default Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "boxPlot": {
             "displayName": "Box Plot",
             "properties": {
                 "show": {
-                    "displayName": "Enable/disable Y-Axis",
+                    "displayName": "Enable/Disable Y-Axis",
                     "type": {
                         "bool": true
                     }

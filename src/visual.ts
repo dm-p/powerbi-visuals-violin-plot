@@ -30,15 +30,19 @@ module powerbi.extensibility.visual {
     import visualTransform = ViolinPlotHelpers.visualTransform;
     import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
     import renderViolin = ViolinPlotHelpers.renderViolin;
-
+    
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
         private container: d3.Selection<{}>;
         private settings: VisualSettings;
         private options: VisualUpdateOptions;
+        private colourPalette: ISandboxExtendedColorPalette;
+        private defaultColour: string;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
+            this.colourPalette = options.host.colorPalette;
+            this.defaultColour = this.colourPalette['colors'][0].value;
 
             /** Visual container */
             this.container = d3.select(options.element)
@@ -50,6 +54,14 @@ module powerbi.extensibility.visual {
         public update(options: VisualUpdateOptions) {
             this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
+
+            /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
+             *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
+             *  assigned colour.
+             */
+                if (!this.settings.dataColours.defaultFillColour) {
+                    this.settings.dataColours.defaultFillColour = this.defaultColour;
+                }
 
             /** Initial debugging for visual update */
                 let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
@@ -375,6 +387,13 @@ module powerbi.extensibility.visual {
                             if (!this.settings.violin.specifyBandwidth) {
                                 delete instances[0].properties['bandwidth'];
                             };
+                        break;
+                    }
+                    case 'dataColours': {
+                        /** Assign default theme colour from palette if default fill colour not overridden */
+                            if (!this.settings.dataColours.defaultFillColour) {
+                                instances[0].properties['defaultFillColour'] = this.defaultColour;
+                            }
                         break;
                     }
                     case 'xAxis': {

@@ -38,6 +38,7 @@ module powerbi.extensibility.visual {
         public yAxis: yAxisSettings = new yAxisSettings();
         public xAxis: xAxisSettings = new xAxisSettings();
         public violin: violinSettings = new violinSettings();
+        public dataColours: dataColourSettings = new dataColourSettings();
         public boxPlot: boxPlotSetings = new boxPlotSetings();
         public about: aboutSettings = new aboutSettings();
     }
@@ -118,6 +119,12 @@ module powerbi.extensibility.visual {
         public specifyBandwidth: boolean = false;
         /** Manual bandwidth */
         public bandwidth: number = 10;
+    }
+
+    /** Used to manage violin colour configuration */
+    export class dataColourSettings {
+        /** Default colour for series */
+        public defaultFillColour: string = null;
     }
 
     /** Used to hold box plot settings */
