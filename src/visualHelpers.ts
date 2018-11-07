@@ -569,7 +569,8 @@ module powerbi.extensibility.visual {
                         })
                         .classed(`${EViolinSide[side]}`, true)
                         .attr({
-                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`
+                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`,
+                            'shape-rendering': 'geometricPrecision'
                         });
 
                 /** Area - no point bothering if we're fully transparent */
@@ -578,8 +579,9 @@ module powerbi.extensibility.visual {
                             .classed('violinPlotViolinArea', true)
                             .attr('d', d => d.areaGen(d.dataKde))
                             .style({
-                                'fill': 'rgb(1, 184, 170)',
+                                'fill': settings.dataColours.defaultFillColour,
                                 'fill-opacity': 1 - (settings.violin.transparency / 100),
+                                'stroke-width': 0
                             });
                     }
 
@@ -589,9 +591,11 @@ module powerbi.extensibility.visual {
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
-                            'stroke': 'rgb(1, 184, 170)',
+                            'stroke': settings.dataColours.defaultFillColour,
                             'stroke-width': settings.violin.strokeWidth,
-                            'stroke-linecap': 'round'
+                            'stroke-linecap': (!settings.violin.clamp)
+                                ?   'round'
+                                :   'butt'
                         });
 
             }
