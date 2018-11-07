@@ -27,9 +27,10 @@
     "objects": {
         "violin": {
             "displayName": "Violin Options",
+            "description": "Configure how the violin is displayed in your chart",
             "properties": {
                 "innerPadding": {
-                    "displayName": "Inner padding (%)",
+                    "displayName": "Inner Padding (%)",
                     "description": "Amount of padding to apply from the edge of the series",
                     "type": {
                         "integer": true
@@ -43,21 +44,21 @@
                     }
                 },
                 "strokeWidth": {
-                    "displayName": "Stroke width",
+                    "displayName": "Stroke Width",
                     "description": "Width of the lines bordering the violin plot",
                     "type": {
                         "integer": true
                     }
                 },
                 "clamp": {
-                    "displayName": "Clamp to min/max",
+                    "displayName": "Clamp to Min/Max",
                     "description": "TBD",
                     "type": {
                         "bool": true
                     }
                 },
                 "lineType": {
-                    "displayName": "Line type",
+                    "displayName": "Line Type",
                     "description": "Specify how the violin line points are plotted",
                     "type": {
                         "enumeration": [
@@ -73,7 +74,7 @@
                     }
                 },
                 "resolution": {
-                    "displayName": "Sampling resolution",
+                    "displayName": "Sampling Resolution",
                     "description": "TBD",
                     "type": {
                         "enumeration": [
@@ -121,7 +122,7 @@
                     }
                 },
                 "specifyBandwidth": {
-                    "displayName": "Specify bandwidth",
+                    "displayName": "Specify Bandwidth",
                     "description": "TBD",
                     "placeHolderText": "Specify Number",
                     "type": {
@@ -168,25 +169,25 @@
             "displayName": "Y-Axis",
             "properties": {
                 "show": {
-                    "displayName": "Enable/disable Y-Axis",
+                    "displayName": "Enable/Disable Y-Axis",
                     "type": {
                         "bool": true
                     }
                 },
                 "showLabels": {
-                    "displayName": "Show labels",
+                    "displayName": "Show Labels",
                     "type": {
                         "bool": true
                     }
                 },
                 "showTitle": {
-                    "displayName": "Show title",
+                    "displayName": "Show Title",
                     "type": {
                         "bool": true
                     }
                 },
                 "titleStyle": {
-                    "displayName": "Title style",
+                    "displayName": "Title Style",
                     "type": {
                         "enumeration": [
                             {
@@ -205,7 +206,7 @@
                     }
                 },
                 "titleColor": {
-                    "displayName": "Title color",
+                    "displayName": "Title Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -215,14 +216,14 @@
                     }
                 },
                 "titleText": {
-                    "displayName": "Title text",
+                    "displayName": "Title Text",
                     "type": {
                         "text": true
                     },
                     "placeHolderText": "Auto"
                 },
                 "titleFontSize": {
-                    "displayName": "Text size",
+                    "displayName": "Text Size",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -230,7 +231,7 @@
                     }
                 },
                 "titleFontFamily": {
-                    "displayName": "Title font family",
+                    "displayName": "Title Font Family",
                     "type": {
                         "enumeration": [
                             {
@@ -340,7 +341,7 @@
                     }
                 },
                 "gridlineColor": {
-                    "displayName": "Gridline color",
+                    "displayName": "Gridline Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -350,13 +351,13 @@
                     }
                 },
                 "gridlineStrokeWidth": {
-                    "displayName": "Gridline stroke width",
+                    "displayName": "Gridline Stroke Width",
                     "type": {
                         "integer": true
                     }
                 },
                 "gridlineStrokeLineStyle": {
-                    "displayName": "Gridline style",
+                    "displayName": "Gridline Style",
                     "type": {
                         "enumeration": [
                             {
@@ -379,7 +380,7 @@
                     }
                 },
                 "fontColor": {
-                    "displayName": "Font color",
+                    "displayName": "Font Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -389,7 +390,7 @@
                     }
                 },
                 "fontSize": {
-                    "displayName": "Text size",
+                    "displayName": "Text Size",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -397,7 +398,7 @@
                     }
                 },
                 "fontFamily": {
-                    "displayName": "Font family",
+                    "displayName": "Font Family",
                     "type": {
                         "enumeration": [
                             {
@@ -501,7 +502,7 @@
                     }
                 },
                 "labelDisplayUnits": {
-                    "displayName": "Display units",
+                    "displayName": "Display Units",
                     "type": {
                         "formatting": {
                             "labelDisplayUnits": true
@@ -509,7 +510,7 @@
                     }
                 },
                 "precision": {
-                    "displayName": "Value decimal places",
+                    "displayName": "Value Decimal Places",
                     "type": {
                         "integer": true
                     },
@@ -521,19 +522,19 @@
             "displayName": "X-Axis",
             "properties": {
                 "show": {
-                    "displayName": "Enable/disable X-Axis",
+                    "displayName": "Enable/Disable X-Axis",
                     "type": {
                         "bool": true
                     }
                 },
                 "showLabels": {
-                    "displayName": "Show labels",
+                    "displayName": "Show Labels",
                     "type": {
                         "bool": true
                     }
                 },
                 "fontColor": {
-                    "displayName": "Font color",
+                    "displayName": "Font Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -543,7 +544,7 @@
                     }
                 },
                 "fontSize": {
-                    "displayName": "Text size",
+                    "displayName": "Text Size",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -551,7 +552,7 @@
                     }
                 },
                 "fontFamily": {
-                    "displayName": "Font family",
+                    "displayName": "Font Family",
                     "type": {
                         "enumeration": [
                             {
@@ -655,13 +656,13 @@
                     }
                 },
                 "showTitle": {
-                    "displayName": "Show title",
+                    "displayName": "Show Title",
                     "type": {
                         "bool": true
                     }
                 },
                 "titleColor": {
-                    "displayName": "Title color",
+                    "displayName": "Title Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -671,14 +672,14 @@
                     }
                 },
                 "titleText": {
-                    "displayName": "Title text",
+                    "displayName": "Title Text",
                     "type": {
                         "text": true
                     },
                     "placeHolderText": "Auto"
                 },
                 "titleFontSize": {
-                    "displayName": "Text size",
+                    "displayName": "Text Size",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -686,7 +687,7 @@
                     }
                 },
                 "titleFontFamily": {
-                    "displayName": "Title font family",
+                    "displayName": "Title Font Family",
                     "type": {
                         "enumeration": [
                             {
@@ -796,7 +797,7 @@
                     }
                 },
                 "gridlineColor": {
-                    "displayName": "Gridline color",
+                    "displayName": "Gridline Color",
                     "type": {
                         "fill": {
                             "solid": {
@@ -806,7 +807,7 @@
                     }
                 },
                 "gridlineStrokeWidth": {
-                    "displayName": "Gridline stroke width",
+                    "displayName": "Gridline Stroke Width",
                     "type": {
                         "integer": true
                     }
