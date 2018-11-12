@@ -82,8 +82,8 @@ module powerbi.extensibility.visual {
                 height: `${options.viewport.height}`,
             });
 
-            let viewModel = visualTransform(options, this.settings);
-            debug.log('View model', viewModel);
+            this.viewModel = visualTransform(options, this.settings, this.host, this.colourPalette);
+            debug.log('View model', this.viewModel);
 
             /** Create a Y axis */
                 if (this.settings.yAxis.show) {
@@ -396,6 +396,29 @@ module powerbi.extensibility.visual {
                         /** Assign default theme colour from palette if default fill colour not overridden */
                             if (!this.settings.dataColours.defaultFillColour) {
                                 instances[0].properties['defaultFillColour'] = this.defaultColour;
+                            }
+                        /** If there are no categories, don't offer the option to colour by them */
+                            if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
+                                delete instances[0].properties['colourByCategory'];
+                                this.settings.dataColours.colourByCategory = false; /** This prevents us losing the default fill if we remove the field afterward */
+                            }
+                        /** Add categories if we want to colour by them */
+                            if (this.settings.dataColours.colourByCategory) {
+                                delete instances[0].properties['defaultFillColour'];
+                                for (let category of this.viewModel.categories) {
+                                    instances.push({
+                                        objectName: objectName,
+                                        displayName: category.name,
+                                        properties: {
+                                            categoryFillColour: {
+                                                solid: {
+                                                    color: category.colour
+                                                }
+                                            }
+                                        },
+                                        selector: category.selectionId.getSelector()
+                                    });
+                                }
                             }
                         break;
                     }

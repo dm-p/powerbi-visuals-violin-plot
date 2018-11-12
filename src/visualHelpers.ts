@@ -88,7 +88,8 @@ module powerbi.extensibility.visual {
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
                 debug.log('Running Visual Transform...');
 
-            let dataViews = options.dataViews;
+            let dataViews = options.dataViews,
+                selectionIdBuilder = host.createSelectionIdBuilder();
 
             /** Create bare-minimum view model */
                 let viewModel = {} as IViewModel;
@@ -97,7 +98,6 @@ module powerbi.extensibility.visual {
                 if (!dataViews
                     || !dataViews[0]
                     || !dataViews[0].categorical
-                    || !dataViews[0].categorical.categories[0].source
                     || !dataViews[0].categorical.values
                     || !dataViews[0].metadata
                 ) {
@@ -108,58 +108,103 @@ module powerbi.extensibility.visual {
             /** Otherwise, let's get that data! */
                 debug.log('Data mapping conditions met. Proceeding with view model transform.');
                 let values = dataViews[0].categorical.values,
+                    categorical = dataViews[0].categorical,
+                    category = dataViews[0].categorical.categories
+                        ?   dataViews[0].categorical.categories[0]
+                        :   null,
                     allDataPoints: number[] = [],
                     metadata = dataViews[0].metadata,
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
 
-                /** Determine if we don't have catergory names; can be used to drive the behaviour of the x-axis and y-axis height */
-                    viewModel.categoryNames = values[0].source.groupName
-                        ?   true
-                        :   false;
+                    viewModel.categories = [];
 
-                /** Assign categorical data and statistics */
-                    viewModel.categories = values
-                        .map(c => {
+                /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. */
+                    if (!category) {
 
-                            let dataPoints = c.values
-                                .filter(v => v !== null)
-                                .map(v => Number(v))
-                                .sort(d3.ascending);
+                        viewModel.categories.push({
+                            name: '',
+                            colour: settings.dataColours.defaultFillColour,
+                            selectionId: null
+                        } as ICategory);
 
-                            /** Send to our combined array for stats generation outside all series */
-                                allDataPoints = allDataPoints.concat(dataPoints);
+                    } else {
 
-                            return {                    
-                                name: viewModel.categoryNames
-                                    ?   valueFormatter.format(c.source.groupName, categoryMetadata.format)
-                                    :   null,
-                                dataPoints: dataPoints,
-                                statistics: {
-                                    min: d3.min(dataPoints),
-                                    confidenceLower: d3.quantile(dataPoints, 0.05),
-                                    quartile1: d3.quantile(dataPoints, 0.25),
-                                    median: d3.median(dataPoints),
-                                    mean: d3.mean(dataPoints),
-                                    quartile3: d3.quantile(dataPoints, 0.75),
-                                    confidenceUpper: d3.quantile(dataPoints, 0.95),
-                                    max: d3.max(dataPoints),
-                                    deviation: d3.deviation(dataPoints),
-                                    iqr: d3.quantile(dataPoints, 0.75) - d3.quantile(dataPoints, 0.25),
-                                    span: d3.max(dataPoints) - d3.min(dataPoints)
+                        for (let i = 0, len = category.values.length; i < len; i++) {
+
+                            let categoryName = valueFormatter.format(category.values[i].toString(), categoryMetadata.format);                        
+                            let defaultColour: Fill = {
+                                solid: {
+                                    color: colourPalette.getColor(categoryName).value
                                 }
-                            } as ICategory;
-                        });
+                            }
+    
+                            viewModel.categories.push({
+                                name: categoryName,
+                                colour: settings.dataColours.colourByCategory
+                                    ?   getCategoricalObjectValue<Fill>(
+                                            category,
+                                            i,
+                                            'dataColours',
+                                            'categoryFillColour',
+                                            defaultColour
+                                        ).solid.color
+                                    :   settings.dataColours.defaultFillColour,
+                                selectionId: host.createSelectionIdBuilder()
+                                    .withCategory(category, i)
+                                    .createSelectionId()
+                            } as ICategory);
+                            
+                        }
+                    }
 
-                /** We should have all raw data, so we can do overall stats on them for the chart */
-                    allDataPoints.sort(d3.ascending);
-                    viewModel.statistics = {
-                        min: d3.min(allDataPoints),
-                        max: d3.max(allDataPoints),
-                        deviation: d3.deviation(allDataPoints),
-                        iqr: d3.quantile(allDataPoints, 0.75) - d3.quantile(allDataPoints, 0.25),
-                        span: d3.max(allDataPoints) - d3.min(allDataPoints)
-                    } as IStatistics;
+                /** Now we should be in a position to resolve mapping from the value data, depending on our groupings */
+
+                    /** First, get the values into arrays for each category */
+                        
+                        /** Instantiate an empty array for each category */
+                            let categoryData: number[][] = [];
+                            viewModel.categories.map((c, i) => {
+                                categoryData[i] = [];
+                            });
+
+                        /** 'unpivot' the values into each individual category (plus all data points) */
+                            values.map(v => {
+                                v.values.map((j, k) => {
+                                    if (j) {
+                                        categoryData[k].push(Number(j));
+                                        allDataPoints.push(Number(j));
+                                    }
+                                });             
+                            });
+
+                    /** Calculate the statistics for all data points */
+                        allDataPoints.sort(d3.ascending);
+                        viewModel.statistics = {
+                            min: d3.min(allDataPoints),
+                            max: d3.max(allDataPoints),
+                            deviation: d3.deviation(allDataPoints),
+                            iqr: d3.quantile(allDataPoints, 0.75) - d3.quantile(allDataPoints, 0.25),
+                            span: d3.max(allDataPoints) - d3.min(allDataPoints)
+                        } as IStatistics;
+                        
+                    /** Process the remainder of the view model by category */
+                        viewModel.categories.map((c, i) => {
+                            c.dataPoints = categoryData[i].sort(d3.ascending);
+                            c.statistics = {
+                                min: d3.min(c.dataPoints),
+                                confidenceLower: d3.quantile(c.dataPoints, 0.05),
+                                quartile1: d3.quantile(c.dataPoints, 0.25),
+                                median: d3.median(c.dataPoints),
+                                mean: d3.mean(c.dataPoints),
+                                quartile3: d3.quantile(c.dataPoints, 0.75),
+                                confidenceUpper: d3.quantile(c.dataPoints, 0.95),
+                                max: d3.max(c.dataPoints),
+                                deviation: d3.deviation(c.dataPoints),
+                                iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
+                                span: d3.max(c.dataPoints) - d3.min(c.dataPoints)
+                            } as IStatistics
+                        });
 
                 /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
                  *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking
@@ -557,6 +602,8 @@ module powerbi.extensibility.visual {
                                         v.areaGen = d3.svg.area<IDataPointKde>()
                                             .interpolate(settings.violin.lineType)
                                             .x(d => viewModel.xVaxis.scale(d.x))
+                                            .y0(v.yVScale(0))
+                                            // .y0(-0.5) /** This fixes a whitespace issue between each side */
                                             .y1(d => v.yVScale(d.y));
 
                             });
@@ -607,7 +654,7 @@ module powerbi.extensibility.visual {
                             .classed('violinPlotViolinArea', true)
                             .attr('d', d => d.areaGen(d.dataKde))
                             .style({
-                                'fill': settings.dataColours.defaultFillColour,
+                                'fill': d => d.colour,
                                 'fill-opacity': 1 - (settings.violin.transparency / 100),
                                 'stroke-width': 0
                             });
@@ -619,7 +666,7 @@ module powerbi.extensibility.visual {
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
-                            'stroke': settings.dataColours.defaultFillColour,
+                            'stroke': d => d.colour,
                             'stroke-width': settings.violin.strokeWidth,
                             'stroke-linecap': (!settings.violin.clamp)
                                 ?   'round'
