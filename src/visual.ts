@@ -38,11 +38,13 @@ module powerbi.extensibility.visual {
         private options: VisualUpdateOptions;
         private colourPalette: ISandboxExtendedColorPalette;
         private defaultColour: string;
+        private host: IVisualHost;
         private viewModel: ViolinPlotModels.IViewModel;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
             this.colourPalette = options.host.colorPalette;
+            this.host = options.host;
             this.defaultColour = this.colourPalette['colors'][0].value;
 
             /** Visual container */
