@@ -125,6 +125,8 @@ module powerbi.extensibility.visual {
     export class dataColourSettings {
         /** Default colour for series */
         public defaultFillColour: string = null;
+        /** Whether to colour by category or not */
+        public colourByCategory: boolean = false;
     }
 
     /** Used to hold box plot settings */

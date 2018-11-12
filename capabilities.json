@@ -142,14 +142,31 @@
             "displayName": "Data Colors",
             "description": "Color settings for the violin",
             "properties": {
-                "defaultFillColour":{
-                    "displayName": "Default Color",
+                "defaultFillColour": {
+                    "displayName": "All Categories",
                     "type": {
                         "fill": {
                             "solid": {
                                 "color": true
                             }
                         }
+                    }
+                },
+                "categoryFillColour": {
+                    "displayName": "Category Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "colourByCategory": {
+                    "displayName": "By Category",
+                    "description": "Apply colour to invididual categories",
+                    "type": {
+                        "bool": true
                     }
                 }
             }
