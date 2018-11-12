@@ -68,6 +68,8 @@ module powerbi.extensibility.visual {
 
         export interface ICategory {
             name: string;
+            colour: string;
+            selectionId: powerbi.visuals.ISelectionId;
             dataPoints: number[];
             dataKde: IDataPointKde[];
             lineGen: d3.svg.Line<IDataPointKde>;
