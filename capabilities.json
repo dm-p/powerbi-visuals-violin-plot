@@ -891,12 +891,12 @@
             "categorical": {
                 "categories": {
                     "for": {
-                        "in": "sampling"
+                        "in": "category"
                     }
                 },
                 "values": {
                     "group": {
-                        "by": "category",
+                        "by": "sampling",
                         "select": [
                             {
                                 "bind": {
