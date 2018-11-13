@@ -28,11 +28,14 @@ module powerbi.extensibility.visual {
     "use strict";
     import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
-    let defaultFontSize: number = 11;
-    let defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif';
-    let defaultFontColor: string = '#777777';
-    let defaultAxisFontColor: string = '#777777';
-    let defaultAxisGridlineColor: string = '#EAEAEA';
+    let defaultFontSize: number = 11,
+        defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
+        defaultFontColor: string = '#777777',
+        defaultAxisFontColor: string = '#777777',
+        defaultAxisGridlineColor: string = '#EAEAEA',
+        defaultBoxFillColour: string = '#000000',
+        defaultBoxDataColour: string = '#FFFFFF';
+    
 
     export class VisualSettings extends DataViewObjectsParser {
         public yAxis: yAxisSettings = new yAxisSettings();
@@ -133,6 +136,26 @@ module powerbi.extensibility.visual {
     export class boxPlotSetings{
         /** Show box plot */
         public show: boolean = true;
+        /** Box plot line stroke width */
+        public strokeWidth: number = 2;
+        /** Box fill colour */
+        public boxFillColour: string = defaultBoxFillColour;
+        /** How transparent the box plot fill should be */
+        public transparency: number = 40;
+        /** Width (as % of violin) */
+        public innerPadding: number = 75;
+        /** Whisker toggle */
+        public showWhiskers: boolean = true;
+        /** Median toggle */
+        public showMedian: boolean = true;
+        /** Median line colour */
+        public medianFillColour: string = defaultBoxDataColour;
+        /** Mean toggle */
+        public showMean: boolean = true;
+        /** Median circle colour */
+        public meanFillColour: string = defaultBoxDataColour;
+        /** Median circle inner colour */
+        public meanFillColourInner: string = defaultBoxFillColour;
     }
 
     /** Used to hold about info and manage debugging */

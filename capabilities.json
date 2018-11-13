@@ -179,7 +179,91 @@
                     "type": {
                         "bool": true
                     }
-                }                
+                },
+                "strokeWidth": {
+                    "displayName": "Stroke Width",
+                    "description": "Width of the lines bordering the box plot",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "boxFillColour": {
+                    "displayName": "Box Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "transparency": {
+                    "displayName": "Transparency",
+                    "description": "Level of transparency to apply to the box plot fill",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "innerPadding": {
+                    "displayName": "Inner Padding (%)",
+                    "description": "Amount of padding to apply from the edge of the violin",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "showWhiskers": {
+                    "displayName": "Show Whiskers",
+                    "description": "Show the 5% - 95% confidence interval (whiskers) on the box plot",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMedian": {
+                    "displayName": "Show Median (Line)",
+                    "description": "Show the median, as a line across the box plot",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "medianFillColour": {
+                    "displayName": "Median Line Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showMean": {
+                    "displayName": "Show Mean (Circle)",
+                    "description": "Show the mean, as a cirlce in the box",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "meanFillColour": {
+                    "displayName": "Median Circle Color",
+                    "description": "The color to apply to the mean indicator",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "meanFillColourInner": {
+                    "displayName": "Median Circle Color (Inner)",
+                    "description": "The inner color to apply to the mean indicator",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
             }
         },
         "yAxis": {

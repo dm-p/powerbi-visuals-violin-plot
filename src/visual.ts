@@ -287,6 +287,33 @@ module powerbi.extensibility.visual {
                             };
                         break;
                     }
+                    case 'boxPlot': {
+                        /** Range validation on stroke width */
+                            instances[0].validValues = instances[0].validValues || {};
+                            instances[0].validValues.strokeWidth = {
+                                numberRange: {
+                                    min: 1,
+                                    max: 5
+                                },
+                            };
+                        /** Range validation on box plot width */
+                            instances[0].validValues.innerPadding = {
+                                numberRange: {
+                                    min: 50,
+                                    max: 90
+                                },
+                            };
+                        /** Toggle median colour */
+                            if (!this.settings.boxPlot.showMedian) {
+                                delete instances[0].properties['medianFillColour'];
+                            }
+                        /** Toggle mean colours */
+                            if (!this.settings.boxPlot.showMean) {
+                                delete instances[0].properties['meanFillColour'];
+                                delete instances[0].properties['meanFillColourInner'];
+                            }
+                        break;
+                    }
                     case 'dataColours': {
                         /** Assign default theme colour from palette if default fill colour not overridden */
                             if (!this.settings.dataColours.defaultFillColour) {

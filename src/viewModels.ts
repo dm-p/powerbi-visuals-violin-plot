@@ -105,6 +105,11 @@ module powerbi.extensibility.visual {
             right
         }
 
+        export enum EBoxPlotWhisker {
+            top,
+            bottom
+        }
+
     }
 
 }

@@ -15,13 +15,14 @@ module powerbi.extensibility.visual {
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import IAxisCategorical = ViolinPlotModels.IAxisCategorical;
             import EViolinSide = ViolinPlotModels.EViolinSide;
+            import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
 
         /** KDE helpers */
             import IKernel = KDE.IKernel;
             import kernelDensityEstimator = KDE.kernelDensityEstimator;
             import kernelDensityRoot = KDE.kernelDensityRoot;
             import kernelDensityInterpolator = KDE.kernelDensityInterpolator;
-            import ELimit = KDE.ELimit
+            import ELimit = KDE.ELimit;
 
         export class VisualDebugger {
             enabled: boolean = false;
@@ -669,7 +670,7 @@ module powerbi.extensibility.visual {
                         .style({
                             'fill': 'none',
                             'stroke': d => d.colour,
-                            'stroke-width': settings.violin.strokeWidth,
+                            'stroke-width': `${settings.violin.strokeWidth}px`,
                             'stroke-linecap': (!settings.violin.clamp)
                                 ?   'round'
                                 :   'butt'
@@ -695,15 +696,60 @@ module powerbi.extensibility.visual {
 
             }
 
+        /**
+         * Handle rendering of a box plot whisker. Will render for the specified range.
+         * For top, this will run from quartile 3 to 95%;
+         * For bottom, this will run from 5% to quartile 1;
+         * 
+         * @param seriesContainer   The element to apply the SVG rendering to
+         * @param viewModel         The view model object to use
+         * @param settings          Visual settings
+         * @param whisker           The whisker to render 
+         */
+            function renderBoxPlotWhisker(boxPlotContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, whisker: EBoxPlotWhisker) {
+
+                boxPlotContainer.append('line')
+                    .classed({
+                        'violinPlotBoxPlot': true,
+                        'whisker': true
+                    })
+                    .classed('range', true)
+                    .attr({
+                        'x1': (viewModel.xAxis.scale.rangeBand() / 2),
+                        'x2': (viewModel.xAxis.scale.rangeBand() / 2),
+                        'y1': (d) => viewModel.yAxis.scale(
+                            whisker == EBoxPlotWhisker.bottom
+                                ?   d.statistics.confidenceLower
+                                :   d.statistics.confidenceUpper
+                        ),
+                        'y2': (d) => viewModel.yAxis.scale(
+                            whisker == EBoxPlotWhisker.bottom
+                                ?   d.statistics.quartile1
+                                :   d.statistics.quartile3
+                        ),
+                        'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                        'stroke': `${settings.boxPlot.boxFillColour}`
+                    });
+
+            }
+
             export function renderBoxPlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
                 /** Set box extremes */
-                    let boxPlotWidth = 15; /** TODO into view model */
-                    let xLeft = (viewModel.xAxis.scale.rangeBand() / 2) - (boxPlotWidth / 2),
-                        xRight = (viewModel.xAxis.scale.rangeBand() / 2) + (boxPlotWidth / 2)
+                    let categoryFullWidth = viewModel.xAxis.scale.rangeBand(),
+                        violinPlotWidth = categoryFullWidth - (categoryFullWidth * (settings.violin.innerPadding / 100)),
+                        boxPlotWidth = violinPlotWidth - (violinPlotWidth * (settings.boxPlot.innerPadding / 100)),
+                        xLeft = (viewModel.xAxis.scale.rangeBand() / 2) - (boxPlotWidth / 2),
+                        xRight = (viewModel.xAxis.scale.rangeBand() / 2) + (boxPlotWidth / 2);
 
                 /** Add the box */
-                    seriesContainer.append('rect')
+                    let boxContainer = seriesContainer
+                        .append('g')
+                        .attr({
+                            'shape-rendering': 'geometricPrecision'
+                        });
+
+                    boxContainer.append('rect')
                         .classed({
                             'violinPlotBoxPlot': true,
                             'box': true
@@ -712,100 +758,68 @@ module powerbi.extensibility.visual {
                             'x': xLeft,
                             'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
                             'width': boxPlotWidth,
-                            'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1)
+                            'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
+                            'stroke': `${settings.boxPlot.boxFillColour}`,
+                            'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                            'fill': `${settings.boxPlot.boxFillColour}`,
+                            'fill-opacity': 1 - (settings.boxPlot.transparency / 100)
                         });
 
-                /** Do the whiskers - we'll repeat this for now and try to optimise later on. We should also allow toggle on the whiskers */
-                let whiskerStyle = {
-                        'fill': 'black',
-                        'stroke': 'black'
-                    },
-                    whiskerClasses = {
-                        'violinPlotBoxPlot': true,
-                        'whisker': true
-                    },
-                    medianStyle = {
-                        'fill': 'white',
-                        'stroke': 'white'
+                /** Do the whiskers, if we need them */
+                    if (settings.boxPlot.showWhiskers) {
+                        renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
+                        renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
                     }
 
-                seriesContainer.append('line')
-                    .classed(whiskerClasses)
-                    .classed('upper', true)
-                    .attr({
-                        'x1': xLeft,
-                        'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper)
-                    })
-                    .style(whiskerStyle);
-
-                seriesContainer.append('line')
-                    .classed(whiskerClasses)
-                    .classed('lower', true)
-                    .attr({
-                        'x1': xLeft,
-                        'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower)
-                    })
-                    .style(whiskerStyle)
-
-                seriesContainer.append('line')
-                    .classed(whiskerClasses)
-                    .classed('range', true)
-                    .attr({
-                        'x1': (viewModel.xAxis.scale.rangeBand() / 2),
-                        'x2': (viewModel.xAxis.scale.rangeBand() / 2),
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.confidenceLower),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.confidenceUpper)
-                    })
-                    .style(whiskerStyle);
-
                 /** Mean and median */
-                seriesContainer.append('line')
-                    .classed({
-                        'violinPlotBoxPlot': true,
-                        'median': true
-                    })
-                    .attr({
-                        'x1': xLeft,
-                        'x2': xRight,
-                        'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
-                        'y2': (d) => viewModel.yAxis.scale(d.statistics.median)
-                    })
-                    .style(medianStyle);
+                    if (settings.boxPlot.showMedian){
+                        boxContainer.append('line')
+                        .classed({
+                            'violinPlotBoxPlot': true,
+                            'median': true
+                        })
+                        .attr({
+                            'x1': xLeft + settings.boxPlot.strokeWidth,
+                            'x2': xRight - settings.boxPlot.strokeWidth,
+                            'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
+                            'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
+                            'stroke': `${settings.boxPlot.medianFillColour}`,
+                            'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                        });
+                    }
 
-                seriesContainer.append('circle')
-                    .classed({
-                        'violinPlotBoxPlot': true,
-                        'mean': true,
-                        'outer': true
-                    })
-                    .attr({
-                        'cx': (viewModel.xAxis.scale.rangeBand() / 2),
-                        'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                        'r': boxPlotWidth / 5
-                    })
-                    .style({
-                        'fill': 'white',
-                        'stroke': 'none'
-                    });
-                seriesContainer.append('circle')
-                    .classed({
-                        'violinPlotBoxPlot': true,
-                        'mean': true,
-                        'inner': true
-                    })
-                    .attr({
-                        'cx': (viewModel.xAxis.scale.rangeBand() / 2),
-                        'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                        'r': boxPlotWidth / 10
-                    })
-                    .style({
-                        'fill': 'black',
-                        'stroke': 'none'
-                    });
+                    if (settings.boxPlot.showMean) {
+                        boxContainer.append('circle')
+                            .classed({
+                                'violinPlotBoxPlot': true,
+                                'mean': true,
+                                'outer': true
+                            })
+                            .attr({
+                                'cx': (viewModel.xAxis.scale.rangeBand() / 2),
+                                'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                                'r': boxPlotWidth / 5
+                            })
+                            .style({
+                                'fill': settings.boxPlot.meanFillColour,
+                                'stroke': 'none'
+                            });
+                        boxContainer.append('circle')
+                            .classed({
+                                'violinPlotBoxPlot': true,
+                                'mean': true,
+                                'inner': true
+                            })
+                            .attr({
+                                'cx': (viewModel.xAxis.scale.rangeBand() / 2),
+                                'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                                'r': boxPlotWidth / (5 + settings.boxPlot.strokeWidth)
+                            })
+                            .style({
+                                'stroke': 'none',
+                                'fill': `${settings.boxPlot.meanFillColourInner}`
+                            });
+                    }
 
             }
 
