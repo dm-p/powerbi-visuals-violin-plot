@@ -779,8 +779,8 @@ module powerbi.extensibility.visual {
                             'median': true
                         })
                         .attr({
-                            'x1': xLeft + settings.boxPlot.strokeWidth,
-                            'x2': xRight - settings.boxPlot.strokeWidth,
+                            'x1': xLeft + (settings.boxPlot.strokeWidth / 2),
+                            'x2': xRight - (settings.boxPlot.strokeWidth / 2),
                             'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
                             'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
                             'stroke': `${settings.boxPlot.medianFillColour}`,
