@@ -30,6 +30,7 @@ module powerbi.extensibility.visual {
     import visualTransform = ViolinPlotHelpers.visualTransform;
     import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
     import renderViolin = ViolinPlotHelpers.renderViolin;
+    import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -205,118 +206,12 @@ module powerbi.extensibility.visual {
                             'width': this.viewModel.xAxis.scale.rangeBand()
                         });
 
-            /** Violin plot TODO: make into a function */
+            /** Violin plot */
                 renderViolin(seriesContainer, this.viewModel, this.settings);
 
             /** Box plot */
                 if (this.settings.boxPlot.show) {
-                    let boxPlotWidth = 15; /** TODO into view model */
-                    let xLeft = (this.viewModel.xAxis.scale.rangeBand() / 2) - (boxPlotWidth / 2),
-                        xRight = (this.viewModel.xAxis.scale.rangeBand() / 2) + (boxPlotWidth / 2)
-
-                    seriesContainer.append('rect')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'box': true
-                        })
-                        .attr({
-                            'x': xLeft,
-                            'y': (d) => this.viewModel.yAxis.scale(d.statistics.quartile3),
-                            'width': boxPlotWidth,
-                            'height': (d) => -this.viewModel.yAxis.scale(d.statistics.quartile3) + this.viewModel.yAxis.scale(d.statistics.quartile1)
-                        });
-
-                    /** Do the whiskers - we'll repeat this for now and try to optimise later on. We should also allow toggle on the whiskers */
-                    let whiskerStyle = {
-                            'fill': 'black',
-                            'stroke': 'black'
-                        },
-                        whiskerClasses = {
-                            'violinPlotBoxPlot': true,
-                            'whisker': true
-                        },
-                        medianStyle = {
-                            'fill': 'white',
-                            'stroke': 'white'
-                        }
-
-                    seriesContainer.append('line')
-                        .classed(whiskerClasses)
-                        .classed('upper', true)
-                        .attr({
-                            'x1': xLeft,
-                            'x2': xRight,
-                            'y1': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceUpper),
-                            'y2': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceUpper)
-                        })
-                        .style(whiskerStyle);
-
-                    seriesContainer.append('line')
-                        .classed(whiskerClasses)
-                        .classed('lower', true)
-                        .attr({
-                            'x1': xLeft,
-                            'x2': xRight,
-                            'y1': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceLower),
-                            'y2': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceLower)
-                        })
-                        .style(whiskerStyle)
-
-                    seriesContainer.append('line')
-                        .classed(whiskerClasses)
-                        .classed('range', true)
-                        .attr({
-                            'x1': (this.viewModel.xAxis.scale.rangeBand() / 2),
-                            'x2': (this.viewModel.xAxis.scale.rangeBand() / 2),
-                            'y1': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceLower),
-                            'y2': (d) => this.viewModel.yAxis.scale(d.statistics.confidenceUpper)
-                        })
-                        .style(whiskerStyle);
-
-                    /** Mean and median */
-                    seriesContainer.append('line')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'median': true
-                        })
-                        .attr({
-                            'x1': xLeft,
-                            'x2': xRight,
-                            'y1': (d) => this.viewModel.yAxis.scale(d.statistics.median),
-                            'y2': (d) => this.viewModel.yAxis.scale(d.statistics.median)
-                        })
-                        .style(medianStyle);
-
-                    seriesContainer.append('circle')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'mean': true,
-                            'outer': true
-                        })
-                        .attr({
-                            'cx': (this.viewModel.xAxis.scale.rangeBand() / 2),
-                            'cy': (d) => this.viewModel.yAxis.scale(d.statistics.mean),
-                            'r': boxPlotWidth / 5
-                        })
-                        .style({
-                            'fill': 'white',
-                            'stroke': 'none'
-                        });
-                    seriesContainer.append('circle')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'mean': true,
-                            'inner': true
-                        })
-                        .attr({
-                            'cx': (this.viewModel.xAxis.scale.rangeBand() / 2),
-                            'cy': (d) => this.viewModel.yAxis.scale(d.statistics.mean),
-                            'r': boxPlotWidth / 10
-                        })
-                        .style({
-                            'fill': 'black',
-                            'stroke': 'none'
-                        });
+                    renderBoxPlot(seriesContainer, this.viewModel, this.settings);
                 }
 
             /** Success! */
