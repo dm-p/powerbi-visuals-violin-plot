@@ -122,6 +122,7 @@ module powerbi.extensibility.visual {
                 /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. */
                     if (!category) {
 
+                        viewModel.categoryNames = false;
                         viewModel.categories.push({
                             name: '',
                             colour: settings.dataColours.defaultFillColour,
@@ -132,6 +133,7 @@ module powerbi.extensibility.visual {
 
                         for (let i = 0, len = category.values.length; i < len; i++) {
 
+                            viewModel.categoryNames = true;
                             let categoryName = valueFormatter.format(category.values[i].toString(), categoryMetadata.format);                        
                             let defaultColour: Fill = {
                                 solid: {
