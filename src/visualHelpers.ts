@@ -798,7 +798,7 @@ module powerbi.extensibility.visual {
                             .attr({
                                 'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                                 'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                'r': 2 + settings.boxPlot.strokeWidth
+                                'r': (boxPlotWidth / 10) + settings.boxPlot.strokeWidth
                             })
                             .style({
                                 'fill': settings.boxPlot.meanFillColourInner,
