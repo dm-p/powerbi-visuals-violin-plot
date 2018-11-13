@@ -788,7 +788,7 @@ module powerbi.extensibility.visual {
                         });
                     }
 
-                    if (settings.boxPlot.showMean) {
+                    if (settings.boxPlot.showMean && boxPlotWidth > 10) {
                         boxContainer.append('circle')
                             .classed({
                                 'violinPlotBoxPlot': true,
@@ -798,26 +798,12 @@ module powerbi.extensibility.visual {
                             .attr({
                                 'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                                 'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                'r': boxPlotWidth / 5
+                                'r': 2 + settings.boxPlot.strokeWidth
                             })
                             .style({
-                                'fill': settings.boxPlot.meanFillColour,
-                                'stroke': 'none'
-                            });
-                        boxContainer.append('circle')
-                            .classed({
-                                'violinPlotBoxPlot': true,
-                                'mean': true,
-                                'inner': true
-                            })
-                            .attr({
-                                'cx': (viewModel.xAxis.scale.rangeBand() / 2),
-                                'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                'r': boxPlotWidth / (5 + settings.boxPlot.strokeWidth)
-                            })
-                            .style({
-                                'stroke': 'none',
-                                'fill': `${settings.boxPlot.meanFillColourInner}`
+                                'fill': settings.boxPlot.meanFillColourInner,
+                                'stroke': settings.boxPlot.meanFillColour,
+                                'stroke-width': `${settings.boxPlot.strokeWidth}px`
                             });
                     }
 
