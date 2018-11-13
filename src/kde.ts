@@ -61,7 +61,7 @@ module powerbi.extensibility.visual {
                 export function kernelDensityInterpolator(value: number, limit: ELimit, kdeRoot) {
                     let interY = kdeRoot(value),
                         interX = value,
-                        count = 25; /** Prevent infinite loop */
+                        count = 5; /** Prevent infinite loop */
                     while (count > 0 && interY != 0) {
                         switch (limit) {
                             case ELimit.max: {
