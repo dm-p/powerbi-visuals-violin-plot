@@ -345,7 +345,7 @@ module powerbi.extensibility.visual {
                                     :   0
                             };
                             xAxis.dimensions = {
-                                height: settings.xAxis.show && viewModel.categoryNames
+                                height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels
                                     ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
                                         +   xAxis.titleDimensions.height
                                         +   xAxis.padding.top
