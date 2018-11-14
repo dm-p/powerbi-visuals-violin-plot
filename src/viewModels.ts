@@ -1,8 +1,7 @@
 module powerbi.extensibility.visual {
 
-    import axisHelper = powerbi.extensibility.utils.chart.axis;
-    import IAxisProperties = powerbi.extensibility.utils.chart.axis.IAxisProperties;
     import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
+    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
     export module ViolinPlotModels {
 
@@ -69,6 +68,7 @@ module powerbi.extensibility.visual {
         export interface ICategory {
             name: string;
             colour: string;
+            formatter: utils.formatting.IValueFormatter;
             selectionId: powerbi.visuals.ISelectionId;
             dataPoints: number[];
             dataKde: IDataPointKde[];
