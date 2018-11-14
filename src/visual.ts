@@ -31,6 +31,8 @@ module powerbi.extensibility.visual {
     import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
     import renderViolin = ViolinPlotHelpers.renderViolin;
     import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+
+    import ICategory = ViolinPlotModels.ICategory;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -41,11 +43,13 @@ module powerbi.extensibility.visual {
         private defaultColour: string;
         private host: IVisualHost;
         private viewModel: ViolinPlotModels.IViewModel;
+        private tooltipServiceWrapper: ITooltipServiceWrapper;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
             this.colourPalette = options.host.colorPalette;
             this.host = options.host;
+            this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
             this.defaultColour = this.colourPalette['colors'][0].value;
 
             /** Visual container */
@@ -194,6 +198,7 @@ module powerbi.extensibility.visual {
 
                 }
 
+            /** Add series elements */
                 let seriesContainer = this.container.selectAll('.violinPlotContainer')
                     .data(this.viewModel.categories)
                     .enter()
@@ -205,6 +210,15 @@ module powerbi.extensibility.visual {
                             'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
                             'width': this.viewModel.xAxis.scale.rangeBand()
                         });
+
+            /** Tooltips */
+                if (this.settings.tooltip.show) {
+                    this.tooltipServiceWrapper.addTooltip(
+                        this.container.selectAll('.violinPlotSeries'),
+                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data),
+                        (tooltipEvent: TooltipEventArgs<number>) => null
+                    )
+                }                
 
             /** Violin plot */
                 renderViolin(seriesContainer, this.viewModel, this.settings);
@@ -220,6 +234,22 @@ module powerbi.extensibility.visual {
                 debug.footer();
             }
 
+        }
+
+        private static getTooltipData(value: any): VisualTooltipDataItem[] {
+            let v = value as ICategory,
+                tooltips: VisualTooltipDataItem[] = [];
+
+            
+
+            return [
+                {
+                    displayName: 'Test',
+                    value: v.name,
+                    color: v.colour,
+                    header: v.name
+                }
+            ];
         }
 
         private static parseSettings(dataView: DataView): VisualSettings {
