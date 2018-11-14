@@ -20,6 +20,7 @@
     "src/kde.ts",
     "src/visualHelpers.ts",
     "src/settings.ts",
+    "src/tooltipServiceWrapper.ts",
     "src/visual.ts"
   ]
 }
