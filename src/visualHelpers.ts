@@ -135,7 +135,7 @@ module powerbi.extensibility.visual {
                         for (let i = 0, len = category.values.length; i < len; i++) {
 
                             viewModel.categoryNames = true;
-                            let categoryName = valueFormatter.format(category.values[i].toString(), categoryMetadata.format);                        
+                            let categoryName = valueFormatter.format(category.values[i], categoryMetadata.format);                        
                             let defaultColour: Fill = {
                                 solid: {
                                     color: colourPalette.getColor(categoryName).value
