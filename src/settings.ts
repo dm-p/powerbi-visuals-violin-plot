@@ -43,6 +43,7 @@ module powerbi.extensibility.visual {
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
         public boxPlot: boxPlotSetings = new boxPlotSetings();
+        public tooltip: tooltipSettings = new tooltipSettings();
         public about: aboutSettings = new aboutSettings();
     }
 
@@ -156,6 +157,12 @@ module powerbi.extensibility.visual {
         public meanFillColour: string = defaultBoxDataColour;
         /** Median circle inner colour */
         public meanFillColourInner: string = defaultBoxFillColour;
+    }
+
+    /** Used to hold tooltip settings */
+    export class tooltipSettings {
+        /** Show tooltips */
+        public show: boolean = true;
     }
 
     /** Used to hold about info and manage debugging */

@@ -938,6 +938,18 @@
                 }
             }
         },
+        "tooltip": {
+            "displayName": "Tooltip",
+            "description": "Tooltip options",
+            "properties": {
+                "show": {
+                    "displayName": "Enable/disable tooltips for series",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "about": {
             "displayName": "About",
             "properties": {
