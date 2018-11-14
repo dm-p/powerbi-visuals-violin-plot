@@ -320,16 +320,14 @@ module powerbi.extensibility.visual {
             if (s.showBandwidth) {
                 if (settings.violin.specifyBandwidth) {
                     tooltips.push({
-                        displayName: 'KDE Bandwidth (Specified)',
+                        displayName: 'Bandwidth (Specified)',
                         value: f.format(viewModel.statistics.bandwidthActual)
                     });
-                } else {
-                    tooltips.push({
-                        displayName: 'KDE Bandwidth (Estimated)',
-                        value: f.format(viewModel.statistics.bandwidthSilverman)
-                    });
                 }
-                
+                tooltips.push({
+                    displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
+                    value: f.format(viewModel.statistics.bandwidthSilverman)
+                });                
             }
 
             return tooltips;
