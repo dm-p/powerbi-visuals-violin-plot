@@ -32,6 +32,7 @@ module powerbi.extensibility.visual {
     import renderViolin = ViolinPlotHelpers.renderViolin;
     import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
 
+    import IViewModel = ViolinPlotModels.IViewModel;
     import ICategory = ViolinPlotModels.ICategory;
     
     export class ViolinPlot implements IVisual {
@@ -215,7 +216,7 @@ module powerbi.extensibility.visual {
                 if (this.settings.tooltip.show) {
                     this.tooltipServiceWrapper.addTooltip(
                         this.container.selectAll('.violinPlotSeries'),
-                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data),
+                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
                         (tooltipEvent: TooltipEventArgs<number>) => null
                     )
                 }                
@@ -236,20 +237,102 @@ module powerbi.extensibility.visual {
 
         }
 
-        private static getTooltipData(value: any): VisualTooltipDataItem[] {
+        private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
             let v = value as ICategory,
+                s = settings.tooltip,
+                f = v.formatter,
                 tooltips: VisualTooltipDataItem[] = [];
 
-            
+            tooltips.push({
+                displayName: 'Category',
+                value: v.name ? v.name : 'All Data',
+                color: v.colour
+            });
 
-            return [
-                {
-                    displayName: 'Test',
-                    value: v.name,
-                    color: v.colour,
-                    header: v.name
+            if (s.showMaxMin) {
+                tooltips.push({
+                    displayName: 'Maximum',
+                    value: f.format(v.statistics.max)
+                });
+                tooltips.push({
+                    displayName: 'Minimum',
+                    value: f.format(v.statistics.min)
+                });
+            }
+
+            if (s.showSpan) {
+                tooltips.push({
+                    displayName: 'Span (Min to Max)',
+                    value: f.format(v.statistics.span)
+                });
+            }
+
+            if (s.showMedian) {
+                tooltips.push({
+                    displayName: 'Median',
+                    value: f.format(v.statistics.median)
+                });
+            }
+
+            if (s.showMean) {
+                tooltips.push({
+                    displayName: 'Mean',
+                    value: f.format(v.statistics.mean)
+                });
+            }
+
+            if (s.showDeviation) {
+                tooltips.push({
+                    displayName: 'Standard Deviation',
+                    value: f.format(v.statistics.deviation)
+                });
+            }
+
+            if (s.showQuartiles) {
+                tooltips.push({
+                    displayName: 'Upper Quartile',
+                    value: f.format(v.statistics.quartile3)
+                });
+                tooltips.push({
+                    displayName: 'Lower Quartile',
+                    value: f.format(v.statistics.quartile1)
+                });
+            }
+
+            if (s.showIqr) {
+                tooltips.push({
+                    displayName: 'Inter Quartile Range',
+                    value: f.format(v.statistics.iqr)
+                });
+            }
+
+            if (s.showConfidence) {
+                tooltips.push({
+                    displayName: 'Upper Whisker (95%)',
+                    value: f.format(v.statistics.confidenceUpper)
+                });
+                tooltips.push({
+                    displayName: 'Lower Whisker (5%)',
+                    value: f.format(v.statistics.confidenceLower)
+                });
+            }
+
+            if (s.showBandwidth) {
+                if (settings.violin.specifyBandwidth) {
+                    tooltips.push({
+                        displayName: 'KDE Bandwidth (Specified)',
+                        value: f.format(viewModel.statistics.bandwidthActual)
+                    });
+                } else {
+                    tooltips.push({
+                        displayName: 'KDE Bandwidth (Estimated)',
+                        value: f.format(viewModel.statistics.bandwidthSilverman)
+                    });
                 }
-            ];
+                
+            }
+
+            return tooltips;
         }
 
         private static parseSettings(dataView: DataView): VisualSettings {
