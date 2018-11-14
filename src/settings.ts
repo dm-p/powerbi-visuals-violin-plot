@@ -163,6 +163,18 @@ module powerbi.extensibility.visual {
     export class tooltipSettings {
         /** Show tooltips */
         public show: boolean = true;
+        /** Precision */
+        public precision: number = null;
+        /** Individual statistics */
+        public showMaxMin: boolean = true;
+        public showSpan: boolean = false;
+        public showMedian: boolean = true;
+        public showMean: boolean = true;
+        public showDeviation: boolean = true;
+        public showQuartiles: boolean = false;
+        public showIqr: boolean = false;
+        public showConfidence: boolean = false;
+        public showBandwidth: boolean = false;
     }
 
     /** Used to hold about info and manage debugging */

@@ -947,6 +947,76 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "precision": {
+                    "displayName": "Value Decimal Places",
+                    "type": {
+                        "integer": true
+                    },
+                    "placeHolderText": "Auto"   
+                },
+                "showMaxMin": {
+                    "displayName": "Maximum & Minimum",
+                    "description": "Show the series maximum and minimum values on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showSpan": {
+                    "displayName": "Span (Min to Max)",
+                    "description": "Show the series span value (range) from minimum to maximum on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMedian": {
+                    "displayName": "Median",
+                    "description": "Show the series median value on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMean": {
+                    "displayName": "Mean",
+                    "description": "Show the series mean value on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showDeviation": {
+                    "displayName": "Standard Deviation",
+                    "description": "Show the series standard deviation value on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showQuartiles": {
+                    "displayName": "Upper & Lower Quartiles",
+                    "description": "Show the series upper and lower quartile values on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showIqr": {
+                    "displayName": "Inter Quartile Range",
+                    "description": "Show the series inter quartile range value on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showConfidence": {
+                    "displayName": "Whisker (Confidence) Values",
+                    "description": "Show the series confindence values (or whisker values) on the tooltip",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showBandwidth": {
+                    "displayName": "KDE Bandwidth",
+                    "description": "Show the bandwidth value applied to the series - used to calculate the violin line",
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         },

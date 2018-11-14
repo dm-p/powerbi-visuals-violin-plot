@@ -344,6 +344,16 @@ module powerbi.extensibility.visual {
                             }
                         break;
                     }
+                    case "tooltip": {
+                        /** Range validation on grid line stroke width and precision */
+                            instances[0].validValues = instances[0].validValues || {};
+                            instances[0].validValues.precision = {
+                                numberRange: {
+                                    min: 0,
+                                    max: 10
+                                }
+                            };
+                    }
                     case 'dataColours': {
                         /** Assign default theme colour from palette if default fill colour not overridden */
                             if (!this.settings.dataColours.defaultFillColour) {
