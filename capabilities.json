@@ -1084,7 +1084,12 @@
                                 "in": "category"
                             }
                         }
-                    ]
+                    ],
+                    "dataReductionAlgorithm": {
+                        "window": {
+                            "count": 30000
+                        }
+                    }
                 },
                 "values": {
                     "bind": {

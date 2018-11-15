@@ -64,6 +64,26 @@ module powerbi.extensibility.visual {
             this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
 
+            /** Initial debugging for visual update */
+                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
+                debug.clear();
+                debug.heading('Visual Update');
+                debug.log('Settings', this.settings);
+                debug.log('Viewport', options.viewport);
+
+            
+
+            /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
+             *  while we're fetching more data.
+             */
+                if (options.dataViews[0].metadata.segment) {
+                    debug.log('Not all data loaded. Loading more (if we can...)...');
+                    this.host.fetchMoreData();
+                    return;
+                } else {
+                    debug.log('We have all the data we can get!');
+                }
+
             /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
              *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
              *  assigned colour.
@@ -72,24 +92,18 @@ module powerbi.extensibility.visual {
                     this.settings.dataColours.defaultFillColour = this.defaultColour;
                 }
 
-            /** Initial debugging for visual update */
-                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
-                debug.clear();
-                debug.heading('Visual Update');
-                debug.log('Settings', this.settings);
-                debug.log('Viewport', options.viewport);
-
             /** Clear down existing plot */
-            this.container.selectAll('*').remove();
+                this.container.selectAll('*').remove();
             
             /** Size our initial container to match the viewport */
-            this.container.attr({
-                width: `${options.viewport.width}`,
-                height: `${options.viewport.height}`,
-            });
+                this.container.attr({
+                    width: `${options.viewport.width}`,
+                    height: `${options.viewport.height}`,
+                });
 
-            this.viewModel = visualTransform(options, this.settings, this.host, this.colourPalette);
-            debug.log('View model', this.viewModel);
+            /** Map the view model */
+                this.viewModel = visualTransform(options, this.settings, this.host, this.colourPalette);
+                debug.log('View model', this.viewModel);
 
             /** Create a Y axis */
                 if (this.settings.yAxis.show) {
@@ -243,21 +257,29 @@ module powerbi.extensibility.visual {
                 f = v.formatter,
                 tooltips: VisualTooltipDataItem[] = [];
 
-            tooltips.push({
-                displayName: 'Category',
-                value: v.name ? v.name : 'All Data',
-                color: v.colour
-            });
+            tooltips.push(
+                {
+                    displayName: 'Category',
+                    value: v.name ? v.name : 'All Data',
+                    color: v.colour
+                },
+                {
+                    displayName: '# Samples',
+                    value: f.format(v.dataPoints.length)
+                }
+            );
 
             if (s.showMaxMin) {
-                tooltips.push({
-                    displayName: 'Maximum',
-                    value: f.format(v.statistics.max)
-                });
-                tooltips.push({
-                    displayName: 'Minimum',
-                    value: f.format(v.statistics.min)
-                });
+                tooltips.push(
+                    {
+                        displayName: 'Maximum',
+                        value: f.format(v.statistics.max)
+                    },
+                    {
+                        displayName: 'Minimum',
+                        value: f.format(v.statistics.min)
+                    }
+                );
             }
 
             if (s.showSpan) {
@@ -289,14 +311,16 @@ module powerbi.extensibility.visual {
             }
 
             if (s.showQuartiles) {
-                tooltips.push({
-                    displayName: 'Upper Quartile',
-                    value: f.format(v.statistics.quartile3)
-                });
-                tooltips.push({
-                    displayName: 'Lower Quartile',
-                    value: f.format(v.statistics.quartile1)
-                });
+                tooltips.push(
+                    {
+                        displayName: 'Upper Quartile',
+                        value: f.format(v.statistics.quartile3)
+                    },
+                    {
+                        displayName: 'Lower Quartile',
+                        value: f.format(v.statistics.quartile1)
+                    }
+                );
             }
 
             if (s.showIqr) {
@@ -307,14 +331,16 @@ module powerbi.extensibility.visual {
             }
 
             if (s.showConfidence) {
-                tooltips.push({
-                    displayName: 'Upper Whisker (95%)',
-                    value: f.format(v.statistics.confidenceUpper)
-                });
-                tooltips.push({
-                    displayName: 'Lower Whisker (5%)',
-                    value: f.format(v.statistics.confidenceLower)
-                });
+                tooltips.push(
+                    {
+                        displayName: 'Upper Whisker (95%)',
+                        value: f.format(v.statistics.confidenceUpper)
+                    },
+                    {
+                        displayName: 'Lower Whisker (5%)',
+                        value: f.format(v.statistics.confidenceLower)
+                    }
+                );
             }
 
             if (s.showBandwidth) {
