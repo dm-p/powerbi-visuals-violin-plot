@@ -67,6 +67,7 @@ module powerbi.extensibility.visual {
 
         export interface ICategory {
             name: string;
+            category: string;
             colour: string;
             formatter: utils.formatting.IValueFormatter;
             selectionId: powerbi.visuals.ISelectionId;

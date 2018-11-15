@@ -109,115 +109,116 @@ module powerbi.extensibility.visual {
             /** Otherwise, let's get that data! */
                 debug.log('Data mapping conditions met. Proceeding with view model transform.');
                 let values = dataViews[0].categorical.values,
-                    categorical = dataViews[0].categorical,
-                    category = dataViews[0].categorical.categories
-                        ?   dataViews[0].categorical.categories[0]
+                    category = dataViews[0].categorical.categories && dataViews[0].categorical.categories[1]
+                        ?   dataViews[0].categorical.categories[1]
                         :   null,
-                    allDataPoints: number[] = [],
                     metadata = dataViews[0].metadata,
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
-
                     viewModel.categories = [];
 
-                /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. */
-                    if (!category) {
+                /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
+                 *  Note that while it makes sense to put the category above the sampling from an analytical perspective, it actually creates blank values
+                 *  for every unique sampling value under categories that do not contain it, and this ultimately blows up the granularity of the data
+                 *  set significantly for even a few hundred rows. Byr grouping by sampling and then by category, we get the same number of rows as
+                 *  there are in our base data. What this means is that we need to get the unique category values from the 'lower level' category in our
+                 *  data view mapping and then assign our groupings once we know what they are.
+                */
 
+                    /** Copy our values array and sort */
+                        let allDataPoints = <number[]>values[0].values
+                            .slice(0)
+                            .sort(d3.ascending);
+
+                    if (!category) {
+                        
                         viewModel.categoryNames = false;
                         viewModel.categories.push({
                             name: '',
                             colour: settings.dataColours.defaultFillColour,
-                            selectionId: null
+                            selectionId: null,
+                            dataPoints: allDataPoints
                         } as ICategory);
 
                     } else {
 
-                        for (let i = 0, len = category.values.length; i < len; i++) {
-
+                        /** Get unique category values */
+                            let distinctCategories = category.values.filter((v, i, a) => a.indexOf(v) == i);
                             viewModel.categoryNames = true;
-                            let categoryName = valueFormatter.format(category.values[i], categoryMetadata.format);                        
-                            let defaultColour: Fill = {
-                                solid: {
-                                    color: colourPalette.getColor(categoryName).value
+
+                        /** Create view model template */
+                            distinctCategories.map((v, i) => {
+                                let categoryName = valueFormatter.format(v, categoryMetadata.format);                        
+                                let defaultColour: Fill = {
+                                    solid: {
+                                        color: colourPalette.getColor(categoryName).value
+                                    }
                                 }
-                            }
-    
-                            viewModel.categories.push({
-                                name: categoryName,
-                                colour: settings.dataColours.colourByCategory
-                                    ?   getCategoricalObjectValue<Fill>(
-                                            category,
-                                            i,
-                                            'dataColours',
-                                            'categoryFillColour',
-                                            defaultColour
-                                        ).solid.color
-                                    :   settings.dataColours.defaultFillColour,
-                                selectionId: host.createSelectionIdBuilder()
-                                    .withCategory(category, i)
-                                    .createSelectionId()
-                            } as ICategory);
-                            
-                        }
+
+                                viewModel.categories.push({
+                                    name: categoryName,
+                                    category: `${v}`,
+                                    dataPoints: [],
+                                    colour: settings.dataColours.colourByCategory
+                                        ?   getCategoricalObjectValue<Fill>(
+                                                category,
+                                                i,
+                                                'dataColours',
+                                                'categoryFillColour',
+                                                defaultColour
+                                            ).solid.color
+                                        :   settings.dataColours.defaultFillColour,
+                                    selectionId: host.createSelectionIdBuilder()
+                                        .withCategory(category, i)
+                                        .createSelectionId()
+                                } as ICategory);
+                            });
+
+                        /** Now we can put the values into the right categories */
+                            values[0].values.map((v, i) => {
+                                viewModel.categories
+                                    .filter(c => c.category == `${category.values[i]}`)[0]
+                                    .dataPoints.push(parseFloat(<string>v) ? Number(v) : null);
+                            });
+
                     }
 
-                /** Now we should be in a position to resolve mapping from the value data, depending on our groupings */
-
-                    /** First, get the values into arrays for each category */
+                /** Calculate the statistics for all data points */
+                    viewModel.statistics = {
+                        min: d3.min(allDataPoints),
+                        max: d3.max(allDataPoints),
+                        deviation: d3.deviation(allDataPoints),
+                        iqr: d3.quantile(allDataPoints, 0.75) - d3.quantile(allDataPoints, 0.25),
+                        span: d3.max(allDataPoints) - d3.min(allDataPoints)
+                    } as IStatistics;
                         
-                        /** Instantiate an empty array for each category */
-                            let categoryData: number[][] = [];
-                            viewModel.categories.map((c, i) => {
-                                categoryData[i] = [];
-                            });
-
-                        /** 'unpivot' the values into each individual category (plus all data points) */
-                            values.map(v => {
-                                v.values.map((j, k) => {
-                                    if (j) {
-                                        categoryData[k].push(Number(j));
-                                        allDataPoints.push(Number(j));
-                                    }
-                                });             
-                            });
-
-                    /** Calculate the statistics for all data points */
-                        allDataPoints.sort(d3.ascending);
-                        viewModel.statistics = {
-                            min: d3.min(allDataPoints),
-                            max: d3.max(allDataPoints),
-                            deviation: d3.deviation(allDataPoints),
-                            iqr: d3.quantile(allDataPoints, 0.75) - d3.quantile(allDataPoints, 0.25),
-                            span: d3.max(allDataPoints) - d3.min(allDataPoints)
-                        } as IStatistics;
-
-                    /** Set up our measure formatter for each category + tooltips */
-                        let mFormat = valueFormatter.create({
-                            format: measureMetadata.format,
-                            value: viewModel.statistics.max,
-                            precision: settings.tooltip.precision != null
-                                ?   settings.tooltip.precision
-                                :   null
-                        });
+                /** Set up our measure formatter for each category + tooltips */
+                    let mFormat = valueFormatter.create({
+                        format: measureMetadata.format,
+                        value: viewModel.statistics.max,
+                        precision: settings.tooltip.precision != null
+                            ?   settings.tooltip.precision
+                            :   null
+                    });
                         
-                    /** Process the remainder of the view model by category */
-                        viewModel.categories.map((c, i) => {
-                            c.formatter = mFormat;
-                            c.dataPoints = categoryData[i].sort(d3.ascending);
-                            c.statistics = {
-                                min: d3.min(c.dataPoints),
-                                confidenceLower: d3.quantile(c.dataPoints, 0.05),
-                                quartile1: d3.quantile(c.dataPoints, 0.25),
-                                median: d3.median(c.dataPoints),
-                                mean: d3.mean(c.dataPoints),
-                                quartile3: d3.quantile(c.dataPoints, 0.75),
-                                confidenceUpper: d3.quantile(c.dataPoints, 0.95),
-                                max: d3.max(c.dataPoints),
-                                deviation: d3.deviation(c.dataPoints),
-                                iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
-                                span: d3.max(c.dataPoints) - d3.min(c.dataPoints)
-                            } as IStatistics
-                        });
+                /** Process the remainder of the view model by category */
+                    viewModel.categories.map((c, i) => {
+                        c.formatter = mFormat;
+                        c.dataPoints.sort(d3.ascending);
+                        c.statistics = {
+                            min: d3.min(c.dataPoints),
+                            confidenceLower: d3.quantile(c.dataPoints, 0.05),
+                            quartile1: d3.quantile(c.dataPoints, 0.25),
+                            median: d3.median(c.dataPoints),
+                            mean: d3.mean(c.dataPoints),
+                            quartile3: d3.quantile(c.dataPoints, 0.75),
+                            confidenceUpper: d3.quantile(c.dataPoints, 0.95),
+                            max: d3.max(c.dataPoints),
+                            deviation: d3.deviation(c.dataPoints),
+                            iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
+                            span: d3.max(c.dataPoints) - d3.min(c.dataPoints)
+                        } as IStatistics
+                    });
 
                 /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
                  *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking

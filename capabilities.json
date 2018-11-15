@@ -1073,20 +1073,22 @@
             ],
             "categorical": {
                 "categories": {
-                    "for": {
-                        "in": "category"
-                    }
+                    "select": [
+                        {
+                            "for": {
+                                "in": "sampling"
+                            }
+                        },
+                        {
+                            "for": {
+                                "in": "category"
+                            }
+                        }
+                    ]
                 },
                 "values": {
-                    "group": {
-                        "by": "sampling",
-                        "select": [
-                            {
-                                "bind": {
-                                    "to": "measure"
-                                }
-                            }
-                        ]
+                    "bind": {
+                        "to": "measure"
                     }
                 }
             }
