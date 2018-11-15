@@ -27,6 +27,10 @@
 module powerbi.extensibility.visual {
     'use strict';
 
+    import tooltip = powerbi.extensibility.utils.tooltip;
+    import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
+    import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
+
     import visualTransform = ViolinPlotHelpers.visualTransform;
     import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
     import renderViolin = ViolinPlotHelpers.renderViolin;
@@ -50,7 +54,7 @@ module powerbi.extensibility.visual {
             this.element = options.element;
             this.colourPalette = options.host.colorPalette;
             this.host = options.host;
-            this.tooltipServiceWrapper = createTooltipServiceWrapper(this.host.tooltipService, options.element);
+            this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(this.host.tooltipService, options.element);
             this.defaultColour = this.colourPalette['colors'][0].value;
 
             /** Visual container */
@@ -71,7 +75,7 @@ module powerbi.extensibility.visual {
                 debug.log('Settings', this.settings);
                 debug.log('Viewport', options.viewport);
 
-            
+
 
             /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
              *  while we're fetching more data.

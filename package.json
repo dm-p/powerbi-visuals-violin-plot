@@ -5,7 +5,8 @@
     "powerbi-models": "^1.0.12",
     "powerbi-visuals-utils-chartutils": "^1.7.1",
     "powerbi-visuals-utils-dataviewutils": "1.2.0",
-    "powerbi-visuals-utils-formattingutils": "^3.0.2"
+    "powerbi-visuals-utils-formattingutils": "^3.0.2",
+    "powerbi-visuals-utils-tooltiputils": "^1.0.0"
   },
   "devDependencies": {
     "@types/d3": "^3.5.41"

@@ -15,12 +15,12 @@
     "node_modules/powerbi-visuals-utils-svgutils/lib/index.d.ts",
     "node_modules/powerbi-visuals-utils-typeutils/lib/index.d.ts",
     "node_modules/powerbi-visuals-utils-chartutils/lib/index.d.ts",
+    "node_modules/powerbi-visuals-utils-tooltiputils/lib/index.d.ts",
     "node_modules/powerbi-models/dist/models-noexports.d.ts",
     "src/viewModels.ts",
     "src/kde.ts",
     "src/visualHelpers.ts",
     "src/settings.ts",
-    "src/tooltipServiceWrapper.ts",
     "src/visual.ts"
   ]
 }
