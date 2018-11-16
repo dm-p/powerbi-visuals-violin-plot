@@ -49,6 +49,7 @@ module powerbi.extensibility.visual {
         private host: IVisualHost;
         private viewModel: ViolinPlotModels.IViewModel;
         private tooltipServiceWrapper: ITooltipServiceWrapper;
+        private errorState: boolean;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
@@ -58,15 +59,16 @@ module powerbi.extensibility.visual {
             this.defaultColour = this.colourPalette['colors'][0].value;
 
             /** Visual container */
-            this.container = d3.select(options.element)
-                .append('svg')
-                .classed('violinPlotContainer', true);
+                this.container = d3.select(options.element)
+                    .append('div')
+                    .classed('violinPlotContainer', true);
 
         }
 
         public update(options: VisualUpdateOptions) {
             this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
+            this.errorState = false;
 
             /** Initial debugging for visual update */
                 let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
@@ -74,19 +76,6 @@ module powerbi.extensibility.visual {
                 debug.heading('Visual Update');
                 debug.log('Settings', this.settings);
                 debug.log('Viewport', options.viewport);
-
-
-
-            /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
-             *  while we're fetching more data.
-             */
-                if (options.dataViews[0].metadata.segment) {
-                    debug.log('Not all data loaded. Loading more (if we can...)...');
-                    this.host.fetchMoreData();
-                    return;
-                } else {
-                    debug.log('We have all the data we can get!');
-                }
 
             /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
              *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
@@ -101,18 +90,64 @@ module powerbi.extensibility.visual {
             
             /** Size our initial container to match the viewport */
                 this.container.attr({
-                    width: `${options.viewport.width}`,
-                    height: `${options.viewport.height}`,
+                    width: `${options.viewport.width}%`,
+                    height: `${options.viewport.height}%`,
                 });
+
+            /** Things that can terminate the update process early */
+
+                /** Validation of inputs and display a nice message */
+                    if (!options.dataViews
+                        || !options.dataViews[0]
+                        || !options.dataViews[0].metadata
+                        || !options.dataViews[0].metadata.columns.filter(c => c.roles['sampling'])[0]
+                        || !options.dataViews[0].categorical.values
+                    ) {
+                        this.errorState = true;
+                        let errorContainer = this.container
+                            .append('div')
+                                .classed('violinPlotError', true);
+                        errorContainer                        
+                            .append('div')
+                                .html('Please ensure that you have added data to the <strong>Sampling</strong>\
+                                    and <strong>Measure Data</strong> fields, in order to display your violin plot :) <br/><br/>\
+                                    (<strong>Category</strong> is optional)');
+
+                        if (debug) {
+                            debug.log('Update cancelled due to incomplete fields.');
+                            debug.footer();
+                        }
+                        return;
+                    }
+
+                /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
+                 *  while we're fetching more data.
+                 */
+                    if (options.dataViews[0].metadata.segment) {
+                        debug.log('Not all data loaded. Loading more (if we can...)...');
+                        this.host.fetchMoreData();
+                        return;
+                    } else {
+                        debug.log('We have all the data we can get!');
+                    }
 
             /** Map the view model */
                 this.viewModel = visualTransform(options, this.settings, this.host, this.colourPalette);
                 debug.log('View model', this.viewModel);
 
+            /** Add our main SVG */
+                let violinPlotCanvas = this.container
+                    .append('svg')
+                        .classed('violinPlotCanvas', true)
+                        .attr({
+                            width: `${options.viewport.width}`,
+                            height: `${options.viewport.height}`
+                        });
+
             /** Create a Y axis */
                 if (this.settings.yAxis.show) {
 
-                    let yAxisContainer = this.container
+                    let yAxisContainer = violinPlotCanvas
                         .append('g')
                             .classed('yAxisContainer', true)
                             .style({
@@ -166,7 +201,7 @@ module powerbi.extensibility.visual {
             
             /** Create an X-axis */
                 if (this.settings.xAxis.show) {
-                    let xAxisContainer = this.container
+                    let xAxisContainer = violinPlotCanvas
                         .append('g')
                         .classed('xAxisContainer', true)
                             .style({
@@ -218,7 +253,7 @@ module powerbi.extensibility.visual {
                 }
 
             /** Add series elements */
-                let seriesContainer = this.container.selectAll('.violinPlotContainer')
+                let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
                     .data(this.viewModel.categories)
                     .enter()
                     .append('g')
@@ -233,7 +268,7 @@ module powerbi.extensibility.visual {
             /** Tooltips */
                 if (this.settings.tooltip.show) {
                     this.tooltipServiceWrapper.addTooltip(
-                        this.container.selectAll('.violinPlotSeries'),
+                        violinPlotCanvas.selectAll('.violinPlotSeries'),
                         (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
                         (tooltipEvent: TooltipEventArgs<number>) => null
                     )
