@@ -27,17 +27,28 @@
 module powerbi.extensibility.visual {
     'use strict';
 
-    import tooltip = powerbi.extensibility.utils.tooltip;
-    import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
-    import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
+    /** powerbi.extensibility.utils.tooltip */
+        import tooltip = powerbi.extensibility.utils.tooltip;
+        import TooltipEventArgs = powerbi.extensibility.utils.tooltip.TooltipEventArgs;
+        import ITooltipServiceWrapper = powerbi.extensibility.utils.tooltip.ITooltipServiceWrapper;
 
-    import visualTransform = ViolinPlotHelpers.visualTransform;
-    import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
-    import renderViolin = ViolinPlotHelpers.renderViolin;
-    import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+    /** powerbi.extensibility.utils.chart.legend */
+        import createLegend = powerbi.extensibility.utils.chart.legend.createLegend;
+        import ILegend = powerbi.extensibility.utils.chart.legend.ILegend;
+        import Legend = powerbi.extensibility.utils.chart.legend;
+        import LegendData = powerbi.extensibility.utils.chart.legend.LegendData;
+        import LegendIcon = powerbi.extensibility.utils.chart.legend.LegendIcon;
+        import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
 
-    import IViewModel = ViolinPlotModels.IViewModel;
-    import ICategory = ViolinPlotModels.ICategory;
+    /** ViolinPlotHelpers */
+        import visualTransform = ViolinPlotHelpers.visualTransform;
+        import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
+        import renderViolin = ViolinPlotHelpers.renderViolin;
+        import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+
+    /** ViolinPlotModels */
+        import IViewModel = ViolinPlotModels.IViewModel;
+        import ICategory = ViolinPlotModels.ICategory;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
