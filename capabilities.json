@@ -943,7 +943,7 @@
             "description": "Tooltip options",
             "properties": {
                 "show": {
-                    "displayName": "Enable/disable tooltips for series",
+                    "displayName": "Enable/disable tooltips for categories",
                     "type": {
                         "bool": true
                     }
@@ -1014,6 +1014,18 @@
                 "showBandwidth": {
                     "displayName": "KDE Bandwidth",
                     "description": "Show the bandwidth value applied to the series - used to calculate the violin line",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "legend": {
+            "displayName": "Legend",
+            "description": "Legend options",
+            "properties": {
+                "show": {
+                    "displayName": "Enable/disable legend for categories",
                     "type": {
                         "bool": true
                     }

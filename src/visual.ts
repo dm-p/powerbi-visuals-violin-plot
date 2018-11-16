@@ -501,7 +501,7 @@ module powerbi.extensibility.visual {
                             }
                         break;
                     }
-                    case "tooltip": {
+                    case 'tooltip': {
                         /** Range validation on grid line stroke width and precision */
                             instances[0].validValues = instances[0].validValues || {};
                             instances[0].validValues.precision = {
@@ -510,6 +510,7 @@ module powerbi.extensibility.visual {
                                     max: 10
                                 }
                             };
+                        break;
                     }
                     case 'dataColours': {
                         /** Assign default theme colour from palette if default fill colour not overridden */
@@ -522,7 +523,7 @@ module powerbi.extensibility.visual {
                                 this.settings.dataColours.colourByCategory = false; /** This prevents us losing the default fill if we remove the field afterward */
                             }
                         /** Add categories if we want to colour by them */
-                            if (this.settings.dataColours.colourByCategory) {
+                            if (this.settings.dataColours.colourByCategory && !this.errorState) {
                                 delete instances[0].properties['defaultFillColour'];
                                 for (let category of this.viewModel.categories) {
                                     instances.push({
@@ -538,6 +539,13 @@ module powerbi.extensibility.visual {
                                         selector: category.selectionId.getSelector()
                                     });
                                 }
+                            }
+                        break;
+                    }
+                    case 'legend' :{
+                        /** Disable/hide if not using Data Colours by Category */
+                            if (!this.settings.dataColours.colourByCategory) {
+                                delete instances[0];
                             }
                         break;
                     }

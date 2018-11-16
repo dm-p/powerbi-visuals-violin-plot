@@ -29,6 +29,7 @@ module powerbi.extensibility.visual {
     import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
 
     let defaultFontSize: number = 11,
+        defaultFontSizeSmall: number = 8,
         defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
         defaultFontColor: string = '#777777',
         defaultAxisFontColor: string = '#777777',
@@ -44,6 +45,7 @@ module powerbi.extensibility.visual {
         public dataColours: dataColourSettings = new dataColourSettings();
         public boxPlot: boxPlotSetings = new boxPlotSetings();
         public tooltip: tooltipSettings = new tooltipSettings();
+        public legend: legendSettings = new legendSettings();
         public about: aboutSettings = new aboutSettings();
     }
 
@@ -175,6 +177,22 @@ module powerbi.extensibility.visual {
         public showIqr: boolean = false;
         public showConfidence: boolean = false;
         public showBandwidth: boolean = false;
+    }
+
+    /** Legend settings */
+    export class legendSettings{
+          /** Show legend */
+          public show: boolean = true;
+          /** Legend position */
+          public position: string = 'Top';
+          /** Show title */
+          public showTitle: boolean = true;
+          /** Title text */
+          public titleText: string = null;
+          /** Font color */
+          public fontColor: string = defaultFontColor;
+          /** Text Size */
+          public fontSize: number = defaultFontSizeSmall;
     }
 
     /** Used to hold about info and manage debugging */
