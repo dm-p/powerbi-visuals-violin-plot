@@ -204,7 +204,9 @@ module powerbi.extensibility.visual {
                 /** Process the remainder of the view model by category */
                     viewModel.categories.map((c, i) => {
                         c.formatter = mFormat;
-                        c.dataPoints.sort(d3.ascending);
+                        c.dataPoints
+                            .filter(v => v !== null)
+                            .sort(d3.ascending);
                         c.statistics = {
                             min: d3.min(c.dataPoints),
                             confidenceLower: d3.quantile(c.dataPoints, 0.05),
