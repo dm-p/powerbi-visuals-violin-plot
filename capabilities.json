@@ -1029,6 +1029,89 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "position": {
+                    "displayName": "Position",
+                    "displayNameKey": "Visual_Position",
+                    "description": "Select the location for the legend",
+                    "descriptionKey": "Visual_Description_Position",
+                    "type": {
+                        "enumeration": [
+                        {
+                            "value": "Top",
+                            "displayNameKey": "Visual_Top",
+                            "displayName": "Top"
+                        },
+                        {
+                            "value": "Bottom",
+                            "displayNameKey": "Visual_Bottom",
+                            "displayName": "Bottom"
+                        },
+                        {
+                            "value": "Left",
+                            "displayNameKey": "Visual_Left",
+                            "displayName": "Left"
+                        },
+                        {
+                            "value": "Right",
+                            "displayNameKey": "Visual_Right",
+                            "displayName": "Right"
+                        },
+                        {
+                            "value": "TopCenter",
+                            "displayNameKey": "Visual_TopCenter",
+                            "displayName": "Top Center"
+                        },
+                        {
+                            "value": "BottomCenter",
+                            "displayNameKey": "Visual_BottomCenter",
+                            "displayName": "Bottom Center"
+                        },
+                        {
+                            "value": "LeftCenter",
+                            "displayNameKey": "Visual_LeftCenter",
+                            "displayName": "Left Center"
+                        },
+                        {
+                            "value": "RightCenter",
+                            "displayNameKey": "Visual_RightCenter",
+                            "displayName": "Right Center"
+                        }
+                        ]
+                    }
+                },
+                "showTitle": {
+                    "displayName": "Title",
+                    "displayNameKey": "Visual_Title",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "titleText": {
+                    "displayName": "Title text",
+                    "displayNameKey": "Visual_Text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "Category"
+                },
+                "fontColor": {
+                    "displayName": "Font color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "fontSize": {
+                    "displayName": "Text size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
                 }
             }
         },
