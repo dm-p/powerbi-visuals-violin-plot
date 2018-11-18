@@ -41,6 +41,7 @@ module powerbi.extensibility.visual {
         import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
 
     /** ViolinPlotHelpers */
+        import visualCategoryStatistics = ViolinPlotHelpers.visualCategoryStatistics;
         import visualTransform = ViolinPlotHelpers.visualTransform;
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
@@ -61,6 +62,9 @@ module powerbi.extensibility.visual {
         private viewModel: ViolinPlotModels.IViewModel;
         private tooltipServiceWrapper: ITooltipServiceWrapper;
         private errorState: boolean;
+        private legend: ILegend;
+        private legendData: LegendData;
+        private viewport: IViewport;
 
         constructor(options: VisualConstructorOptions) {
             this.element = options.element;
@@ -74,19 +78,29 @@ module powerbi.extensibility.visual {
                     .append('div')
                     .classed('violinPlotContainer', true);
 
+            /** Legend container */
+                this.legend = createLegend(
+                    options.element,
+                    false,
+                    null,
+                    false,
+                    LegendPosition.Top
+                );
+
         }
 
         public update(options: VisualUpdateOptions) {
             this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
             this.errorState = false;
+            this.viewport = options.viewport;
 
             /** Initial debugging for visual update */
                 let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
                 debug.clear();
                 debug.heading('Visual Update');
                 debug.log('Settings', this.settings);
-                debug.log('Viewport', options.viewport);
+                debug.log('Viewport (Pre-legend)', options.viewport);
 
             /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
              *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
@@ -115,6 +129,7 @@ module powerbi.extensibility.visual {
                         || !options.dataViews[0].categorical.values
                     ) {
                         this.errorState = true;
+                        this.renderLegend();
                         let errorContainer = this.container
                             .append('div')
                                 .classed('violinPlotError', true);
@@ -142,8 +157,35 @@ module powerbi.extensibility.visual {
                         debug.log('We have all the data we can get!');
                     }
 
-            /** Map the view model */
-                this.viewModel = visualTransform(options, this.settings, this.host, this.colourPalette);
+            /** Get initial categores and statistics for the view model. We can use this in rendering the legend */
+                this.viewModel = visualCategoryStatistics(options, this.settings, this.host, this.colourPalette);
+
+            /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
+            if (this.viewModel.categoryNames) {
+                this.legendData = {
+                    title: this.settings.legend.showTitle 
+                                ? this.settings.legend.titleText 
+                                    ?   this.settings.legend.titleText
+                                    :   options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0].displayName
+                                : null,
+                    fontSize: this.settings.legend.fontSize,
+                    labelColor: this.settings.legend.fontColor,
+                    dataPoints: this.viewModel.categories.map(c => (
+                        {
+                            label: c.name,
+                            color: c.colour,
+                            icon: LegendIcon.Circle,
+                            selected: false,
+                            identity: c.selectionId
+                        }
+                    ))
+                }
+            }
+            this.renderLegend();
+            debug.log('Viewport (Post-legend)', this.viewport);
+
+            /** Map the rest of the view model */
+                this.viewModel = visualTransform(options, this.viewModel, this.settings, this.viewport);
                 debug.log('View model', this.viewModel);
 
             /** Add our main SVG */
@@ -409,6 +451,38 @@ module powerbi.extensibility.visual {
             return tooltips;
         }
 
+    /** Renders the legend, based on the properties supplied in the update method */
+        private renderLegend(): void {
+            
+            /** Only show if legend is enabled and we colour by category */
+                const position: LegendPosition = this.settings.legend.show 
+                    && !this.errorState 
+                    && this.settings.dataColours.colourByCategory
+                        ?   LegendPosition[this.settings.legend.position]
+                        :   LegendPosition.None;
+
+            /** Draw the legend using values */
+                this.legend.changeOrientation(position);
+                this.legend.drawLegend(this.legendData, this.viewport);
+                Legend.positionChartArea(this.container, this.legend);
+
+            /** Adjust to viewport to match the legend orientation */
+                switch (this.legend.getOrientation()) {
+                    case LegendPosition.Left:
+                    case LegendPosition.LeftCenter:
+                    case LegendPosition.Right:
+                    case LegendPosition.RightCenter:
+                        this.viewport.width -= this.legend.getMargins().width;
+                        break;
+                    case LegendPosition.Top:
+                    case LegendPosition.TopCenter:
+                    case LegendPosition.Bottom:
+                    case LegendPosition.BottomCenter:
+                        this.viewport.height -= this.legend.getMargins().height;
+                        break;
+                }
+        }
+
         private static parseSettings(dataView: DataView): VisualSettings {
             return VisualSettings.parse(dataView) as VisualSettings;
         }
@@ -546,6 +620,10 @@ module powerbi.extensibility.visual {
                         /** Disable/hide if not using Data Colours by Category */
                             if (!this.settings.dataColours.colourByCategory) {
                                 delete instances[0];
+                            }
+                        /** Legend title toggle */
+                            if (!this.settings.legend.showTitle) {
+                                delete instances[0].properties['titleText'];
                             }
                         break;
                     }

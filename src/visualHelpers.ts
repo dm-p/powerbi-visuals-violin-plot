@@ -83,14 +83,13 @@ module powerbi.extensibility.visual {
                 return defaultValue;
             }
 
-        export function visualTransform(options: VisualUpdateOptions, settings: VisualSettings, host: IVisualHost, colourPalette: IColorPalette) : IViewModel {
+        export function visualCategoryStatistics(options: VisualUpdateOptions, settings: VisualSettings, host: IVisualHost, colourPalette: IColorPalette) : IViewModel  {
 
             /** Set up debugging */
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
-                debug.log('Running Visual Transform...');
+                debug.log('Preparing categories and statistics...');
 
-            let dataViews = options.dataViews,
-                selectionIdBuilder = host.createSelectionIdBuilder();
+            let dataViews = options.dataViews;
 
             /** Create bare-minimum view model */
                 let viewModel = {} as IViewModel;
@@ -143,21 +142,32 @@ module powerbi.extensibility.visual {
                     } else {
 
                         /** Get unique category values */
-                            let distinctCategories = category.values.filter((v, i, a) => a.indexOf(v) == i);
-                            viewModel.categoryNames = true;
+                            let distinctCategories = category.values.reduce(function(accum, current, idx) {
+                                if (!accum.filter(c => c.category == `${current}`)[0]) {
+                                    accum.push({
+                                        category: current,
+                                        selectionId: host.createSelectionIdBuilder()
+                                            .withCategory(category, idx)
+                                            .createSelectionId()
+                                    });
+                                }
+                                return accum;
+                            }, []);
+                            
+                        viewModel.categoryNames = true;
 
                         /** Create view model template */
                             distinctCategories.map((v, i) => {
-                                let categoryName = valueFormatter.format(v, categoryMetadata.format);                        
+                                let categoryName = valueFormatter.format(v.category, categoryMetadata.format);                        
                                 let defaultColour: Fill = {
                                     solid: {
                                         color: colourPalette.getColor(categoryName).value
                                     }
                                 }
-
+                                
                                 viewModel.categories.push({
                                     name: categoryName,
-                                    category: `${v}`,
+                                    category: `${v.category}`,
                                     dataPoints: [],
                                     colour: settings.dataColours.colourByCategory
                                         ?   getCategoricalObjectValue<Fill>(
@@ -168,9 +178,7 @@ module powerbi.extensibility.visual {
                                                 defaultColour
                                             ).solid.color
                                         :   settings.dataColours.defaultFillColour,
-                                    selectionId: host.createSelectionIdBuilder()
-                                        .withCategory(category, i)
-                                        .createSelectionId()
+                                    selectionId: v.selectionId
                                 } as ICategory);
                             });
 
@@ -205,8 +213,8 @@ module powerbi.extensibility.visual {
                     viewModel.categories.map((c, i) => {
                         c.formatter = mFormat;
                         c.dataPoints
-                            .filter(v => v !== null)
-                            .sort(d3.ascending);
+                            .sort(d3.ascending)
+                            .filter(v => v !== null);
                         c.statistics = {
                             min: d3.min(c.dataPoints),
                             confidenceLower: d3.quantile(c.dataPoints, 0.05),
@@ -254,6 +262,26 @@ module powerbi.extensibility.visual {
                                 :   viewModel.statistics.bandwidthSilverman;
 
                     }
+
+            debug.log('Categories and statistics mapped!');
+            return viewModel;
+
+        }
+
+        export function visualTransform(options: VisualUpdateOptions, viewModel: IViewModel, settings: VisualSettings, viewport: IViewport) : IViewModel {
+            
+            /** Set up debugging */
+                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+                debug.log('Preparing categories and statistics...');
+            
+            /** Other pre-requisites */
+                let dataViews = options.dataViews,
+                    metadata = dataViews[0].metadata,
+                    categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
+                    measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
+                    kernel = settings.violin.type == 'line'
+                        ?   KDE.kernels[settings.violin.kernel]
+                        :   {} as IKernel;
 
                 /** Add axis properties */
                     let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
@@ -358,7 +386,7 @@ module powerbi.extensibility.visual {
                         /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
                             debug.log('Y-Axis vertical space...');
                             let yPadVert = settings.yAxis.fontSize / 2,
-                                yHeight = options.viewport.height - yPadVert - xAxis.dimensions.height;
+                                yHeight = viewport.height - yPadVert - xAxis.dimensions.height;
 
                             yAxis.dimensions = {
                                 height: yHeight,
@@ -407,9 +435,9 @@ module powerbi.extensibility.visual {
                         /** Solve the remaining axis dimensions */
                             yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
                             yAxis.dimensions.x = yAxis.titleDimensions.width;
-                            xAxis.dimensions.width = xAxis.titleDimensions.width = options.viewport.width - yAxis.dimensions.width
+                            xAxis.dimensions.width = xAxis.titleDimensions.width = viewport.width - yAxis.dimensions.width
                             xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
-                            xAxis.titleDimensions.y = options.viewport.height - xAxis.titleDimensions.height;
+                            xAxis.titleDimensions.y = viewport.height - xAxis.titleDimensions.height;
 
                         /** Revise Y-axis properties as necessary */
                             debug.log('Y-Axis generator functions...');
@@ -417,7 +445,7 @@ module powerbi.extensibility.visual {
                                 .scale(yAxis.scale)
                                 .orient('left')
                                 .ticks(yAxis.ticks)
-                                .tickSize(-options.viewport.width + yAxis.dimensions.width)
+                                .tickSize(-viewport.width + yAxis.dimensions.width)
                                 .tickFormat(d => settings.yAxis.showLabels
                                     ?   yFormat.format(d)
                                     :   ''
