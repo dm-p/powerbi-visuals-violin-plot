@@ -1,7 +1,7 @@
 module powerbi.extensibility.visual {
 
     import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
-    import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
+    import IValueFormatter = powerbi.extensibility.utils.formatting.IValueFormatter;
 
     export module ViolinPlotModels {
 
@@ -44,6 +44,7 @@ module powerbi.extensibility.visual {
             titleTextProperties: TextProperties;
             axisLabelDimensions: IDimensions;
             titleDimensions: IDimensions;
+            labelFormatter: IValueFormatter;
             labelTextProperties: TextProperties;
             labelWidth: number;
             labelHeight: number;
@@ -140,6 +141,10 @@ module powerbi.extensibility.visual {
         export enum EBoxPlotWhisker {
             top,
             bottom
+        }
+
+        export enum EResizeOperation {
+            
         }
 
     }

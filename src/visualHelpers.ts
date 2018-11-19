@@ -303,10 +303,6 @@ module powerbi.extensibility.visual {
                         :   {} as IKernel;
 
                 /** Add axis properties */
-                    let formatStringProp: powerbi.DataViewObjectPropertyIdentifier = {
-                        objectName: 'general',
-                        propertyName: 'formatString',
-                    };
 
                     /** Y-axis (initial) */
                         debug.log('Initial Y-Axis setup...');
@@ -320,7 +316,7 @@ module powerbi.extensibility.visual {
                                 :   null
                         });
 
-                        let yAxis = {
+                        viewModel.yAxis = {
                             padding: {
                                 left: 5
                             },
@@ -328,6 +324,7 @@ module powerbi.extensibility.visual {
                                 fontFamily: settings.yAxis.fontFamily,
                                 fontSize: PixelConverter.toString(settings.yAxis.fontSize)
                             },
+                            labelFormatter: yFormat,
                             titleTextProperties: {
                                 text: function() {            
                                     /** If we supplied a title, use that, otherwise format our measure names */
@@ -354,15 +351,17 @@ module powerbi.extensibility.visual {
                                 fontFamily: settings.yAxis.titleFontFamily,
                                 fontSize:PixelConverter.toString(settings.yAxis.titleFontSize)
                             },
-                            domain: [
-                                viewModel.statistics.min,
-                                viewModel.statistics.max
-                            ]
+                            domain: viewModel.yAxis && viewModel.yAxis.domain
+                                ?   viewModel.yAxis.domain
+                                :   [
+                                        viewModel.statistics.min,
+                                        viewModel.statistics.max
+                                    ]
                         } as IAxisLinear;
 
                     /** X-Axis (initial) */
                         debug.log('Initial X-Axis setup...');
-                        let xAxis = {
+                        viewModel.xAxis = {
                             padding: {
                                 top: 5
                             },
@@ -385,196 +384,65 @@ module powerbi.extensibility.visual {
                             domain: viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
 
-                    /** Axis post-processing */
+                    /** Initial sizing work */
+                        resyncDimensions(viewModel, settings, viewport);
 
-                        /** X-axis height */
-                            debug.log('X-axis vertical space...');
-                            xAxis.titleDimensions = {
-                                height: settings.xAxis.show && settings.xAxis.showTitle && xAxis.titleTextProperties.text !== ''
-                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
-                                    :   0
-                            };
-                            xAxis.axisLabelDimensions = {
-                                height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels
-                                    ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
-                                    :   0
-                            };
-                            xAxis.dimensions = {
-                                height:     xAxis.titleDimensions.height
-                                        +   xAxis.axisLabelDimensions.height
-                                        +   (   settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels
-                                                    ?   xAxis.padding.top
-                                                    :   0
-                                            )
-                            };
+                    /** Manage display label overflow if required. By doing this, we can use the raw,
+                     *  unformatted category name to define our ticks, but format them correctly in the
+                     *  event of us wishing to use ellipses etc.
+                     *  
+                     *  We'll work out the tailored name vs. the original name, and that way we can determine
+                     *  how many categories have been reduced to their ellipses. If all have been reduced then
+                     *  we can just remove the axis labels as they serve no purpose.
+                     */
+                        if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
 
-                        /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
-                            debug.log('Y-Axis vertical space...');
-                            let yPadVert = settings.yAxis.fontSize / 2,
-                                yHeight = viewport.height - yPadVert - xAxis.dimensions.height;
+                            let xTickMapper = {},
+                                collapsedCount = 0;
 
-                            yAxis.dimensions = {
-                                height: yHeight,
-                                y: yPadVert /** TODO: manage categorical axis, padding etc. */
-                            };
+                            viewModel.categories.map(c => {
+                                let tailoredName = c.displayName.formattedName,
+                                    tailoredWidth = c.displayName.formattedWidth,
+                                    collapsed = false;
 
-                            yAxis.range = [
-                                yAxis.dimensions.height,
-                                yAxis.dimensions.y
-                            ];
-
-                            debug.log('Y-Axis ticks and scale...');
-                            yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
-                            yAxis.scale = d3.scale.linear()
-                                .domain(yAxis.domain)
-                                .range(yAxis.range)
-                                .nice(yAxis.ticks)
-                                .clamp(true);
-                            yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
-                                settings.yAxis.showLabels
-                                    ?   yFormat.format(v)
-                                    :   ''
-                            ));
-
-                        /** Resolve the title dimensions */
-                            debug.log('Y-Axis title sizing...');
-                            yAxis.titleDimensions = {
-                                width: (settings.yAxis.show && settings.yAxis.showTitle && yAxis.titleTextProperties.text !== '')
-                                    ?   textMeasurementService.measureSvgTextHeight(yAxis.titleTextProperties)
-                                    :   0,
-                                height: yHeight,
-                                x: -yHeight / 2,
-                                y: 0
-                            };
-
-                        /** Find the widest label and use that for our Y-axis width overall */
-                            debug.log('Y-Axis label sizing...');
-                            yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
-                                ?   Math.max(
-                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
-                                        textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1])
+                                if (c.displayName.formattedWidth > viewModel.xAxis.scale.rangeBand()) {
+                                    tailoredName = textMeasurementService.getTailoredTextOrDefault(
+                                        c.displayName.textProperties,
+                                        viewModel.xAxis.scale.rangeBand()
+                                    );
+                                    tailoredWidth = textMeasurementService.measureSvgTextWidth(
+                                        c.displayName.textProperties,
+                                        tailoredName
                                     )
-                                    + yAxis.padding.left
-                                : 0;
-
-                        /** Solve the remaining axis dimensions */
-                            yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
-                            yAxis.dimensions.x = yAxis.titleDimensions.width;
-                            xAxis.dimensions.width = xAxis.titleDimensions.width = viewport.width - yAxis.dimensions.width
-                            xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
-                            xAxis.titleDimensions.y = viewport.height - xAxis.titleDimensions.height;
-
-                        /** Revise Y-axis properties as necessary */
-                            debug.log('Y-Axis generator functions...');
-                            yAxis.generator = d3.svg.axis()
-                                .scale(yAxis.scale)
-                                .orient('left')
-                                .ticks(yAxis.ticks)
-                                .tickSize(-viewport.width + yAxis.dimensions.width)
-                                .tickFormat(d => settings.yAxis.showLabels
-                                    ?   yFormat.format(d)
-                                    :   ''
-                                );
-
-                        /** Now we have y-axis width, do remaining x-axis width stuff */
-                            debug.log('X-Axis ticks and scale...');
-                            xAxis.range = [0, xAxis.dimensions.width];
-                            xAxis.scale = d3.scale.ordinal()
-                                .domain(xAxis.domain)
-                                .rangeRoundBands(xAxis.range);
-                            xAxis.generator = d3.svg.axis()
-                                .scale(xAxis.scale)
-                                .orient('bottom')
-                                .tickSize(-yAxis.dimensions.height);
-
-                            /** Manage display label overflow if required. By doing this, we can use the raw,
-                             *  unformatted category name to define our ticks, but format them correctly in the
-                             *  event of us wishing to use ellipses etc.
-                             *  
-                             *  We'll work out the tailored name vs. the original name, and that way we can determine
-                             *  how many categories have been reduced to their ellipses. If all have been reduced then
-                             *  we can just remove the axis labels as they serve no purpose.
-                             */
-                                if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
-
-                                    let xTickMapper = {},
-                                        collapsedCount = 0;
-
-                                    viewModel.categories.map(c => {
-                                        let tailoredName = c.displayName.formattedName,
-                                            tailoredWidth = c.displayName.formattedWidth,
-                                            collapsed = false;
-
-                                        if (c.displayName.formattedWidth > xAxis.scale.rangeBand()) {
-                                            tailoredName = textMeasurementService.getTailoredTextOrDefault(
-                                                c.displayName.textProperties,
-                                                xAxis.scale.rangeBand()
-                                            );
-                                            tailoredWidth = textMeasurementService.measureSvgTextWidth(
-                                                c.displayName.textProperties,
-                                                tailoredName
-                                            )
-                                            /** Flag if the value is entirely truncated down to an ellipsis */
-                                                if (tailoredName == '...' ) {
-                                                    collapsed = true;
-                                                    collapsedCount++;
-                                                }
+                                    /** Flag if the value is entirely truncated down to an ellipsis */
+                                        if (tailoredName == '...' ) {
+                                            collapsed = true;
+                                            collapsedCount++;
                                         }
-                                        
-                                        xTickMapper[`${c.name}`] = tailoredName;
-                                        c.displayName.tailoredName = tailoredName;
-                                        c.displayName.tailoredWidth = tailoredWidth;
-                                        c.displayName.collapsed = collapsed;
-                                    });
-
-                                    viewModel.categoryCollapsedCount = collapsedCount;
-                                    viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
-                                    
-                                    xAxis.generator.tickFormat(function(d) {
-                                        
-                                        /** Extend the y-axis to fill the gap if all our ticks got collapsed */
-                                            if (viewModel.categoriesAllCollapsed) {
-                                                return '';
-                                            } else {
-                                                return xTickMapper[d];
-                                            }                                        
-                                    });
-                                    
                                 }
+                                
+                                xTickMapper[`${c.name}`] = tailoredName;
+                                c.displayName.tailoredName = tailoredName;
+                                c.displayName.tailoredWidth = tailoredWidth;
+                                c.displayName.collapsed = collapsed;
+                            });
 
-                        
-
-                        /** Violin plot specifics */
-                            debug.log('Violin dimensions...');
-                            viewModel.violinPlot = {
-                                categoryWidth: xAxis.scale.rangeBand(),
-                                width: xAxis.scale.rangeBand() - (xAxis.scale.rangeBand() * (settings.violin.innerPadding / 100))
-                            } as IViolinPlot;
+                            viewModel.categoryCollapsedCount = collapsedCount;
+                            viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
                             
+                            viewModel.xAxis.generator.tickFormat(function(d) {
+                                
+                                /** Extend the y-axis to fill the gap if all our ticks got collapsed */
+                                    if (viewModel.categoriesAllCollapsed) {
+                                        return '';
+                                    } else {
+                                        return xTickMapper[d];
+                                    }                                        
+                            });
 
-                        /** Box plot specifics */
-                            debug.log('Box plot dimensions...');
-                            viewModel.boxPlot = {
-                                width: viewModel.violinPlot.width - (viewModel.violinPlot.width * (settings.boxPlot.innerPadding / 100)),
-                                maxMeanRadius: 3
-                            } as IBoxPlot;
-                            viewModel.boxPlot.maxMeanDiameter = viewModel.boxPlot.maxMeanRadius * 2;
-                            viewModel.boxPlot.scaledMeanRadius = (viewModel.boxPlot.width / 5);
-                            viewModel.boxPlot.scaledMeanDiameter = viewModel.boxPlot.scaledMeanRadius * 2;
+                            resyncDimensions(viewModel, settings, viewport);
                             
-                            if (Math.min(viewModel.boxPlot.scaledMeanDiameter, viewModel.boxPlot.maxMeanDiameter) >= viewModel.boxPlot.width) {
-                                viewModel.boxPlot.actualMeanDiameter = 0
-                            } else {
-                                viewModel.boxPlot.actualMeanDiameter = viewModel.boxPlot.scaledMeanDiameter > viewModel.boxPlot.maxMeanDiameter
-                                    ?   viewModel.boxPlot.maxMeanDiameter
-                                    :   viewModel.boxPlot.scaledMeanDiameter
-                            }
-                            viewModel.boxPlot.actualMeanRadius = viewModel.boxPlot.actualMeanDiameter / 2;
-                            viewModel.boxPlot.xLeft = (viewModel.violinPlot.categoryWidth / 2) - (viewModel.boxPlot.width / 2);
-                            viewModel.boxPlot.xRight = (viewModel.violinPlot.categoryWidth / 2) + (viewModel.boxPlot.width / 2);
-
-                        viewModel.yAxis = yAxis;
-                        viewModel.xAxis = xAxis;
+                        }
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis;
@@ -582,9 +450,7 @@ module powerbi.extensibility.visual {
                 /** Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin */
                     if (settings.violin.type == 'line') {
 
-                        /** Keep track of the axis limits so that we can adjust them later if necessary
-                         *  TODO: try and do this once if possible
-                         */
+                        /** Keep track of the axis limits so that we can adjust them later if necessary */
                         let yMin = viewModel.yAxis.domain[0],
                             yMax = viewModel.yAxis.domain[1];
                     
@@ -739,12 +605,10 @@ module powerbi.extensibility.visual {
                                         }
                                         
                                     /** Adjust violin scale to account for inner padding preferences */
-                                        let violinFullWidth = xAxis.scale.rangeBand() / 2;
                                         v.yVScale = d3.scale.linear()
                                             .range([
                                                 0, 
-                                                /** Width of x-axis adjusted for inner padding */
-                                                violinFullWidth - (violinFullWidth * (settings.violin.innerPadding / 100))
+                                                viewModel.violinPlot.width / 2
                                             ])
                                             .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                                             .clamp(true);
@@ -766,19 +630,179 @@ module powerbi.extensibility.visual {
                         /** This adjusts the domain of each axis to match any adjustments we made earlier on.
                          *  It's repeated code for now, so we should see if we can normalise later on when we clean up.
                          */
-                            viewModel.yAxis.scale
-                                .domain([yMin, yMax])
-                                .nice()
-                                .clamp(true);
-                            viewModel.xVaxis.scale
-                                .domain([yMin, yMax])
-                                .nice()
-                                .clamp(true);
-
+                            viewModel.yAxis.domain = viewModel.xVaxis.domain = [
+                                yMin,
+                                yMax
+                            ];
+                            resyncDimensions(viewModel, settings, viewport);
+                            
                     }
 
             debug.log('View model completely mapped!');
             return viewModel;
+
+        }
+
+        /**
+         * To make things more responsive, we need to repeatedly check the dimensions within the view model and apply particular changes and update other properties
+         * as necessary. This function will do the necessary checks and balances to make sure that things resize correctly.
+         * @param viewModel 
+         * @param settings
+         */
+        function resyncDimensions(viewModel: IViewModel, settings: VisualSettings, viewport: IViewport) {
+
+            /** Set up debugging */
+                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+                debug.log('Completing view model...');
+
+            let xAxis = viewModel.xAxis,
+                yAxis = viewModel.yAxis;
+
+            /** X-axis height */
+                debug.log('X-axis vertical space...');
+                xAxis.titleDimensions = {
+                    height: settings.xAxis.show && settings.xAxis.showTitle && xAxis.titleTextProperties.text !== ''
+                        ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
+                        :   0
+                };
+                xAxis.axisLabelDimensions = {
+                    height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels && !viewModel.categoriesAllCollapsed
+                        ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
+                        :   0
+                };
+                xAxis.dimensions = {
+                    height:     xAxis.titleDimensions.height
+                            +   xAxis.axisLabelDimensions.height
+                            +   (   settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels && !viewModel.categoriesAllCollapsed
+                                        ?   xAxis.padding.top
+                                        :   0
+                                )
+                };
+
+            /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
+                debug.log('Y-Axis vertical space...');
+                let yPadVert = settings.yAxis.fontSize / 2,
+                    yHeight = viewport.height - yPadVert - xAxis.dimensions.height;
+
+                yAxis.dimensions = {
+                    height: yHeight,
+                    y: yPadVert /** TODO: manage categorical axis, padding etc. */
+                };
+
+                yAxis.range = [
+                    yAxis.dimensions.height,
+                    yAxis.dimensions.y
+                ];
+
+                debug.log('Y-Axis ticks and scale...');
+                yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
+                yAxis.scale = d3.scale.linear()
+                    .domain(yAxis.domain)
+                    .range(yAxis.range)
+                    .nice(yAxis.ticks)
+                    .clamp(true);
+                yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
+                    settings.yAxis.showLabels
+                        ?   yAxis.labelFormatter.format(v)
+                        :   ''
+                ));
+
+            /** Resolve the title dimensions */
+                debug.log('Y-Axis title sizing...');
+                yAxis.titleDimensions = {
+                    width: (settings.yAxis.show && settings.yAxis.showTitle && yAxis.titleTextProperties.text !== '')
+                        ?   textMeasurementService.measureSvgTextHeight(yAxis.titleTextProperties)
+                        :   0,
+                    height: yHeight,
+                    x: -yHeight / 2,
+                    y: 0
+                };
+
+            /** Find the widest label and use that for our Y-axis width overall */
+                debug.log('Y-Axis label sizing...');
+                yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
+                    ?   Math.max(
+                            textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
+                            textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1])
+                        )
+                        + yAxis.padding.left
+                    : 0;
+
+            /** Solve the remaining axis dimensions */
+                yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
+                yAxis.dimensions.x = yAxis.titleDimensions.width;
+                xAxis.dimensions.width = xAxis.titleDimensions.width = viewport.width - yAxis.dimensions.width
+                xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
+                xAxis.titleDimensions.y = viewport.height - xAxis.titleDimensions.height;
+
+            /** Revise Y-axis properties as necessary */
+                debug.log('Y-Axis generator functions...');
+                if (!yAxis.generator) {
+                    yAxis.generator = d3.svg.axis()
+                }
+                yAxis.generator
+                    .scale(yAxis.scale)
+                    .orient('left')
+                    .ticks(yAxis.ticks)
+                    .tickSize(-viewport.width + yAxis.dimensions.width)
+                    .tickFormat(d => settings.yAxis.showLabels
+                        ?   yAxis.labelFormatter.format(d)
+                        :   ''
+                    );
+
+            /** Now we have y-axis width, do remaining x-axis width stuff */
+                debug.log('X-Axis ticks and scale...');
+                xAxis.range = [0, xAxis.dimensions.width];
+                xAxis.scale = d3.scale.ordinal()
+                    .domain(xAxis.domain)
+                    .rangeRoundBands(xAxis.range);
+                
+                if (!xAxis.generator) {
+                    xAxis.generator = d3.svg.axis()
+                };
+                xAxis.generator    
+                    .scale(xAxis.scale)
+                    .orient('bottom')
+                    .tickSize(-yAxis.dimensions.height);
+
+                /** Violin plot specifics */
+                    debug.log('Violin dimensions...');
+                    viewModel.violinPlot = {
+                        categoryWidth: xAxis.scale.rangeBand(),
+                        width: xAxis.scale.rangeBand() - (xAxis.scale.rangeBand() * (settings.violin.innerPadding / 100))
+                    } as IViolinPlot;
+                    
+
+                /** Box plot specifics */
+                    debug.log('Box plot dimensions...');
+                    viewModel.boxPlot = {
+                        width: viewModel.violinPlot.width - (viewModel.violinPlot.width * (settings.boxPlot.innerPadding / 100)),
+                        maxMeanRadius: 3
+                    } as IBoxPlot;
+                    viewModel.boxPlot.maxMeanDiameter = viewModel.boxPlot.maxMeanRadius * 2;
+                    viewModel.boxPlot.scaledMeanRadius = (viewModel.boxPlot.width / 5);
+                    viewModel.boxPlot.scaledMeanDiameter = viewModel.boxPlot.scaledMeanRadius * 2;
+                    
+                    if (Math.min(viewModel.boxPlot.scaledMeanDiameter, viewModel.boxPlot.maxMeanDiameter) >= viewModel.boxPlot.width) {
+                        viewModel.boxPlot.actualMeanDiameter = 0
+                    } else {
+                        viewModel.boxPlot.actualMeanDiameter = viewModel.boxPlot.scaledMeanDiameter > viewModel.boxPlot.maxMeanDiameter
+                            ?   viewModel.boxPlot.maxMeanDiameter
+                            :   viewModel.boxPlot.scaledMeanDiameter
+                    }
+                    viewModel.boxPlot.actualMeanRadius = viewModel.boxPlot.actualMeanDiameter / 2;
+                    viewModel.boxPlot.xLeft = (viewModel.violinPlot.categoryWidth / 2) - (viewModel.boxPlot.width / 2);
+                    viewModel.boxPlot.xRight = (viewModel.violinPlot.categoryWidth / 2) + (viewModel.boxPlot.width / 2);
+
+                viewModel.yAxis = yAxis;
+                viewModel.xAxis = xAxis;
+
+            if (viewModel.xVaxis) {
+                viewModel.xVaxis.scale
+                    .domain(viewModel.xVaxis.domain)
+                    .nice()
+                    .clamp(true);
+            }
 
         }
 
