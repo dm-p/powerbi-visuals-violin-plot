@@ -284,20 +284,6 @@ module powerbi.extensibility.visual {
                             })
                             .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
-                    /** Manage ellipses on labels, if needed */
-                        let vm = this.viewModel;
-                        xAxisTicks.selectAll('text')
-                            .html('')
-                            .append('tspan')
-                                .text(d => d)
-                                .each(function(d) {
-                                    wrapText(
-                                        d3.select(this),
-                                        vm.xAxis.labelTextProperties,
-                                        vm.violinPlot.categoryWidth
-                                    );
-                                });
-
                     /** Add title if required */
                         if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleTextProperties) {
                             let xTitle = xAxisContainer
@@ -374,7 +360,7 @@ module powerbi.extensibility.visual {
             tooltips.push(
                 {
                     displayName: 'Category',
-                    value: v.name ? v.name : 'All Data',
+                    value: v.displayName.formatted ? v.displayName.formatted : 'All Data',
                     color: v.colour
                 },
                 {
@@ -624,7 +610,7 @@ module powerbi.extensibility.visual {
                                 for (let category of this.viewModel.categories) {
                                     instances.push({
                                         objectName: objectName,
-                                        displayName: category.name,
+                                        displayName: category.displayName.formatted,
                                         properties: {
                                             categoryFillColour: {
                                                 solid: {

@@ -86,7 +86,7 @@ module powerbi.extensibility.visual {
 
         export interface ICategory {
             name: string;
-            category: string;
+            displayName: ICategoryDisplayName;
             colour: string;
             formatter: utils.formatting.IValueFormatter;
             selectionId: powerbi.visuals.ISelectionId;
@@ -96,6 +96,12 @@ module powerbi.extensibility.visual {
             areaGen: d3.svg.Area<IDataPointKde>;
             statistics: IStatistics;
             yVScale: d3.scale.Linear<number, number>;
+        }
+
+        export interface ICategoryDisplayName {
+            formatted: string;
+            textProperties: TextProperties;
+            width: number;
         }
 
         export interface IStatistics {

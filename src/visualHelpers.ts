@@ -130,13 +130,22 @@ module powerbi.extensibility.visual {
                     /** Copy our values array and sort */
                         let allDataPoints = <number[]>values[0].values
                             .slice(0)
-                            .sort(d3.ascending);
+                            .sort(d3.ascending),
+                            categoryTextProperties = {
+                                fontFamily: settings.xAxis.fontFamily,
+                                fontSize: PixelConverter.toString(settings.xAxis.fontSize)
+                            };
 
                     if (!category) {
                         
                         viewModel.categoryNames = false;
                         viewModel.categories.push({
                             name: '',
+                            displayName: {
+                                formatted: '',
+                                textProperties: categoryTextProperties,
+                                width: 0
+                            },
                             colour: settings.dataColours.defaultFillColour,
                             selectionId: null,
                             dataPoints: allDataPoints
@@ -160,17 +169,24 @@ module powerbi.extensibility.visual {
                         viewModel.categoryNames = true;
 
                         /** Create view model template */
-                            distinctCategories.map((v, i) => {
-                                let categoryName = valueFormatter.format(v.category, categoryMetadata.format);                        
+                            distinctCategories.map((v, i) => {                     
                                 let defaultColour: Fill = {
                                     solid: {
-                                        color: colourPalette.getColor(categoryName).value
+                                        color: colourPalette.getColor(v.category).value
                                     }
                                 }
                                 
                                 viewModel.categories.push({
-                                    name: categoryName,
-                                    category: `${v.category}`,
+                                    name: `${v.category}`,
+                                    displayName: {
+                                        formatted: valueFormatter.format(v.category, categoryMetadata.format),
+                                        textProperties: {
+                                            fontFamily: categoryTextProperties.fontFamily,
+                                            fontSize: categoryTextProperties.fontSize,
+                                            text: valueFormatter.format(v.category, categoryMetadata.format)
+                                        },
+                                        width: textMeasurementService.measureSvgTextWidth(categoryTextProperties, valueFormatter.format(v.category, categoryMetadata.format))
+                                    },
                                     dataPoints: [],
                                     colour: settings.dataColours.colourByCategory
                                         ?   getCategoricalObjectValue<Fill>(
@@ -188,7 +204,7 @@ module powerbi.extensibility.visual {
                         /** Now we can put the values into the right categories */
                             values[0].values.map((v, i) => {
                                 viewModel.categories
-                                    .filter(c => c.category == `${category.values[i]}`)[0]
+                                    .filter(c => c.name == `${category.values[i]}`)[0]
                                     .dataPoints.push(parseFloat(<string>v) ? Number(v) : null);
                             });
 
@@ -464,6 +480,20 @@ module powerbi.extensibility.visual {
                                 .scale(xAxis.scale)
                                 .orient('bottom')
                                 .tickSize(-yAxis.dimensions.height);
+
+                            /* Manage display label overflow if required */
+                                xAxis.generator.tickFormat(function(d) {
+                                    let xTickMapper = {};
+                                    viewModel.categories.map(c => {
+                                        xTickMapper[`${c.name}`] = c.displayName.width > xAxis.scale.rangeBand()
+                                            ?   textMeasurementService.getTailoredTextOrDefault(
+                                                    c.displayName.textProperties,
+                                                    xAxis.scale.rangeBand()
+                                                )
+                                            :   c.displayName.formatted
+                                    });
+                                    return xTickMapper[d];
+                                });
 
                         /** Vioinlin plot specifics */
                             debug.log('Violin dimensions...');
