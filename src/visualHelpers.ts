@@ -881,5 +881,32 @@ module powerbi.extensibility.visual {
 
             }
 
+        /**
+         * For supplied selection, textProperties and width, try to concatenate the text with ellipses if it overflows the specified width
+         * 
+         * @param selection             - D3 selection to apply formatting to
+         * @param textProperties        - Properties of the text to assess
+         * @param width                 - Width to fit the text
+         */
+        export function wrapText(selection: d3.Selection<any>, textProperties: TextProperties, width?: number): void {
+            var width = width || 0,
+                textLength = textMeasurementService.measureSvgTextWidth(
+                    textProperties,
+                    selection.text()
+                ),
+                text = selection.text();
+            while (textLength > (width) && text.length > 0) {
+                text = text.slice(0, -1);
+                selection.text(text + '\u2026');
+                textLength = textLength = textMeasurementService.measureSvgTextWidth(
+                    textProperties,
+                    selection.text()
+                );
+            }
+            if (textLength > width) {
+                selection.text('');
+            }
+        }
+
     }
 }
