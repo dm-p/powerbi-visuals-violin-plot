@@ -286,7 +286,7 @@ module powerbi.extensibility.visual {
 
                     /** Add title if required */
                         if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleTextProperties) {
-                            let xTitle = xAxisContainer
+                            xAxisContainer
                                 .append('text')
                                     .classed('xAxisTitle', true)
                                     .attr({
@@ -300,15 +300,7 @@ module powerbi.extensibility.visual {
                                         'font-family': this.settings.xAxis.titleFontFamily,
                                         'fill': this.settings.xAxis.titleColor,
                                     })
-                                    .append('tspan')
-                                        .text(this.viewModel.xAxis.titleTextProperties.text)
-                                        .each(function(d) {
-                                            wrapText(
-                                                d3.select(this),
-                                                vm.xAxis.titleTextProperties,
-                                                vm.xAxis.titleDimensions.width
-                                            );
-                                        });
+                                    .text(this.viewModel.xAxis.titleTextProperties.text);
                         }
 
                 }
@@ -360,7 +352,7 @@ module powerbi.extensibility.visual {
             tooltips.push(
                 {
                     displayName: 'Category',
-                    value: v.displayName.formatted ? v.displayName.formatted : 'All Data',
+                    value: v.displayName.formattedName ? v.displayName.formattedName : 'All Data',
                     color: v.colour
                 },
                 {
@@ -610,7 +602,7 @@ module powerbi.extensibility.visual {
                                 for (let category of this.viewModel.categories) {
                                     instances.push({
                                         objectName: objectName,
-                                        displayName: category.displayName.formatted,
+                                        displayName: category.displayName.formattedName,
                                         properties: {
                                             categoryFillColour: {
                                                 solid: {

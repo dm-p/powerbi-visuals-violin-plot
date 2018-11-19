@@ -8,6 +8,8 @@ module powerbi.extensibility.visual {
         export interface IViewModel {
             categories: ICategory[];
             categoryNames: boolean;
+            categoryCollapsedCount: number;
+            categoriesAllCollapsed: boolean;
             statistics: IStatistics;
             xAxis: IAxisCategorical;
             yAxis: IAxisLinear;
@@ -40,6 +42,7 @@ module powerbi.extensibility.visual {
             generator: d3.svg.Axis;
             dimensions: IDimensions;
             titleTextProperties: TextProperties;
+            axisLabelDimensions: IDimensions;
             titleDimensions: IDimensions;
             labelTextProperties: TextProperties;
             labelWidth: number;
@@ -99,9 +102,12 @@ module powerbi.extensibility.visual {
         }
 
         export interface ICategoryDisplayName {
-            formatted: string;
-            textProperties: TextProperties;
-            width: number;
+            formattedName: string;
+            formattedWidth: number;
+            textProperties?: TextProperties;
+            tailoredName: string;
+            tailoredWidth: number;
+            collapsed: boolean;
         }
 
         export interface IStatistics {

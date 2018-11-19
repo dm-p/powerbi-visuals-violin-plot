@@ -142,9 +142,9 @@ module powerbi.extensibility.visual {
                         viewModel.categories.push({
                             name: '',
                             displayName: {
-                                formatted: '',
+                                formattedName: '',
                                 textProperties: categoryTextProperties,
-                                width: 0
+                                formattedWidth: 0
                             },
                             colour: settings.dataColours.defaultFillColour,
                             selectionId: null,
@@ -179,13 +179,13 @@ module powerbi.extensibility.visual {
                                 viewModel.categories.push({
                                     name: `${v.category}`,
                                     displayName: {
-                                        formatted: valueFormatter.format(v.category, categoryMetadata.format),
+                                        formattedName: valueFormatter.format(v.category, categoryMetadata.format),
                                         textProperties: {
                                             fontFamily: categoryTextProperties.fontFamily,
                                             fontSize: categoryTextProperties.fontSize,
                                             text: valueFormatter.format(v.category, categoryMetadata.format)
                                         },
-                                        width: textMeasurementService.measureSvgTextWidth(categoryTextProperties, valueFormatter.format(v.category, categoryMetadata.format))
+                                        formattedWidth: textMeasurementService.measureSvgTextWidth(categoryTextProperties, valueFormatter.format(v.category, categoryMetadata.format))
                                     },
                                     dataPoints: [],
                                     colour: settings.dataColours.colourByCategory
@@ -394,12 +394,18 @@ module powerbi.extensibility.visual {
                                     ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
                                     :   0
                             };
-                            xAxis.dimensions = {
+                            xAxis.axisLabelDimensions = {
                                 height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels
                                     ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
-                                        +   xAxis.titleDimensions.height
-                                        +   xAxis.padding.top
                                     :   0
+                            };
+                            xAxis.dimensions = {
+                                height:     xAxis.titleDimensions.height
+                                        +   xAxis.axisLabelDimensions.height
+                                        +   (   settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels
+                                                    ?   xAxis.padding.top
+                                                    :   0
+                                            )
                             };
 
                         /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
@@ -484,21 +490,56 @@ module powerbi.extensibility.visual {
                             /** Manage display label overflow if required. By doing this, we can use the raw,
                              *  unformatted category name to define our ticks, but format them correctly in the
                              *  event of us wishing to use ellipses etc.
+                             *  
+                             *  We'll work out the tailored name vs. the original name, and that way we can determine
+                             *  how many categories have been reduced to their ellipses. If all have been reduced then
+                             *  we can just remove the axis labels as they serve no purpose.
                              */
-                                xAxis.generator.tickFormat(function(d) {
-                                    let xTickMapper = {};
-                                    viewModel.categories.map(c => {
-                                        xTickMapper[`${c.name}`] = c.displayName.width > xAxis.scale.rangeBand()
-                                            ?   textMeasurementService.getTailoredTextOrDefault(
+                                if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
+                                    xAxis.generator.tickFormat(function(d) {
+                                        let xTickMapper = {},
+                                            collapsedCount = 0;
+                                        viewModel.categories.map(c => {
+                                            let tailoredName = c.displayName.formattedName,
+                                                tailoredWidth = c.displayName.formattedWidth,
+                                                collapsed = false;
+                                            if (c.displayName.formattedWidth > xAxis.scale.rangeBand()) {
+                                                tailoredName = textMeasurementService.getTailoredTextOrDefault(
                                                     c.displayName.textProperties,
                                                     xAxis.scale.rangeBand()
+                                                );
+                                                tailoredWidth = textMeasurementService.measureSvgTextWidth(
+                                                    c.displayName.textProperties,
+                                                    tailoredName
                                                 )
-                                            :   c.displayName.formatted
-                                    });
-                                    return xTickMapper[d];
-                                });
+                                                /** Flag if the value is entirely truncated down to an ellipsis */
+                                                    if (tailoredName == '...' ) {
+                                                        collapsed = true;
+                                                        collapsedCount++;
+                                                    }
+                                            }
+                                            xTickMapper[`${c.name}`] = c.displayName.tailoredName;
+                                            c.displayName.tailoredName = tailoredName;
+                                            c.displayName.tailoredWidth = tailoredWidth;
+                                            c.displayName.collapsed = collapsed;
+                                        });
+                                        viewModel.categoryCollapsedCount = collapsedCount;
+                                        viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
 
-                        /** Vioinlin plot specifics */
+                                        /** Extend the y-axis to fill the gap if all our ticks got collapsed */
+                                            if (viewModel.categoriesAllCollapsed) {
+                                                return '';
+                                            } 
+
+                                        return xTickMapper[d];
+                                    });
+
+                                    
+                                }
+
+                        
+
+                        /** Violin plot specifics */
                             debug.log('Violin dimensions...');
                             viewModel.violinPlot = {
                                 categoryWidth: xAxis.scale.rangeBand(),
