@@ -496,44 +496,49 @@ module powerbi.extensibility.visual {
                              *  we can just remove the axis labels as they serve no purpose.
                              */
                                 if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
-                                    xAxis.generator.tickFormat(function(d) {
-                                        let xTickMapper = {},
-                                            collapsedCount = 0;
-                                        viewModel.categories.map(c => {
-                                            let tailoredName = c.displayName.formattedName,
-                                                tailoredWidth = c.displayName.formattedWidth,
-                                                collapsed = false;
-                                            if (c.displayName.formattedWidth > xAxis.scale.rangeBand()) {
-                                                tailoredName = textMeasurementService.getTailoredTextOrDefault(
-                                                    c.displayName.textProperties,
-                                                    xAxis.scale.rangeBand()
-                                                );
-                                                tailoredWidth = textMeasurementService.measureSvgTextWidth(
-                                                    c.displayName.textProperties,
-                                                    tailoredName
-                                                )
-                                                /** Flag if the value is entirely truncated down to an ellipsis */
-                                                    if (tailoredName == '...' ) {
-                                                        collapsed = true;
-                                                        collapsedCount++;
-                                                    }
-                                            }
-                                            xTickMapper[`${c.name}`] = c.displayName.tailoredName;
-                                            c.displayName.tailoredName = tailoredName;
-                                            c.displayName.tailoredWidth = tailoredWidth;
-                                            c.displayName.collapsed = collapsed;
-                                        });
-                                        viewModel.categoryCollapsedCount = collapsedCount;
-                                        viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
 
+                                    let xTickMapper = {},
+                                        collapsedCount = 0;
+
+                                    viewModel.categories.map(c => {
+                                        let tailoredName = c.displayName.formattedName,
+                                            tailoredWidth = c.displayName.formattedWidth,
+                                            collapsed = false;
+
+                                        if (c.displayName.formattedWidth > xAxis.scale.rangeBand()) {
+                                            tailoredName = textMeasurementService.getTailoredTextOrDefault(
+                                                c.displayName.textProperties,
+                                                xAxis.scale.rangeBand()
+                                            );
+                                            tailoredWidth = textMeasurementService.measureSvgTextWidth(
+                                                c.displayName.textProperties,
+                                                tailoredName
+                                            )
+                                            /** Flag if the value is entirely truncated down to an ellipsis */
+                                                if (tailoredName == '...' ) {
+                                                    collapsed = true;
+                                                    collapsedCount++;
+                                                }
+                                        }
+                                        
+                                        xTickMapper[`${c.name}`] = tailoredName;
+                                        c.displayName.tailoredName = tailoredName;
+                                        c.displayName.tailoredWidth = tailoredWidth;
+                                        c.displayName.collapsed = collapsed;
+                                    });
+
+                                    viewModel.categoryCollapsedCount = collapsedCount;
+                                    viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
+                                    
+                                    xAxis.generator.tickFormat(function(d) {
+                                        
                                         /** Extend the y-axis to fill the gap if all our ticks got collapsed */
                                             if (viewModel.categoriesAllCollapsed) {
                                                 return '';
-                                            } 
-
-                                        return xTickMapper[d];
+                                            } else {
+                                                return xTickMapper[d];
+                                            }                                        
                                     });
-
                                     
                                 }
 
