@@ -43,7 +43,7 @@ module powerbi.extensibility.visual {
         public xAxis: xAxisSettings = new xAxisSettings();
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
-        public boxPlot: boxPlotSetings = new boxPlotSetings();
+        public boxPlot: boxPlotSettings = new boxPlotSettings();
         public tooltip: tooltipSettings = new tooltipSettings();
         public legend: legendSettings = new legendSettings();
         public about: aboutSettings = new aboutSettings();
@@ -136,7 +136,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold box plot settings */
-    export class boxPlotSetings{
+    export class boxPlotSettings{
         /** Show box plot */
         public show: boolean = true;
         /** Box plot line stroke width */

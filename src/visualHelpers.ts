@@ -10,6 +10,8 @@ module powerbi.extensibility.visual {
         /** Internal view models */
             import IViewModel = ViolinPlotModels.IViewModel;
             import ICategory = ViolinPlotModels.ICategory;
+            import IViolinPlot = ViolinPlotModels.IViolinPlot;
+            import IBoxPlot = ViolinPlotModels.IBoxPlot;
             import IStatistics = ViolinPlotModels.IStatistics;
             import IDataPointKde = ViolinPlotModels.IDataPointKde;
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
@@ -272,8 +274,8 @@ module powerbi.extensibility.visual {
             
             /** Set up debugging */
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
-                debug.log('Preparing categories and statistics...');
-            
+                debug.log('Completing view model...');
+
             /** Other pre-requisites */
                 let dataViews = options.dataViews,
                     metadata = dataViews[0].metadata,
@@ -461,6 +463,35 @@ module powerbi.extensibility.visual {
                                 .scale(xAxis.scale)
                                 .orient('bottom')
                                 .tickSize(-yAxis.dimensions.height);
+
+                        /** Vioinlin plot specifics */
+                            debug.log('Violin dimensions...');
+                            viewModel.violinPlot = {
+                                categoryWidth: xAxis.scale.rangeBand(),
+                                width: xAxis.scale.rangeBand() - (xAxis.scale.rangeBand() * (settings.violin.innerPadding / 100))
+                            } as IViolinPlot;
+                            
+
+                        /** Box plot specifics */
+                            debug.log('Box plot dimensions...');
+                            viewModel.boxPlot = {
+                                width: viewModel.violinPlot.width - (viewModel.violinPlot.width * (settings.boxPlot.innerPadding / 100)),
+                                maxMeanRadius: 3
+                            } as IBoxPlot;
+                            viewModel.boxPlot.maxMeanDiameter = viewModel.boxPlot.maxMeanRadius * 2;
+                            viewModel.boxPlot.scaledMeanRadius = (viewModel.boxPlot.width / 5);
+                            viewModel.boxPlot.scaledMeanDiameter = viewModel.boxPlot.scaledMeanRadius * 2;
+                            
+                            if (Math.min(viewModel.boxPlot.scaledMeanDiameter, viewModel.boxPlot.maxMeanDiameter) >= viewModel.boxPlot.width) {
+                                viewModel.boxPlot.actualMeanDiameter = 0
+                            } else {
+                                viewModel.boxPlot.actualMeanDiameter = viewModel.boxPlot.scaledMeanDiameter > viewModel.boxPlot.maxMeanDiameter
+                                    ?   viewModel.boxPlot.maxMeanDiameter
+                                    :   viewModel.boxPlot.scaledMeanDiameter
+                            }
+                            viewModel.boxPlot.actualMeanRadius = viewModel.boxPlot.actualMeanDiameter / 2;
+                            viewModel.boxPlot.xLeft = (viewModel.violinPlot.categoryWidth / 2) - (viewModel.boxPlot.width / 2);
+                            viewModel.boxPlot.xRight = (viewModel.violinPlot.categoryWidth / 2) + (viewModel.boxPlot.width / 2);
 
                         viewModel.yAxis = yAxis;
                         viewModel.xAxis = xAxis;
@@ -776,77 +807,74 @@ module powerbi.extensibility.visual {
 
             export function renderBoxPlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
-                /** Set box extremes */
-                    let categoryFullWidth = viewModel.xAxis.scale.rangeBand(),
-                        violinPlotWidth = categoryFullWidth - (categoryFullWidth * (settings.violin.innerPadding / 100)),
-                        boxPlotWidth = violinPlotWidth - (violinPlotWidth * (settings.boxPlot.innerPadding / 100)),
-                        xLeft = (viewModel.xAxis.scale.rangeBand() / 2) - (boxPlotWidth / 2),
-                        xRight = (viewModel.xAxis.scale.rangeBand() / 2) + (boxPlotWidth / 2);
+                if (viewModel.boxPlot.width > settings.boxPlot.strokeWidth) {
 
-                /** Add the box */
-                    let boxContainer = seriesContainer
-                        .append('g')
-                        .attr({
-                            'shape-rendering': 'geometricPrecision'
-                        });
+                    /** Add the box */
+                        let boxContainer = seriesContainer
+                            .append('g')
+                            .attr({
+                                'shape-rendering': 'geometricPrecision'
+                            });
 
-                    boxContainer.append('rect')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'box': true
-                        })
-                        .attr({
-                            'x': xLeft,
-                            'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
-                            'width': boxPlotWidth,
-                            'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
-                            'stroke': `${settings.boxPlot.boxFillColour}`,
-                            'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                            'fill': `${settings.boxPlot.boxFillColour}`,
-                            'fill-opacity': 1 - (settings.boxPlot.transparency / 100)
-                        });
-
-                /** Do the whiskers, if we need them */
-                    if (settings.boxPlot.showWhiskers) {
-                        renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
-                        renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
-                    }
-
-                /** Mean and median */
-                    if (settings.boxPlot.showMedian){
-                        boxContainer.append('line')
-                        .classed({
-                            'violinPlotBoxPlot': true,
-                            'median': true
-                        })
-                        .attr({
-                            'x1': xLeft + (settings.boxPlot.strokeWidth / 2),
-                            'x2': xRight - (settings.boxPlot.strokeWidth / 2),
-                            'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
-                            'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
-                            'stroke': `${settings.boxPlot.medianFillColour}`,
-                            'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                        });
-                    }
-
-                    if (settings.boxPlot.showMean && boxPlotWidth > 10) {
-                        boxContainer.append('circle')
+                        boxContainer.append('rect')
                             .classed({
                                 'violinPlotBoxPlot': true,
-                                'mean': true,
-                                'outer': true
+                                'box': true
                             })
                             .attr({
-                                'cx': (viewModel.xAxis.scale.rangeBand() / 2),
-                                'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                'r': (boxPlotWidth / 10) + settings.boxPlot.strokeWidth
-                            })
-                            .style({
-                                'fill': settings.boxPlot.meanFillColourInner,
-                                'stroke': settings.boxPlot.meanFillColour,
-                                'stroke-width': `${settings.boxPlot.strokeWidth}px`
+                                'x': viewModel.boxPlot.xLeft,
+                                'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
+                                'width': viewModel.boxPlot.width,
+                                'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
+                                'stroke': `${settings.boxPlot.boxFillColour}`,
+                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                                'fill': `${settings.boxPlot.boxFillColour}`,
+                                'fill-opacity': 1 - (settings.boxPlot.transparency / 100)
                             });
-                    }
+
+                    /** Do the whiskers, if we need them */
+                        if (settings.boxPlot.showWhiskers) {
+                            renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
+                            renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
+                        }
+
+                    /** Mean and median */
+                        if (settings.boxPlot.showMedian){
+                            boxContainer.append('line')
+                            .classed({
+                                'violinPlotBoxPlot': true,
+                                'median': true
+                            })
+                            .attr({
+                                'x1': viewModel.boxPlot.xLeft + (settings.boxPlot.strokeWidth / 2),
+                                'x2': viewModel.boxPlot.xRight - (settings.boxPlot.strokeWidth / 2),
+                                'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
+                                'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
+                                'stroke': `${settings.boxPlot.medianFillColour}`,
+                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                            });
+                        }
+
+                        if (settings.boxPlot.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
+                            boxContainer.append('circle')
+                                .classed({
+                                    'violinPlotBoxPlot': true,
+                                    'mean': true,
+                                    'outer': true
+                                })
+                                .attr({
+                                    'cx': (viewModel.xAxis.scale.rangeBand() / 2),
+                                    'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                                    'r': viewModel.boxPlot.actualMeanRadius
+                                })
+                                .style({
+                                    'fill': settings.boxPlot.meanFillColourInner,
+                                    'stroke': settings.boxPlot.meanFillColour,
+                                    'stroke-width': `${settings.boxPlot.strokeWidth}px`
+                                });
+                        }
+
+                }
 
             }
 

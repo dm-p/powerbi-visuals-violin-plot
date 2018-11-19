@@ -12,9 +12,28 @@ module powerbi.extensibility.visual {
             xAxis: IAxisCategorical;
             yAxis: IAxisLinear;
             xVaxis: IAxisLinear;
+            violinPlot: IViolinPlot;
+            boxPlot: IBoxPlot;
         }
 
-        interface IAxis {
+        export interface IViolinPlot {
+            categoryWidth: number;
+            width: number;
+        }
+
+        export interface IBoxPlot {
+            width: number;
+            scaledMeanRadius: number;
+            scaledMeanDiameter: number;
+            maxMeanRadius: number;
+            maxMeanDiameter: number;
+            actualMeanRadius: number;
+            actualMeanDiameter: number;
+            xLeft: number;
+            xRight: number;
+        }
+
+        export interface IAxis {
             ticks: number;
             tickSize: number;
             ticksFormatted: string[];
