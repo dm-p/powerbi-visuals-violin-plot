@@ -865,7 +865,9 @@ module powerbi.extensibility.visual {
                                 .attr({
                                     'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                                     'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                    'r': viewModel.boxPlot.actualMeanRadius
+                                    'r': (d)=> -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) < viewModel.boxPlot.actualMeanDiameter
+                                        ?   0
+                                        :   viewModel.boxPlot.actualMeanRadius
                                 })
                                 .style({
                                     'fill': settings.boxPlot.meanFillColourInner,
