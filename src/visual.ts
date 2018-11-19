@@ -46,6 +46,7 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+        import wrapText = ViolinPlotHelpers.wrapText;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
@@ -283,9 +284,23 @@ module powerbi.extensibility.visual {
                             })
                             .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
+                    /** Manage ellipses on labels, if needed */
+                        let vm = this.viewModel;
+                        xAxisTicks.selectAll('text')
+                            .html('')
+                            .append('tspan')
+                                .text(d => d)
+                                .each(function(d) {
+                                    wrapText(
+                                        d3.select(this),
+                                        vm.xAxis.labelTextProperties,
+                                        vm.violinPlot.categoryWidth
+                                    );
+                                });
+
                     /** Add title if required */
                         if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleTextProperties) {
-                            xAxisContainer
+                            let xTitle = xAxisContainer
                                 .append('text')
                                     .classed('xAxisTitle', true)
                                     .attr({
@@ -299,8 +314,15 @@ module powerbi.extensibility.visual {
                                         'font-family': this.settings.xAxis.titleFontFamily,
                                         'fill': this.settings.xAxis.titleColor,
                                     })
-                                    .text(this.viewModel.xAxis.titleTextProperties.text)
-                                    /** TODO wrap/ellipsis */
+                                    .append('tspan')
+                                        .text(this.viewModel.xAxis.titleTextProperties.text)
+                                        .each(function(d) {
+                                            wrapText(
+                                                d3.select(this),
+                                                vm.xAxis.titleTextProperties,
+                                                vm.xAxis.titleDimensions.width
+                                            );
+                                        });
                         }
 
                 }
