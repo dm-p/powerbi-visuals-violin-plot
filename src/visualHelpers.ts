@@ -6,6 +6,7 @@ module powerbi.extensibility.visual {
         import axisHelper = powerbi.extensibility.utils.chart.axis;
         import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
         import textMeasurementService = powerbi.extensibility.utils.formatting.textMeasurementService;
+        import TextProperties = powerbi.extensibility.utils.formatting.TextProperties;
 
         /** Internal view models */
             import IViewModel = ViolinPlotModels.IViewModel;
