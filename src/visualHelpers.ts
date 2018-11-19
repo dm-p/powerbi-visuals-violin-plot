@@ -481,7 +481,10 @@ module powerbi.extensibility.visual {
                                 .orient('bottom')
                                 .tickSize(-yAxis.dimensions.height);
 
-                            /* Manage display label overflow if required */
+                            /** Manage display label overflow if required. By doing this, we can use the raw,
+                             *  unformatted category name to define our ticks, but format them correctly in the
+                             *  event of us wishing to use ellipses etc.
+                             */
                                 xAxis.generator.tickFormat(function(d) {
                                     let xTickMapper = {};
                                     viewModel.categories.map(c => {
