@@ -705,6 +705,10 @@ module powerbi.extensibility.visual {
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
                 debug.log('Syncing view model dimensions...');
 
+            /** Constants for removal of axes if a given percentage is exceeded */
+                const   xAxisHeightLimit = 0.33,
+                        yAxisWidthLimit = 0.33;
+
             let xAxis = viewModel.xAxis,
                 yAxis = viewModel.yAxis;
 
@@ -723,11 +727,13 @@ module powerbi.extensibility.visual {
                             })
                         :   0
                 };
+                debug.log(`X-axis title height: ${xAxis.titleDimensions.height}`);
                 xAxis.labelDimensions = {
                     height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels && !viewModel.categoriesAllCollapsed
                         ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
                         :   0
                 };
+                debug.log(`X-axis label height: ${xAxis.labelDimensions.height}`);
                 xAxis.dimensions = {
                     height:     xAxis.titleDimensions.height
                             +   xAxis.labelDimensions.height
@@ -736,6 +742,27 @@ module powerbi.extensibility.visual {
                                         :   0
                                 )
                 };
+                debug.log(`X-axis total height: ${xAxis.dimensions.height}`);
+
+                /** After we have the full height, we can compare it to the overall viewport height and make some adustments to make it more responsive. 
+                 *  We'll remove any labels and check again. if the title is there and we still exceed, then remove that.
+                 *  This can probably be done more elegantly but we're late into dev and this works for now...
+                 */
+                    if (        settings.xAxis.show
+                            &&  xAxis.dimensions.height / viewport.height > xAxisHeightLimit
+                    ) {
+                        debug.log('X-axis height exceeds maximum cap. Reducing...')
+                        xAxis.dimensions.height -= xAxis.labelDimensions.height;
+                        xAxis.labelDimensions.height = 0;
+                        if (xAxis.generator) xAxis.generator.tickFormat('');
+                        if (        settings.xAxis.showTitle
+                                &&  xAxis.titleDimensions.height > 0
+                                &&  xAxis.dimensions.height / viewport.height > xAxisHeightLimit
+                        ) {
+                            xAxis.titleDimensions.height = 0
+                            xAxis.dimensions.height = 0;
+                        }
+                    }
 
             /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
                 debug.log('Y-Axis vertical space...');

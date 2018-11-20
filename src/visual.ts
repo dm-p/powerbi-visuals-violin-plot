@@ -287,7 +287,7 @@ module powerbi.extensibility.visual {
                             .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
                     /** Add title if required */
-                        if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName) {
+                        if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName && this.viewModel.xAxis.titleDimensions.height > 0) {
                             xAxisContainer
                                 .append('text')
                                     .classed('xAxisTitle', true)
