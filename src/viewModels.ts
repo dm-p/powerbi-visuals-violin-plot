@@ -41,13 +41,11 @@ module powerbi.extensibility.visual {
             ticksFormatted: string[];
             generator: d3.svg.Axis;
             dimensions: IDimensions;
-            titleTextProperties: TextProperties;
-            axisLabelDimensions: IDimensions;
+            labelDimensions: IDimensions;
             titleDimensions: IDimensions;
+            titleTextProperties: TextProperties;
             labelFormatter: IValueFormatter;
             labelTextProperties: TextProperties;
-            labelWidth: number;
-            labelHeight: number;
             padding: IPadding;
         }
 

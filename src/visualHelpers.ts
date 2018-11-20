@@ -665,14 +665,14 @@ module powerbi.extensibility.visual {
                         ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
                         :   0
                 };
-                xAxis.axisLabelDimensions = {
+                xAxis.labelDimensions = {
                     height: settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels && !viewModel.categoriesAllCollapsed
                         ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
                         :   0
                 };
                 xAxis.dimensions = {
                     height:     xAxis.titleDimensions.height
-                            +   xAxis.axisLabelDimensions.height
+                            +   xAxis.labelDimensions.height
                             +   (   settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels && !viewModel.categoriesAllCollapsed
                                         ?   xAxis.padding.top
                                         :   0
@@ -720,16 +720,18 @@ module powerbi.extensibility.visual {
 
             /** Find the widest label and use that for our Y-axis width overall */
                 debug.log('Y-Axis label sizing...');
-                yAxis.labelWidth = settings.yAxis.show && settings.yAxis.showLabels
-                    ?   Math.max(
-                            textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
-                            textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1])
-                        )
-                        + yAxis.padding.left
-                    : 0;
+                yAxis.labelDimensions = {
+                    width: settings.yAxis.show && settings.yAxis.showLabels
+                        ?   Math.max(
+                                textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[0]),
+                                textMeasurementService.measureSvgTextWidth(yAxis.labelTextProperties, yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1])
+                            )
+                            + yAxis.padding.left
+                        : 0
+                    };
 
             /** Solve the remaining axis dimensions */
-                yAxis.dimensions.width = yAxis.labelWidth + yAxis.titleDimensions.width;
+                yAxis.dimensions.width = yAxis.labelDimensions.width + yAxis.titleDimensions.width;
                 yAxis.dimensions.x = yAxis.titleDimensions.width;
                 xAxis.dimensions.width = xAxis.titleDimensions.width = viewport.width - yAxis.dimensions.width
                 xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
