@@ -802,6 +802,7 @@ module powerbi.extensibility.visual {
                     x: -yHeight / 2,
                     y: 0
                 };
+                debug.log(`Y-axis title width: ${yAxis.titleDimensions.width}`);
 
             /** Find the widest label and use that for our Y-axis width overall */
                 debug.log('Y-Axis label sizing...');
@@ -814,9 +815,31 @@ module powerbi.extensibility.visual {
                             + yAxis.padding.left
                         : 0
                     };
+                debug.log(`Y-axis label width: ${yAxis.labelDimensions.width}`);
+
+            /** Total Y-axis width */
+                yAxis.dimensions.width = yAxis.labelDimensions.width + yAxis.titleDimensions.width;
+                debug.log(`Y-axis total width: ${yAxis.dimensions.width}`);
+
+            /** Make adjustments to the width to compensate for smaller viewports
+             *  TODO: very similar to x-axis code above; we can probably turn this into a function
+             */
+            if (        settings.yAxis.show
+                &&  yAxis.dimensions.width / viewport.width > yAxisWidthLimit
+            ) {
+                debug.log('Y-axis width exceeds maximum cap. Reducing...')
+                yAxis.dimensions.width -= yAxis.labelDimensions.width;
+                yAxis.labelDimensions.width = 0;
+                if (        settings.yAxis.showTitle
+                        &&  yAxis.titleDimensions.width > 0
+                        &&  yAxis.dimensions.width / viewport.width > yAxisWidthLimit
+                ) {
+                    yAxis.titleDimensions.width = 0
+                    yAxis.dimensions.width = 0;
+                }
+            }
 
             /** Solve the remaining axis dimensions */
-                yAxis.dimensions.width = yAxis.labelDimensions.width + yAxis.titleDimensions.width;
                 yAxis.dimensions.x = yAxis.titleDimensions.width;
                 xAxis.dimensions.width = xAxis.titleDimensions.width = viewport.width - yAxis.dimensions.width
                 xAxis.titleDimensions.x = yAxis.dimensions.width + (xAxis.dimensions.width / 2);
@@ -832,7 +855,7 @@ module powerbi.extensibility.visual {
                     .orient('left')
                     .ticks(yAxis.ticks)
                     .tickSize(-viewport.width + yAxis.dimensions.width)
-                    .tickFormat(d => settings.yAxis.showLabels
+                    .tickFormat(d => settings.yAxis.showLabels && yAxis.labelDimensions.width > 0
                         ?   yAxis.labelFormatter.format(d)
                         :   ''
                     );

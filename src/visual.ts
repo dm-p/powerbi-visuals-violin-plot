@@ -214,7 +214,7 @@ module powerbi.extensibility.visual {
                             });
 
                     /** Add title if required */
-                        if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleTextProperties) {
+                        if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleTextProperties && this.viewModel.yAxis.titleDimensions.width > 0) {
                             yAxisContainer
                                 .append('text')
                                     .classed('yAxisTitle', true)
