@@ -372,82 +372,86 @@ module powerbi.extensibility.visual {
                     /** Initial sizing work */
                         resyncDimensions(viewModel, settings, viewport);
 
-                    /** Manage display label overflow if required. By doing this, we can use the raw,
-                     *  unformatted category name to define our ticks, but format them correctly in the
-                     *  event of us wishing to use ellipses etc.
-                     *  
-                     *  We'll work out the tailored name vs. the original name, and that way we can determine
-                     *  how many categories have been reduced to their ellipses. If all have been reduced then
-                     *  we can just remove the axis labels as they serve no purpose.
-                     */
-                        
-                        if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
+                    /** Manage the x-axis label/title and sizing */
 
-                            let xTickMapper = {},
-                                collapsedCount = 0;
+                        /** Manage display label overflow if required. By doing this, we can use the raw,
+                         *  unformatted category name to define our ticks, but format them correctly in the
+                         *  event of us wishing to use ellipses etc.
+                         *  
+                         *  We'll work out the tailored name vs. the original name, and that way we can determine
+                         *  how many categories have been reduced to their ellipses. If all have been reduced then
+                         *  we can just remove the axis labels as they serve no purpose.
+                         */
+                            
+                            if (viewModel.categoryNames){
 
-                            viewModel.categories.map(c => {
-                                c.displayName = getTailoredDisplayName(
-                                    valueFormatter.format(c.name, categoryMetadata.format),
+                                let xTickMapper = {},
+                                    collapsedCount = 0;
+
+                                viewModel.categories.map(c => {
+                                    c.displayName = getTailoredDisplayName(
+                                        valueFormatter.format(c.name, categoryMetadata.format),
+                                        {
+                                            fontFamily: categoryTextProperties.fontFamily,
+                                            fontSize: categoryTextProperties.fontSize,
+                                            text: valueFormatter.format(c.name, categoryMetadata.format)
+                                        },
+                                        viewModel.xAxis.scale.rangeBand()
+                                    );
+
+                                    collapsedCount += c.displayName.collapsed
+                                        ?   1
+                                        :   0;
+                                    
+                                    xTickMapper[`${c.name}`] = c.displayName.tailoredName;
+                                    
+                                });
+
+                                viewModel.categoryCollapsedCount = collapsedCount;
+                                viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
+                                
+                                viewModel.xAxis.generator.tickFormat(function(d) {
+                                    
+                                    /** If all our ticks got collapse, we might as well not have them... */
+                                        if (viewModel.categoriesAllCollapsed) {
+                                            return '';
+                                        } else {
+                                            return xTickMapper[d];
+                                        }        
+
+                                });
+                                
+                            } else {
+
+                                viewModel.xAxis.generator.tickFormat('');
+
+                            }
+
+                        /** Repeat for the X-Axis title */
+                            if (settings.xAxis.showTitle) {
+                                
+                                let xAxisTitleFormatted = !categoryMetadata 
+                                        ?   ''
+                                        :   (!settings.xAxis.titleText 
+                                                ?   categoryMetadata.displayName
+                                                :   settings.xAxis.titleText
+                                            ).trim();
+                                viewModel.xAxis.titleDisplayName = getTailoredDisplayName(
+                                    xAxisTitleFormatted,
                                     {
-                                        fontFamily: categoryTextProperties.fontFamily,
-                                        fontSize: categoryTextProperties.fontSize,
-                                        text: valueFormatter.format(c.name, categoryMetadata.format)
+                                        fontFamily: settings.xAxis.titleFontFamily,
+                                        fontSize:PixelConverter.toString(settings.xAxis.titleFontSize),
+                                        text: xAxisTitleFormatted
                                     },
-                                    viewModel.xAxis.scale.rangeBand()
-                                );
+                                    viewModel.xAxis.dimensions.width
+                                )
 
-                                collapsedCount += c.displayName.collapsed
-                                    ?   1
-                                    :   0;
-                                
-                                xTickMapper[`${c.name}`] = c.displayName.tailoredName;
-                                
-                            });
+                            }
 
-                            viewModel.categoryCollapsedCount = collapsedCount;
-                            viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
-                            
-                            viewModel.xAxis.generator.tickFormat(function(d) {
-                                
-                                /** If all our ticks got collapse, we might as well not have them... */
-                                    if (viewModel.categoriesAllCollapsed) {
-                                        return '';
-                                    } else {
-                                        return xTickMapper[d];
-                                    }        
-
-                            });
-
-                            resyncDimensions(viewModel, settings, viewport);
-                            
-                        } else {
-
-                            viewModel.xAxis.generator.tickFormat('');
-
-                        }
-
-                    /** Repeat for the X-Axis title */
-                        if (settings.xAxis.show && settings.xAxis.showTitle) {
-                            
-                            let xAxisTitleFormatted = !categoryMetadata 
-                                    ?   ''
-                                    :   (!settings.xAxis.titleText 
-                                            ?   categoryMetadata.displayName
-                                            :   settings.xAxis.titleText
-                                        ).trim();
-                            viewModel.xAxis.titleDisplayName = getTailoredDisplayName(
-                                xAxisTitleFormatted,
-                                {
-                                    fontFamily: settings.xAxis.titleFontFamily,
-                                    fontSize:PixelConverter.toString(settings.xAxis.titleFontSize),
-                                    text: xAxisTitleFormatted
-                                },
-                                viewModel.xAxis.dimensions.width
-                            )
-
-                            resyncDimensions(viewModel, settings, viewport);
-                    }
+                        /** Resync if showing the axis at all */
+                            if (settings.xAxis.show) {
+                                resyncDimensions(viewModel, settings, viewport);
+                            }
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis;

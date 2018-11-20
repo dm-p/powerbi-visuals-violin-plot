@@ -94,6 +94,7 @@ module powerbi.extensibility.visual {
             this.options = options;
             this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
             this.errorState = false;
+            this.legendData = {dataPoints: []};
             this.viewport = options.viewport;
 
             /** Initial debugging for visual update */
@@ -163,6 +164,7 @@ module powerbi.extensibility.visual {
 
             /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
                 if (this.viewModel.categoryNames) {
+                    debug.log('Constructing legend...');
                     this.legendData = {
                         title: this.settings.legend.showTitle 
                                     ? this.settings.legend.titleText 
@@ -453,6 +455,9 @@ module powerbi.extensibility.visual {
 
     /** Renders the legend, based on the properties supplied in the update method */
         private renderLegend(): void {
+
+            let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
+            debug.log('Rendering legend...');
             
             /** Only show if legend is enabled and we colour by category */
                 const position: LegendPosition = this.settings.legend.show 
@@ -460,11 +465,15 @@ module powerbi.extensibility.visual {
                     && this.settings.dataColours.colourByCategory
                         ?   LegendPosition[this.settings.legend.position]
                         :   LegendPosition.None;
+                debug.log(`Position: ${position}`);
 
             /** Draw the legend using values */
                 this.legend.changeOrientation(position);
+                debug.log('Legend orientation set.');
                 this.legend.drawLegend(this.legendData, this.viewport);
+                debug.log('Legend drawn.');
                 Legend.positionChartArea(this.container, this.legend);
+                debug.log('Legend positioned.');
 
             /** Adjust to viewport to match the legend orientation */
                 switch (this.legend.getOrientation()) {
