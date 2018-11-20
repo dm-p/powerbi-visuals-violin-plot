@@ -17,6 +17,7 @@ module powerbi.extensibility.visual {
             import IDataPointKde = ViolinPlotModels.IDataPointKde;
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import IAxisCategorical = ViolinPlotModels.IAxisCategorical;
+            import IDisplayName = ViolinPlotModels.IDisplayName;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
 
@@ -401,30 +402,18 @@ module powerbi.extensibility.visual {
                                 collapsedCount = 0;
 
                             viewModel.categories.map(c => {
-                                let tailoredName = c.displayName.formattedName,
-                                    tailoredWidth = c.displayName.formattedWidth,
-                                    collapsed = false;
+                                c.displayName = getTailoredDisplayName(
+                                    c.displayName.formattedName,
+                                    c.displayName.textProperties,
+                                    viewModel.xAxis.scale.rangeBand()
+                                );
 
-                                if (c.displayName.formattedWidth > viewModel.xAxis.scale.rangeBand()) {
-                                    tailoredName = textMeasurementService.getTailoredTextOrDefault(
-                                        c.displayName.textProperties,
-                                        viewModel.xAxis.scale.rangeBand()
-                                    );
-                                    tailoredWidth = textMeasurementService.measureSvgTextWidth(
-                                        c.displayName.textProperties,
-                                        tailoredName
-                                    )
-                                    /** Flag if the value is entirely truncated down to an ellipsis */
-                                        if (tailoredName == '...' ) {
-                                            collapsed = true;
-                                            collapsedCount++;
-                                        }
-                                }
+                                collapsedCount += c.displayName.collapsed
+                                    ?   1
+                                    :   0;
                                 
-                                xTickMapper[`${c.name}`] = tailoredName;
-                                c.displayName.tailoredName = tailoredName;
-                                c.displayName.tailoredWidth = tailoredWidth;
-                                c.displayName.collapsed = collapsed;
+                                xTickMapper[`${c.name}`] = c.displayName.tailoredName;
+                                
                             });
 
                             viewModel.categoryCollapsedCount = collapsedCount;
@@ -640,6 +629,47 @@ module powerbi.extensibility.visual {
 
             debug.log('View model completely mapped!');
             return viewModel;
+
+        }
+
+        /**
+         * Calculate the necessary IDisplayName object for the supplied properties. Used to return a tailored value
+         * (i.e. with ellipses) if the bounding width is not wide enough. An IDisplayName object is regarded as
+         * `collapsed` if the tailored value is solely an ellipsis (`...`), which can then be used to determine
+         * whether to display it at all based on other specific business logic.
+         * 
+         * @param formattedName     The formatted string to evaluate
+         * @param textProperties    The text properties to use when calculating dimensions
+         * @param boundingWidth     The width to test against
+         */
+        function getTailoredDisplayName(formattedName: string, textProperties : TextProperties, boundingWidth): IDisplayName {
+            
+            let formattedWidth = textMeasurementService.measureSvgTextWidth(
+                    textProperties,
+                    formattedName
+                ),
+                tailoredName = formattedWidth > boundingWidth
+                    ?   textMeasurementService.getTailoredTextOrDefault(
+                            textProperties,
+                            boundingWidth
+                        )
+                    :   formattedName,
+                tailoredWidth = formattedWidth > boundingWidth
+                    ?   textMeasurementService.measureSvgTextWidth(
+                            textProperties,
+                            tailoredName
+                        )
+                    :   formattedWidth;
+                textProperties.text = formattedName;
+
+            return {
+                formattedName: formattedName,
+                formattedWidth: formattedWidth,
+                textProperties: textProperties,
+                tailoredName: tailoredName,
+                tailoredWidth: tailoredWidth,
+                collapsed: tailoredName == '...'
+            }
 
         }
 
