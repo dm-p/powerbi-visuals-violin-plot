@@ -117,7 +117,11 @@ module powerbi.extensibility.visual {
                         :   null,
                     metadata = dataViews[0].metadata,
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
-                    measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
+                    measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
+                    categoryTextProperties = {
+                        fontFamily: settings.xAxis.fontFamily,
+                        fontSize: PixelConverter.toString(settings.xAxis.fontSize)
+                    };
                     viewModel.categories = [];
 
                 /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
@@ -131,11 +135,7 @@ module powerbi.extensibility.visual {
                     /** Copy our values array and sort */
                         let allDataPoints = <number[]>values[0].values
                             .slice(0)
-                            .sort(d3.ascending),
-                            categoryTextProperties = {
-                                fontFamily: settings.xAxis.fontFamily,
-                                fontSize: PixelConverter.toString(settings.xAxis.fontSize)
-                            };
+                            .sort(d3.ascending);
 
                     if (!category) {
                         
@@ -179,15 +179,6 @@ module powerbi.extensibility.visual {
                                 
                                 viewModel.categories.push({
                                     name: `${v.category}`,
-                                    displayName: {
-                                        formattedName: valueFormatter.format(v.category, categoryMetadata.format),
-                                        textProperties: {
-                                            fontFamily: categoryTextProperties.fontFamily,
-                                            fontSize: categoryTextProperties.fontSize,
-                                            text: valueFormatter.format(v.category, categoryMetadata.format)
-                                        },
-                                        formattedWidth: textMeasurementService.measureSvgTextWidth(categoryTextProperties, valueFormatter.format(v.category, categoryMetadata.format))
-                                    },
                                     dataPoints: [],
                                     colour: settings.dataColours.colourByCategory
                                         ?   getCategoricalObjectValue<Fill>(
@@ -299,6 +290,10 @@ module powerbi.extensibility.visual {
                     metadata = dataViews[0].metadata,
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
+                    categoryTextProperties = {
+                        fontFamily: settings.xAxis.fontFamily,
+                        fontSize: PixelConverter.toString(settings.xAxis.fontSize)
+                    },
                     kernel = settings.violin.type == 'line'
                         ?   KDE.kernels[settings.violin.kernel]
                         :   {} as IKernel;
@@ -403,8 +398,12 @@ module powerbi.extensibility.visual {
 
                             viewModel.categories.map(c => {
                                 c.displayName = getTailoredDisplayName(
-                                    c.displayName.formattedName,
-                                    c.displayName.textProperties,
+                                    valueFormatter.format(c.name, categoryMetadata.format),
+                                    {
+                                        fontFamily: categoryTextProperties.fontFamily,
+                                        fontSize: categoryTextProperties.fontSize,
+                                        text: valueFormatter.format(c.name, categoryMetadata.format)
+                                    },
                                     viewModel.xAxis.scale.rangeBand()
                                 );
 
@@ -683,7 +682,7 @@ module powerbi.extensibility.visual {
 
             /** Set up debugging */
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
-                debug.log('Completing view model...');
+                debug.log('Syncing view model dimensions...');
 
             let xAxis = viewModel.xAxis,
                 yAxis = viewModel.yAxis;
