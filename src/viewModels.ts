@@ -44,6 +44,7 @@ module powerbi.extensibility.visual {
             labelDimensions: IDimensions;
             titleDimensions: IDimensions;
             titleTextProperties: TextProperties;
+            titleDisplayName: IDisplayName;
             labelFormatter: IValueFormatter;
             labelTextProperties: TextProperties;
             padding: IPadding;
@@ -88,7 +89,7 @@ module powerbi.extensibility.visual {
 
         export interface ICategory {
             name: string;
-            displayName: ICategoryDisplayName;
+            displayName: IDisplayName;
             colour: string;
             formatter: utils.formatting.IValueFormatter;
             selectionId: powerbi.visuals.ISelectionId;
@@ -100,7 +101,7 @@ module powerbi.extensibility.visual {
             yVScale: d3.scale.Linear<number, number>;
         }
 
-        export interface ICategoryDisplayName {
+        export interface IDisplayName {
             formattedName: string;
             formattedWidth: number;
             textProperties?: TextProperties;

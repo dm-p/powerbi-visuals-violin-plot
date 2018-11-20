@@ -285,7 +285,7 @@ module powerbi.extensibility.visual {
                             .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
                     /** Add title if required */
-                        if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleTextProperties) {
+                        if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName) {
                             xAxisContainer
                                 .append('text')
                                     .classed('xAxisTitle', true)
@@ -296,11 +296,11 @@ module powerbi.extensibility.visual {
                                     })
                                     .style({
                                         'text-anchor': 'middle',
-                                        'font-size': this.viewModel.xAxis.titleTextProperties.fontSize,
+                                        'font-size': this.viewModel.xAxis.titleDisplayName.textProperties.fontSize,
                                         'font-family': this.settings.xAxis.titleFontFamily,
                                         'fill': this.settings.xAxis.titleColor,
                                     })
-                                    .text(this.viewModel.xAxis.titleTextProperties.text);
+                                    .text(this.viewModel.xAxis.titleDisplayName.tailoredName);
                         }
 
                 }

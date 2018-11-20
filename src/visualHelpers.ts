@@ -366,17 +366,6 @@ module powerbi.extensibility.visual {
                                 fontSize: PixelConverter.toString(settings.xAxis.fontSize),
                                 text: viewModel.categories[0].name
                             },
-                            titleTextProperties: {
-                                text: !categoryMetadata 
-                                    ?   ''
-                                    :   (!settings.xAxis.titleText 
-                                            ?   categoryMetadata.displayName
-                                            :   settings.xAxis.titleText
-                                        ).trim()
-                                ,
-                                fontFamily: settings.xAxis.titleFontFamily,
-                                fontSize:PixelConverter.toString(settings.xAxis.titleFontSize)
-                            },
                             domain: viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
 
@@ -391,6 +380,7 @@ module powerbi.extensibility.visual {
                      *  how many categories have been reduced to their ellipses. If all have been reduced then
                      *  we can just remove the axis labels as they serve no purpose.
                      */
+                        
                         if (settings.xAxis.show && viewModel.categoryNames && settings.xAxis.showLabels){
 
                             let xTickMapper = {},
@@ -420,17 +410,44 @@ module powerbi.extensibility.visual {
                             
                             viewModel.xAxis.generator.tickFormat(function(d) {
                                 
-                                /** Extend the y-axis to fill the gap if all our ticks got collapsed */
+                                /** If all our ticks got collapse, we might as well not have them... */
                                     if (viewModel.categoriesAllCollapsed) {
                                         return '';
                                     } else {
                                         return xTickMapper[d];
-                                    }                                        
+                                    }        
+
                             });
 
                             resyncDimensions(viewModel, settings, viewport);
                             
+                        } else {
+
+                            viewModel.xAxis.generator.tickFormat('');
+
                         }
+
+                    /** Repeat for the X-Axis title */
+                        if (settings.xAxis.show && settings.xAxis.showTitle) {
+                            
+                            let xAxisTitleFormatted = !categoryMetadata 
+                                    ?   ''
+                                    :   (!settings.xAxis.titleText 
+                                            ?   categoryMetadata.displayName
+                                            :   settings.xAxis.titleText
+                                        ).trim();
+                            viewModel.xAxis.titleDisplayName = getTailoredDisplayName(
+                                xAxisTitleFormatted,
+                                {
+                                    fontFamily: settings.xAxis.titleFontFamily,
+                                    fontSize:PixelConverter.toString(settings.xAxis.titleFontSize),
+                                    text: xAxisTitleFormatted
+                                },
+                                viewModel.xAxis.dimensions.width
+                            )
+
+                            resyncDimensions(viewModel, settings, viewport);
+                    }
 
                 /** Add vertical X-axis properties */
                     viewModel.xVaxis = viewModel.yAxis;
@@ -690,8 +707,16 @@ module powerbi.extensibility.visual {
             /** X-axis height */
                 debug.log('X-axis vertical space...');
                 xAxis.titleDimensions = {
-                    height: settings.xAxis.show && settings.xAxis.showTitle && xAxis.titleTextProperties.text !== ''
-                        ?   textMeasurementService.measureSvgTextHeight(xAxis.titleTextProperties)
+                    height:     settings.xAxis.show 
+                            &&  settings.xAxis.showTitle
+                            &&  xAxis.titleDisplayName 
+                            &&  !xAxis.titleDisplayName.collapsed 
+                            &&  xAxis.titleDisplayName.tailoredName !== ''
+                        ?   textMeasurementService.measureSvgTextHeight({
+                                fontSize: xAxis.titleDisplayName.textProperties.fontSize,
+                                fontFamily: xAxis.titleDisplayName.textProperties.fontFamily,
+                                text: xAxis.titleDisplayName.tailoredName
+                            })
                         :   0
                 };
                 xAxis.labelDimensions = {
