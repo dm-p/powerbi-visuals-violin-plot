@@ -316,7 +316,7 @@ module powerbi.extensibility.visual {
                             padding: {
                                 left: 5
                             },
-                            heightLimit: 55,
+                            heightLimit: settings.yAxis.heightLimit,
                             labelTextProperties: {
                                 fontFamily: settings.yAxis.fontFamily,
                                 fontSize: PixelConverter.toString(settings.yAxis.fontSize)
@@ -336,7 +336,7 @@ module powerbi.extensibility.visual {
                             padding: {
                                 top: 5
                             },
-                            widthLimit: 55,
+                            widthLimit: settings.xAxis.widthLimit,
                             labelTextProperties: {
                                 fontFamily: settings.xAxis.fontFamily,
                                 fontSize: PixelConverter.toString(settings.xAxis.fontSize),
@@ -353,6 +353,7 @@ module powerbi.extensibility.visual {
                         /** Y-axis title */
                             if (settings.yAxis.showTitle) {
                                     
+                                debug.log('Y-axis title initial setup...')
                                 let yAxisTitleFormatted = function() {            
                                     /** If we supplied a title, use that, otherwise format our measure names */
                                         let title = (!settings.yAxis.titleText) 
@@ -382,7 +383,9 @@ module powerbi.extensibility.visual {
                                         fontSize:PixelConverter.toString(settings.yAxis.titleFontSize),
                                         text: yAxisTitleFormatted
                                     },
-                                    viewModel.yAxis.dimensions.height
+                                    viewModel.yAxis.dimensions
+                                        ?   viewModel.yAxis.dimensions.height
+                                        :   viewport.height
                                 )
 
                             }
@@ -393,6 +396,7 @@ module powerbi.extensibility.visual {
                                 }
 
                     /** Manage the x-axis label/title and sizing */
+                        debug.log('X-axis label and title sizing...');
 
                         /** Manage display label overflow if required. By doing this, we can use the raw,
                          *  unformatted category name to define our ticks, but format them correctly in the
@@ -405,6 +409,7 @@ module powerbi.extensibility.visual {
                             
                             if (viewModel.categoryNames){
 
+                                debug.log('X-axis labels...');
                                 let xTickMapper = {},
                                     collapsedCount = 0;
 
@@ -416,30 +421,36 @@ module powerbi.extensibility.visual {
                                             fontSize: categoryTextProperties.fontSize,
                                             text: valueFormatter.format(c.name, categoryMetadata.format)
                                         },
-                                        viewModel.xAxis.scale.rangeBand()
+                                        viewModel.xAxis.scale
+                                            ?   viewModel.xAxis.scale.rangeBand()
+                                            :   viewport.width / viewModel.categories.length
                                     );
-
+                                    
                                     collapsedCount += c.displayName.collapsed
                                         ?   1
                                         :   0;
                                     
                                     xTickMapper[`${c.name}`] = c.displayName.tailoredName;
-                                    
+
                                 });
 
                                 viewModel.categoryCollapsedCount = collapsedCount;
                                 viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
-                                
-                                viewModel.xAxis.generator.tickFormat(function(d) {
-                                    
-                                    /** If all our ticks got collapse, we might as well not have them... */
-                                        if (viewModel.categoriesAllCollapsed) {
-                                            return '';
-                                        } else {
-                                            return xTickMapper[d];
-                                        }        
 
-                                });
+                                if (viewModel.xAxis.generator){
+
+                                    viewModel.xAxis.generator.tickFormat(function(d) {
+                                    
+                                        /** If all our ticks got collapse, we might as well not have them... */
+                                            if (viewModel.categoriesAllCollapsed) {
+                                                return '';
+                                            } else {
+                                                return xTickMapper[d];
+                                            }        
+
+                                    });
+
+                                }
                                 
                             } else {
 
@@ -450,6 +461,7 @@ module powerbi.extensibility.visual {
                         /** Repeat for the X-Axis title */
                             if (settings.xAxis.showTitle) {
                                 
+                                debug.log('X-axis title...');
                                 let xAxisTitleFormatted = !categoryMetadata 
                                         ?   ''
                                         :   (!settings.xAxis.titleText 
@@ -477,7 +489,7 @@ module powerbi.extensibility.visual {
                     viewModel.xVaxis = viewModel.yAxis;
 
                 /** Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin */
-                    if (settings.violin.type == 'line') {
+                    if (settings.violin.type == 'line' && !viewModel.yAxis.collapsed) {
 
                         /** Keep track of the axis limits so that we can adjust them later if necessary */
                         let yMin = viewModel.yAxis.domain[0],
@@ -791,7 +803,7 @@ module powerbi.extensibility.visual {
                         debug.log('Y-axis too short to render properly!');
                         viewModel.yAxis.collapsed = true;
                     }
-                    if (settings.yAxis.showTitle && yAxis.titleDisplayName) {
+                    if (settings.yAxis.showTitle && yAxis.titleDisplayName && !yAxis.collapsed) {
                         debug.log('Re-checking and adjusting Y-axis title...');
                         yAxis.titleDisplayName = getTailoredDisplayName(
                             yAxis.titleDisplayName.formattedName,
@@ -802,7 +814,6 @@ module powerbi.extensibility.visual {
 
                 /** Providing that we managed to keep the Y-axis... */
                     if (!yAxis.collapsed) {
-
                         yAxis.dimensions = {
                             height: yHeight,
                             y: yPadVert /** TODO: manage categorical axis, padding etc. */
@@ -959,9 +970,6 @@ module powerbi.extensibility.visual {
                                 viewModel.boxPlot.xLeft = (viewModel.violinPlot.categoryWidth / 2) - (viewModel.boxPlot.width / 2);
                                 viewModel.boxPlot.xRight = (viewModel.violinPlot.categoryWidth / 2) + (viewModel.boxPlot.width / 2);
 
-                            viewModel.yAxis = yAxis;
-                            viewModel.xAxis = xAxis;
-
                         if (viewModel.xVaxis) {
                             viewModel.xVaxis.scale
                                 .domain(viewModel.xVaxis.domain)
@@ -970,6 +978,9 @@ module powerbi.extensibility.visual {
                         }
 
                     }
+        
+                viewModel.yAxis = yAxis;
+                viewModel.xAxis = xAxis;
 
         }
 
