@@ -36,6 +36,9 @@ module powerbi.extensibility.visual {
         }
 
         export interface IAxis {
+            collapsed: boolean;
+            widthLimit?: number;
+            heightLimit?: number;
             ticks: number;
             tickSize: number;
             ticksFormatted: string[];

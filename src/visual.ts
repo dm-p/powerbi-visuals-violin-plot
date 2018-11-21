@@ -40,6 +40,9 @@ module powerbi.extensibility.visual {
         import LegendIcon = powerbi.extensibility.utils.chart.legend.LegendIcon;
         import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
 
+    /** powerbi.extensibility.utils.type */
+        import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
+
     /** ViolinPlotHelpers */
         import visualCategoryStatistics = ViolinPlotHelpers.visualCategoryStatistics;
         import visualTransform = ViolinPlotHelpers.visualTransform;
@@ -201,7 +204,7 @@ module powerbi.extensibility.visual {
                         });
 
             /** Create a Y axis */
-                if (this.settings.yAxis.show) {
+                if (this.settings.yAxis.show && !this.viewModel.yAxis.collapsed && !this.viewModel.xAxis.collapsed) {
 
                     let yAxisContainer = violinPlotCanvas
                         .append('g')
@@ -255,7 +258,7 @@ module powerbi.extensibility.visual {
                 }
             
             /** Create an X-axis */
-                if (this.settings.xAxis.show) {
+                if (this.settings.xAxis.show && !this.viewModel.xAxis.collapsed && !this.viewModel.yAxis.collapsed) {
                     let xAxisContainer = violinPlotCanvas
                         .append('g')
                         .classed('xAxisContainer', true)
@@ -306,34 +309,39 @@ module powerbi.extensibility.visual {
 
                 }
 
-            /** Add series elements */
-                let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
-                    .data(this.viewModel.categories)
-                    .enter()
-                    .append('g')
-                        .classed({
-                            'violinPlotSeries': true
-                        })
-                        .attr({
-                            'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
-                            'width': this.viewModel.xAxis.scale.rangeBand()
-                        });
+            /** Do the rest, if required */
+                if (!this.viewModel.yAxis.collapsed && !this.viewModel.xAxis.collapsed) {
+            
+                    /** Add series elements */
+                        let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
+                            .data(this.viewModel.categories)
+                            .enter()
+                            .append('g')
+                                .classed({
+                                    'violinPlotSeries': true
+                                })
+                                .attr({
+                                    'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
+                                    'width': this.viewModel.xAxis.scale.rangeBand()
+                                });
 
-            /** Tooltips */
-                if (this.settings.tooltip.show) {
-                    this.tooltipServiceWrapper.addTooltip(
-                        violinPlotCanvas.selectAll('.violinPlotSeries'),
-                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
-                        (tooltipEvent: TooltipEventArgs<number>) => null
-                    )
-                }                
+                    /** Tooltips */
+                        if (this.settings.tooltip.show) {
+                            this.tooltipServiceWrapper.addTooltip(
+                                violinPlotCanvas.selectAll('.violinPlotSeries'),
+                                (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
+                                (tooltipEvent: TooltipEventArgs<number>) => null
+                            )
+                        }
 
-            /** Violin plot */
-                renderViolin(seriesContainer, this.viewModel, this.settings);
+                    /** Violin plot */
+                        renderViolin(seriesContainer, this.viewModel, this.settings);
 
-            /** Box plot */
-                if (this.settings.boxPlot.show) {
-                    renderBoxPlot(seriesContainer, this.viewModel, this.settings);
+                    /** Box plot */
+                        if (this.settings.boxPlot.show) {
+                            renderBoxPlot(seriesContainer, this.viewModel, this.settings);
+                        }
+
                 }
 
             /** Success! */
