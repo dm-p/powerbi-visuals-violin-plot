@@ -83,8 +83,11 @@ module powerbi.extensibility.visual {
             public gridlineColor: string = defaultAxisGridlineColor;
             /** Gridline stroke width */
             public gridlineStrokeWidth: number = 1;
-            /*8 Gridline line style */
+            /** Gridline line style */
             public gridlineStrokeLineStyle: string = 'solid';
+            /** Height and width limit constants */
+            public heightLimit: number;
+            public widthLimit: number;
         }
 
     /** Y-axis specific settings */
@@ -92,6 +95,7 @@ module powerbi.extensibility.visual {
             constructor() {
                 super();
                 this.gridlines = true;
+                this.heightLimit = 55;
             }
         }
 
@@ -100,6 +104,7 @@ module powerbi.extensibility.visual {
             constructor() {
                 super();
                 this.gridlines = false;
+                this.widthLimit = 55;
             }
         }
 
@@ -193,6 +198,9 @@ module powerbi.extensibility.visual {
           public fontColor: string = defaultFontColor;
           /** Text Size */
           public fontSize: number = defaultFontSizeSmall;
+          /** Height and width limit constants */
+          public heightLimit: number = 75;
+          public widthLimit: number = 75;
     }
 
     /** Used to hold about info and manage debugging */
