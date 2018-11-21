@@ -467,36 +467,52 @@ module powerbi.extensibility.visual {
             debug.log('Rendering legend...');
             
             /** Only show if legend is enabled and we colour by category */
-                const position: LegendPosition = this.settings.legend.show 
+                let position: LegendPosition = this.settings.legend.show 
                     && !this.errorState 
                     && this.settings.dataColours.colourByCategory
                         ?   LegendPosition[this.settings.legend.position]
                         :   LegendPosition.None;
                 debug.log(`Position: ${position}`);
 
-            /** Draw the legend using values */
+            /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
                 this.legend.changeOrientation(position);
                 debug.log('Legend orientation set.');
                 this.legend.drawLegend(this.legendData, this.viewport);
                 debug.log('Legend drawn.');
-                Legend.positionChartArea(this.container, this.legend);
-                debug.log('Legend positioned.');
 
-            /** Adjust to viewport to match the legend orientation */
+            /** If this exceeds our limits, then we will hide and re-draw prior to render */
+                let legendBreaksViewport = false;
                 switch (this.legend.getOrientation()) {
                     case LegendPosition.Left:
                     case LegendPosition.LeftCenter:
                     case LegendPosition.Right:
                     case LegendPosition.RightCenter:
-                        this.viewport.width -= this.legend.getMargins().width;
+                        legendBreaksViewport = 
+                                (this.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
+                            ||  (this.viewport.height < this.settings.legend.heightLimit);
                         break;
                     case LegendPosition.Top:
                     case LegendPosition.TopCenter:
                     case LegendPosition.Bottom:
                     case LegendPosition.BottomCenter:
-                        this.viewport.height -= this.legend.getMargins().height;
+                    legendBreaksViewport =         
+                                (this.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
+                            ||  (this.viewport.width < this.settings.legend.widthLimit);
                         break;
                 }
+
+            /** Adjust viewport (and hide legend) as appropriate */
+                if (legendBreaksViewport) {
+                    debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
+                    this.legend.changeOrientation(LegendPosition.None);
+                    this.legend.drawLegend(this.legendData, this.viewport);
+                } else {
+                    debug.log('Legend dimensions are good to go!');
+                    this.viewport.width -= this.legend.getMargins().width;
+                    this.viewport.height -= this.legend.getMargins().height;
+                }
+                Legend.positionChartArea(this.container, this.legend);
+                debug.log('Legend positioned.');
         }
 
         private static parseSettings(dataView: DataView): VisualSettings {
