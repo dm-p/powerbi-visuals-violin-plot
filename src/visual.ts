@@ -214,7 +214,7 @@ module powerbi.extensibility.visual {
                             });
 
                     /** Add title if required */
-                        if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleTextProperties && this.viewModel.yAxis.titleDimensions.width > 0) {
+                        if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleDisplayName && this.viewModel.yAxis.titleDimensions.width > 0) {
                             yAxisContainer
                                 .append('text')
                                     .classed('yAxisTitle', true)
@@ -226,12 +226,11 @@ module powerbi.extensibility.visual {
                                     })
                                     .style({
                                         'text-anchor': 'middle',
-                                        'font-size': this.viewModel.yAxis.titleTextProperties.fontSize,
+                                        'font-size': this.viewModel.yAxis.titleDisplayName.textProperties.fontSize,
                                         'font-family': this.settings.yAxis.titleFontFamily,
                                         'fill': this.settings.yAxis.titleColor,
                                     })
-                                    .text(this.viewModel.yAxis.titleTextProperties.text)
-                                    /** TODO wrap/ellipsis */
+                                    .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
                         }
 
                     let yAxisTicks = yAxisContainer

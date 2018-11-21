@@ -321,32 +321,6 @@ module powerbi.extensibility.visual {
                                 fontSize: PixelConverter.toString(settings.yAxis.fontSize)
                             },
                             labelFormatter: yFormat,
-                            titleTextProperties: {
-                                text: function() {            
-                                    /** If we supplied a title, use that, otherwise format our measure names */
-                                        let title = (!settings.yAxis.titleText) 
-                                            ? measureMetadata.displayName
-                                            : settings.yAxis.titleText;
-                
-                                    /** Return the correct title based on our supplied settings */
-                                        if (settings.yAxis.labelDisplayUnits == 1 || !yFormat.displayUnit) {
-                                            return title;
-                                        }
-                                        switch (settings.yAxis.titleStyle) {
-                                            case 'title': {
-                                                return title;
-                                            }
-                                            case 'unit': {
-                                                return yFormat.displayUnit.title;
-                                            }
-                                            case 'both': {
-                                                return `${title} (${yFormat.displayUnit.title})`;
-                                            }
-                                        }
-                                }(),
-                                fontFamily: settings.yAxis.titleFontFamily,
-                                fontSize:PixelConverter.toString(settings.yAxis.titleFontSize)
-                            },
                             domain: viewModel.yAxis && viewModel.yAxis.domain
                                 ?   viewModel.yAxis.domain
                                 :   [
@@ -371,6 +345,50 @@ module powerbi.extensibility.visual {
 
                     /** Initial sizing work */
                         resyncDimensions(viewModel, settings, viewport);
+
+                    /** Manage Y-axis label/title and sizing */
+                        
+                        /** Y-axis title */
+                            if (settings.yAxis.showTitle) {
+                                    
+                                let yAxisTitleFormatted = function() {            
+                                    /** If we supplied a title, use that, otherwise format our measure names */
+                                        let title = (!settings.yAxis.titleText) 
+                                            ? measureMetadata.displayName
+                                            : settings.yAxis.titleText;
+                
+                                    /** Return the correct title based on our supplied settings */
+                                        if (settings.yAxis.labelDisplayUnits == 1 || !yFormat.displayUnit) {
+                                            return title;
+                                        }
+                                        switch (settings.yAxis.titleStyle) {
+                                            case 'title': {
+                                                return title;
+                                            }
+                                            case 'unit': {
+                                                return yFormat.displayUnit.title;
+                                            }
+                                            case 'both': {
+                                                return `${title} (${yFormat.displayUnit.title})`;
+                                            }
+                                        }
+                                }();
+                                viewModel.yAxis.titleDisplayName = getTailoredDisplayName(
+                                    yAxisTitleFormatted,
+                                    {
+                                        fontFamily: settings.yAxis.titleFontFamily,
+                                        fontSize:PixelConverter.toString(settings.yAxis.titleFontSize),
+                                        text: yAxisTitleFormatted
+                                    },
+                                    viewModel.yAxis.dimensions.height
+                                )
+
+                            }
+
+                            /** Resync if showing the axis at all */
+                                if (settings.yAxis.show) {
+                                    resyncDimensions(viewModel, settings, viewport);
+                                }
 
                     /** Manage the x-axis label/title and sizing */
 
@@ -706,8 +724,8 @@ module powerbi.extensibility.visual {
                 debug.log('Syncing view model dimensions...');
 
             /** Constants for removal of axes if a given percentage is exceeded */
-                const   xAxisHeightLimit = 0.33,
-                        yAxisWidthLimit = 0.33;
+                const   xAxisHeightLimit = 0.25,
+                        yAxisWidthLimit = 0.15;
 
             let xAxis = viewModel.xAxis,
                 yAxis = viewModel.yAxis;
@@ -791,12 +809,21 @@ module powerbi.extensibility.visual {
                         ?   yAxis.labelFormatter.format(v)
                         :   ''
                 ));
+                // console.clear();
+                // console.log(yAxis.ticks);
+                // console.log(yAxis.scale.nice(yAxis.ticks).ticks());
 
             /** Resolve the title dimensions */
                 debug.log('Y-Axis title sizing...');
                 yAxis.titleDimensions = {
-                    width: (settings.yAxis.show && settings.yAxis.showTitle && yAxis.titleTextProperties.text !== '')
-                        ?   textMeasurementService.measureSvgTextHeight(yAxis.titleTextProperties)
+                    width: (
+                                settings.yAxis.show 
+                            &&  settings.yAxis.showTitle
+                            &&  yAxis.titleDisplayName 
+                            &&  !yAxis.titleDisplayName.collapsed 
+                            &&  yAxis.titleDisplayName.tailoredName !== ''
+                        )
+                        ?   textMeasurementService.measureSvgTextHeight(yAxis.titleDisplayName.textProperties)
                         :   0,
                     height: yHeight,
                     x: -yHeight / 2,
