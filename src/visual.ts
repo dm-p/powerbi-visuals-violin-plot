@@ -194,161 +194,173 @@ module powerbi.extensibility.visual {
                 this.viewModel = visualTransform(options, this.viewModel, this.settings, this.viewport);
                 debug.log('View model', this.viewModel);
 
-            /** Add our main SVG */
-                let violinPlotCanvas = this.container
-                    .append('svg')
-                        .classed('violinPlotCanvas', true)
-                        .attr({
-                            width: `${options.viewport.width}`,
-                            height: `${options.viewport.height}`
-                        });
+            /** We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator */
+                if (this.viewModel.yAxis.collapsed || this.viewModel.xAxis.collapsed) {
 
-            /** Create a Y axis */
-                if (this.settings.yAxis.show && !this.viewModel.yAxis.collapsed && !this.viewModel.xAxis.collapsed) {
+                    let errorContainer = this.container
+                        .append('div')
+                        .classed('violinPlotError', true);
+                    errorContainer                        
+                        .append('div')
+                            .style('opacity', '0.5')
+                            .html('&#128202;');
 
-                    let yAxisContainer = violinPlotCanvas
-                        .append('g')
-                            .classed('yAxisContainer', true)
-                            .style({
-                                'font-size': this.viewModel.yAxis.labelTextProperties.fontSize,
-                                'font-family': this.settings.yAxis.fontFamily,
-                                'fill': this.settings.yAxis.fontColor,
-                                'stroke-width' : 1 /** TODO: Config */
-                            });
+                } else {
 
-                    /** Add title if required */
-                        if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleDisplayName && this.viewModel.yAxis.titleDimensions.width > 0) {
-                            yAxisContainer
-                                .append('text')
-                                    .classed('yAxisTitle', true)
-                                    .attr({
-                                        transform: 'rotate(-90)',
-                                        x: this.viewModel.yAxis.titleDimensions.x,
-                                        y: this.viewModel.yAxis.titleDimensions.y,
-                                        dy: '1em'
-                                    })
-                                    .style({
-                                        'text-anchor': 'middle',
-                                        'font-size': this.viewModel.yAxis.titleDisplayName.textProperties.fontSize,
-                                        'font-family': this.settings.yAxis.titleFontFamily,
-                                        'fill': this.settings.yAxis.titleColor,
-                                    })
-                                    .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
-                        }
-
-                    let yAxisTicks = yAxisContainer
-                        .append('g')
-                            .classed({
-                                'yAxis': true,
-                                'grid': true
-                            })
-                            .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, 0)`)
-                        .call(this.viewModel.yAxis.generator);
-
-                    /** Apply gridline styling */
-                        yAxisTicks.selectAll('line')
+                    /** Add our main SVG */
+                        let violinPlotCanvas = this.container
+                        .append('svg')
+                            .classed('violinPlotCanvas', true)
                             .attr({
-                                stroke: this.settings.yAxis.gridlineColor,
-                                'stroke-width': this.settings.yAxis.gridlines
-                                    ? this.settings.yAxis.gridlineStrokeWidth
-                                    : 0
-                            })
-                            .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
-
-                }
-            
-            /** Create an X-axis */
-                if (this.settings.xAxis.show && !this.viewModel.xAxis.collapsed && !this.viewModel.yAxis.collapsed) {
-                    let xAxisContainer = violinPlotCanvas
-                        .append('g')
-                        .classed('xAxisContainer', true)
-                            .style({
-                                'font-size': this.viewModel.xAxis.labelTextProperties.fontSize,
-                                'font-family': this.settings.xAxis.fontFamily,
-                                'fill': this.settings.xAxis.fontColor,
-                                'stroke-width' : 1 /** TODO: Config */
+                                width: `${options.viewport.width}`,
+                                height: `${options.viewport.height}`
                             });
+
+                    /** Create a Y axis */
+                        if (this.settings.yAxis.show) {
+
+                            let yAxisContainer = violinPlotCanvas
+                                .append('g')
+                                    .classed('yAxisContainer', true)
+                                    .style({
+                                        'font-size': this.viewModel.yAxis.labelTextProperties.fontSize,
+                                        'font-family': this.settings.yAxis.fontFamily,
+                                        'fill': this.settings.yAxis.fontColor,
+                                        'stroke-width' : 1 /** TODO: Config */
+                                    });
+
+                            /** Add title if required */
+                                if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleDisplayName && this.viewModel.yAxis.titleDimensions.width > 0) {
+                                    yAxisContainer
+                                        .append('text')
+                                            .classed('yAxisTitle', true)
+                                            .attr({
+                                                transform: 'rotate(-90)',
+                                                x: this.viewModel.yAxis.titleDimensions.x,
+                                                y: this.viewModel.yAxis.titleDimensions.y,
+                                                dy: '1em'
+                                            })
+                                            .style({
+                                                'text-anchor': 'middle',
+                                                'font-size': this.viewModel.yAxis.titleDisplayName.textProperties.fontSize,
+                                                'font-family': this.settings.yAxis.titleFontFamily,
+                                                'fill': this.settings.yAxis.titleColor,
+                                            })
+                                            .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
+                                }
+
+                            let yAxisTicks = yAxisContainer
+                                .append('g')
+                                    .classed({
+                                        'yAxis': true,
+                                        'grid': true
+                                    })
+                                    .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, 0)`)
+                                .call(this.viewModel.yAxis.generator);
+
+                            /** Apply gridline styling */
+                                yAxisTicks.selectAll('line')
+                                    .attr({
+                                        stroke: this.settings.yAxis.gridlineColor,
+                                        'stroke-width': this.settings.yAxis.gridlines
+                                            ? this.settings.yAxis.gridlineStrokeWidth
+                                            : 0
+                                    })
+                                    .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
+
+                        }
                     
-                    let xAxisTicks = xAxisContainer
-                        .append('g')
-                            .classed({
-                                'xAxis': true,
-                                'grid': true
-                            })
-                            .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, ${options.viewport.height - this.viewModel.xAxis.dimensions.height})`)
-                        .call(this.viewModel.xAxis.generator);
-
-                    /** Apply gridline styling */
-                        xAxisTicks.selectAll('line')
-                            .attr({
-                                stroke: this.settings.xAxis.gridlineColor,
-                                'stroke-width': this.settings.xAxis.gridlines
-                                    ? this.settings.xAxis.gridlineStrokeWidth
-                                    : 0
-                            })
-                            .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
-
-                    /** Add title if required */
-                        if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName && this.viewModel.xAxis.titleDimensions.height > 0) {
-                            xAxisContainer
-                                .append('text')
-                                    .classed('xAxisTitle', true)
-                                    .attr({
-                                        x: this.viewModel.xAxis.titleDimensions.x,
-                                        y: this.viewModel.xAxis.titleDimensions.y,
-                                        dy: '1em'
-                                    })
+                    /** Create an X-axis */
+                        if (this.settings.xAxis.show) {
+                            let xAxisContainer = violinPlotCanvas
+                                .append('g')
+                                .classed('xAxisContainer', true)
                                     .style({
-                                        'text-anchor': 'middle',
-                                        'font-size': this.viewModel.xAxis.titleDisplayName.textProperties.fontSize,
-                                        'font-family': this.settings.xAxis.titleFontFamily,
-                                        'fill': this.settings.xAxis.titleColor,
+                                        'font-size': this.viewModel.xAxis.labelTextProperties.fontSize,
+                                        'font-family': this.settings.xAxis.fontFamily,
+                                        'fill': this.settings.xAxis.fontColor,
+                                        'stroke-width' : 1 /** TODO: Config */
+                                    });
+                            
+                            let xAxisTicks = xAxisContainer
+                                .append('g')
+                                    .classed({
+                                        'xAxis': true,
+                                        'grid': true
                                     })
-                                    .text(this.viewModel.xAxis.titleDisplayName.tailoredName);
+                                    .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, ${options.viewport.height - this.viewModel.xAxis.dimensions.height})`)
+                                .call(this.viewModel.xAxis.generator);
+
+                            /** Apply gridline styling */
+                                xAxisTicks.selectAll('line')
+                                    .attr({
+                                        stroke: this.settings.xAxis.gridlineColor,
+                                        'stroke-width': this.settings.xAxis.gridlines
+                                            ? this.settings.xAxis.gridlineStrokeWidth
+                                            : 0
+                                    })
+                                    .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
+
+                            /** Add title if required */
+                                if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName && this.viewModel.xAxis.titleDimensions.height > 0) {
+                                    xAxisContainer
+                                        .append('text')
+                                            .classed('xAxisTitle', true)
+                                            .attr({
+                                                x: this.viewModel.xAxis.titleDimensions.x,
+                                                y: this.viewModel.xAxis.titleDimensions.y,
+                                                dy: '1em'
+                                            })
+                                            .style({
+                                                'text-anchor': 'middle',
+                                                'font-size': this.viewModel.xAxis.titleDisplayName.textProperties.fontSize,
+                                                'font-family': this.settings.xAxis.titleFontFamily,
+                                                'fill': this.settings.xAxis.titleColor,
+                                            })
+                                            .text(this.viewModel.xAxis.titleDisplayName.tailoredName);
+                                }
+
                         }
 
-                }
+                    /** Do the rest, if required */
+                    
+                        /** Add series elements */
+                            let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
+                                .data(this.viewModel.categories)
+                                .enter()
+                                .append('g')
+                                    .classed({
+                                        'violinPlotSeries': true
+                                    })
+                                    .attr({
+                                        'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
+                                        'width': this.viewModel.xAxis.scale.rangeBand()
+                                    });
 
-            /** Do the rest, if required */
-                if (!this.viewModel.yAxis.collapsed && !this.viewModel.xAxis.collapsed) {
-            
-                    /** Add series elements */
-                        let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
-                            .data(this.viewModel.categories)
-                            .enter()
-                            .append('g')
-                                .classed({
-                                    'violinPlotSeries': true
-                                })
-                                .attr({
-                                    'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
-                                    'width': this.viewModel.xAxis.scale.rangeBand()
-                                });
+                        /** Tooltips */
+                            if (this.settings.tooltip.show) {
+                                this.tooltipServiceWrapper.addTooltip(
+                                    violinPlotCanvas.selectAll('.violinPlotSeries'),
+                                    (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
+                                    (tooltipEvent: TooltipEventArgs<number>) => null
+                                )
+                            }
 
-                    /** Tooltips */
-                        if (this.settings.tooltip.show) {
-                            this.tooltipServiceWrapper.addTooltip(
-                                violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
-                                (tooltipEvent: TooltipEventArgs<number>) => null
-                            )
-                        }
+                        /** Violin plot */
+                            renderViolin(seriesContainer, this.viewModel, this.settings);
 
-                    /** Violin plot */
-                        renderViolin(seriesContainer, this.viewModel, this.settings);
-
-                    /** Box plot */
-                        if (this.settings.boxPlot.show) {
-                            renderBoxPlot(seriesContainer, this.viewModel, this.settings);
-                        }
+                        /** Box plot */
+                            if (this.settings.boxPlot.show) {
+                                renderBoxPlot(seriesContainer, this.viewModel, this.settings);
+                            }
 
                 }
 
             /** Success! */
-            if (debug) {
-                debug.log('Visual fully rendered!');
-                debug.footer();
-            }
+                if (debug) {
+                    debug.log('Visual fully rendered!');
+                    debug.footer();
+                }
 
         }
 
