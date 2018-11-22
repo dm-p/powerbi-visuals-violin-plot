@@ -141,8 +141,7 @@ module powerbi.extensibility.visual {
                         errorContainer                        
                             .append('div')
                                 .html('Please ensure that you have added data to the <strong>Sampling</strong>\
-                                    and <strong>Measure Data</strong> fields, in order to display your violin plot :) <br/><br/>\
-                                    (<strong>Category</strong> is optional)');
+                                    and <strong>Measure Data</strong> fields &#128522;');
 
                         if (debug) {
                             debug.log('Update cancelled due to incomplete fields.');
@@ -618,6 +617,12 @@ module powerbi.extensibility.visual {
                                 delete instances[0].properties['meanFillColourInner'];
                             }
                         break;
+                    }
+                    case 'sorting': {
+                        /** Remove category option if no categories present */
+                            if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
+                                delete instances[0].properties['category'];
+                            }
                     }
                     case 'tooltip': {
                         /** Range validation on grid line stroke width and precision */

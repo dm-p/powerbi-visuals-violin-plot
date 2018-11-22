@@ -241,6 +241,14 @@ module powerbi.extensibility.visual {
                         } as IStatistics
                     });
 
+                /** If we're sorting, sort the categories appropriately */
+                    if (viewModel.categoryNames) {
+                        debug.log(`Sorting by category - ${settings.sorting.category}`);
+                        viewModel.categories.sort((x, y) => {
+                            return d3[`${settings.sorting.category}`](x.name, y.name);
+                        });
+                    }
+
                 /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
                  *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking
                  *  at potentially different sub-ranges of data in groups). Also, if we wish to apply a manual override for bandwidth,

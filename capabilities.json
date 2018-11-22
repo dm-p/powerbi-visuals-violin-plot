@@ -138,6 +138,28 @@
                 }
             }
         },
+        "sorting": {
+            "displayName": "Sorting",
+            "description": "Sorting options for the violin plot",
+            "properties": {
+                "category": {
+                    "displayName": "Category",
+                    "description": "Category sort order",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "ascending",
+                                "displayName": "Ascending"
+                            },
+                            {
+                                "value": "descending",
+                                "displayName": "Descending"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "dataColours": {
             "displayName": "Data Colors",
             "description": "Color settings for the violin",
@@ -1195,8 +1217,13 @@
         }
     ],
     "sorting": {
-        "default": {
-            
+        "implicit": {
+            "clauses": [
+                {
+                    "role": "category",
+                    "direction": 1
+                }
+            ]
         }
     }
 }

@@ -41,6 +41,7 @@ module powerbi.extensibility.visual {
     export class VisualSettings extends DataViewObjectsParser {
         public yAxis: yAxisSettings = new yAxisSettings();
         public xAxis: xAxisSettings = new xAxisSettings();
+        public sorting: sortingSettings = new sortingSettings();
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
         public boxPlot: boxPlotSettings = new boxPlotSettings();
@@ -186,21 +187,27 @@ module powerbi.extensibility.visual {
 
     /** Legend settings */
     export class legendSettings{
-          /** Show legend */
-          public show: boolean = true;
-          /** Legend position */
-          public position: string = 'Top';
-          /** Show title */
-          public showTitle: boolean = true;
-          /** Title text */
-          public titleText: string = null;
-          /** Font color */
-          public fontColor: string = defaultFontColor;
-          /** Text Size */
-          public fontSize: number = defaultFontSizeSmall;
-          /** Height and width limit constants */
-          public heightLimit: number = 75;
-          public widthLimit: number = 75;
+        /** Show legend */
+        public show: boolean = true;
+        /** Legend position */
+        public position: string = 'Top';
+        /** Show title */
+        public showTitle: boolean = true;
+        /** Title text */
+        public titleText: string = null;
+        /** Font color */
+        public fontColor: string = defaultFontColor;
+        /** Text Size */
+        public fontSize: number = defaultFontSizeSmall;
+        /** Height and width limit constants */
+        public heightLimit: number = 75;
+        public widthLimit: number = 75;
+    }
+
+    /** Sorting */
+    export class sortingSettings {
+        /** Category */
+        public category: string = 'ascending';
     }
 
     /** Used to hold about info and manage debugging */
