@@ -1,10 +1,10 @@
 {
   "visual": {
     "name": "violinPlot",
-    "displayName": "violinPlot",
+    "displayName": "Violin Plot",
     "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D972",
     "visualClassName": "ViolinPlot",
-    "version": "1.0.0",
+    "version": "1.0.0.0",
     "description": "",
     "supportUrl": "",
     "gitHubUrl": ""
@@ -15,7 +15,7 @@
     "email": ""
   },
   "assets": {
-    "icon": "assets/icon.png"
+    "icon": "assets/desktop_icon.png"
   },
   "externalJS": [
     "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
