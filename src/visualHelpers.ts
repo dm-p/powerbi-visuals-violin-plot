@@ -245,9 +245,22 @@ module powerbi.extensibility.visual {
 
                 /** If we're sorting, sort the categories appropriately */
                     if (viewModel.categoryNames) {
-                        debug.log(`Sorting by category - ${settings.sorting.category}`);
+                        debug.log(`Sorting by ${settings.sorting.by}`);
                         viewModel.categories.sort((x, y) => {
-                            return d3[`${settings.sorting.category}`](x.name, y.name);
+                            switch (settings.sorting.by) {
+                                case 'category': {
+                                    return d3[`${settings.sorting.order}`](x.name, y.name);
+                                }
+                                case 'samples': {
+                                    return d3[`${settings.sorting.order}`](x.dataPoints.length, y.dataPoints.length);
+                                }
+                                case 'median':
+                                case 'mean':
+                                case 'min':
+                                case 'max': {
+                                    return d3[`${settings.sorting.order}`](x.statistics[`${settings.sorting.by}`], y.statistics[`${settings.sorting.by}`]);
+                                }
+                            }
                         });
                     }
 

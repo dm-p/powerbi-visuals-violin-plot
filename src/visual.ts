@@ -619,10 +619,11 @@ module powerbi.extensibility.visual {
                         break;
                     }
                     case 'sorting': {
-                        /** Remove category option if no categories present */
+                        /** Disable/hide if not using categories */
                             if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
-                                delete instances[0].properties['category'];
+                                delete instances[0];
                             }
+                        break;
                     }
                     case 'tooltip': {
                         /** Range validation on grid line stroke width and precision */

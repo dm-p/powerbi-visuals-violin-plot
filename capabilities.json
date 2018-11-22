@@ -142,9 +142,40 @@
             "displayName": "Sorting",
             "description": "Sorting options for the violin plot",
             "properties": {
-                "category": {
-                    "displayName": "Category",
-                    "description": "Category sort order",
+                "by": {
+                    "displayName": "Sort By",
+                    "description": "How to sort the categories in the visual",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "category",
+                                "displayName": "Category"
+                            },
+                            {
+                                "value": "samples",
+                                "displayName": "Samples"
+                            },
+                            {
+                                "value": "median",
+                                "displayName": "Median"
+                            },
+                            {
+                                "value": "mean",
+                                "displayName": "Mean"
+                            },
+                            {
+                                "value": "max",
+                                "displayName": "Maximum"
+                            },
+                            {
+                                "value": "min",
+                                "displayName": "Minimum"
+                            }
+                        ]
+                    }
+                },
+                "order": {
+                    "displayName": "Sort Order",
                     "type": {
                         "enumeration": [
                             {

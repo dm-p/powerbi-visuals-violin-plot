@@ -206,8 +206,10 @@ module powerbi.extensibility.visual {
 
     /** Sorting */
     export class sortingSettings {
-        /** Category */
-        public category: string = 'ascending';
+        /** Sort by */
+        public by: string = 'category';
+        /** Sort order */
+        public order: string = 'ascending';
     }
 
     /** Used to hold about info and manage debugging */
