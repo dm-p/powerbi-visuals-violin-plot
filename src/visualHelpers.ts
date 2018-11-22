@@ -161,7 +161,8 @@ module powerbi.extensibility.visual {
                                         category: current,
                                         selectionId: host.createSelectionIdBuilder()
                                             .withCategory(category, idx)
-                                            .createSelectionId()
+                                            .createSelectionId(),
+                                        objectIndex: idx
                                     });
                                 }
                                 return accum;
@@ -179,11 +180,12 @@ module powerbi.extensibility.visual {
                                 
                                 viewModel.categories.push({
                                     name: `${v.category}`,
+                                    objectIndex: v.objectIndex,
                                     dataPoints: [],
                                     colour: settings.dataColours.colourByCategory
                                         ?   getCategoricalObjectValue<Fill>(
                                                 category,
-                                                i,
+                                                v.objectIndex,
                                                 'dataColours',
                                                 'categoryFillColour',
                                                 defaultColour
