@@ -225,7 +225,8 @@ module powerbi.extensibility.visual {
                                         'font-size': this.viewModel.yAxis.labelTextProperties.fontSize,
                                         'font-family': this.settings.yAxis.fontFamily,
                                         'fill': this.settings.yAxis.fontColor,
-                                        'stroke-width' : 1 /** TODO: Config */
+                                        'stroke-opacity': 0,
+                                        'stroke-width' : 1
                                     });
 
                             /** Add title if required */
@@ -278,7 +279,8 @@ module powerbi.extensibility.visual {
                                         'font-size': this.viewModel.xAxis.labelTextProperties.fontSize,
                                         'font-family': this.settings.xAxis.fontFamily,
                                         'fill': this.settings.xAxis.fontColor,
-                                        'stroke-width' : 1 /** TODO: Config */
+                                        'stroke-opacity': 0,
+                                        'stroke-width' : 1
                                     });
                             
                             let xAxisTicks = xAxisContainer
