@@ -225,8 +225,6 @@ module powerbi.extensibility.visual {
                                         'font-size': this.viewModel.yAxis.labelTextProperties.fontSize,
                                         'font-family': this.settings.yAxis.fontFamily,
                                         'fill': this.settings.yAxis.fontColor,
-                                        'stroke-opacity': 0,
-                                        'stroke-width' : 1
                                     });
 
                             /** Add title if required */
@@ -244,7 +242,7 @@ module powerbi.extensibility.visual {
                                                 'text-anchor': 'middle',
                                                 'font-size': this.viewModel.yAxis.titleDisplayName.textProperties.fontSize,
                                                 'font-family': this.settings.yAxis.titleFontFamily,
-                                                'fill': this.settings.yAxis.titleColor,
+                                                'fill': this.settings.yAxis.titleColor
                                             })
                                             .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
                                 }
@@ -278,9 +276,7 @@ module powerbi.extensibility.visual {
                                     .style({
                                         'font-size': this.viewModel.xAxis.labelTextProperties.fontSize,
                                         'font-family': this.settings.xAxis.fontFamily,
-                                        'fill': this.settings.xAxis.fontColor,
-                                        'stroke-opacity': 0,
-                                        'stroke-width' : 1
+                                        'fill': this.settings.xAxis.fontColor
                                     });
                             
                             let xAxisTicks = xAxisContainer
