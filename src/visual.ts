@@ -364,7 +364,7 @@ module powerbi.extensibility.visual {
         private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
             let v = value as ICategory,
                 s = settings.tooltip,
-                f = v.formatter,
+                f = viewModel.yAxis.labelFormatter,
                 tooltips: VisualTooltipDataItem[] = [];
 
             tooltips.push(

@@ -990,13 +990,6 @@
                         "bool": true
                     }
                 },
-                "precision": {
-                    "displayName": "Value Decimal Places",
-                    "type": {
-                        "integer": true
-                    },
-                    "placeHolderText": "Auto"   
-                },
                 "showMaxMin": {
                     "displayName": "Maximum & Minimum",
                     "description": "Show the series maximum and minimum values on the tooltip",

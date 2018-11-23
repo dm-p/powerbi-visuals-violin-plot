@@ -213,18 +213,8 @@ module powerbi.extensibility.visual {
                         span: d3.max(allDataPoints) - d3.min(allDataPoints)
                     } as IStatistics;
                         
-                /** Set up our measure formatter for each category + tooltips */
-                    let mFormat = valueFormatter.create({
-                        format: measureMetadata.format,
-                        value: viewModel.statistics.max,
-                        precision: settings.tooltip.precision != null
-                            ?   settings.tooltip.precision
-                            :   null
-                    });
-                        
                 /** Process the remainder of the view model by category */
                     viewModel.categories.map((c, i) => {
-                        c.formatter = mFormat;
                         c.dataPoints
                             .sort(d3.ascending)
                             .filter(v => v !== null);

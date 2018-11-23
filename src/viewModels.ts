@@ -95,7 +95,6 @@ module powerbi.extensibility.visual {
             displayName: IDisplayName;
             objectIndex: number;
             colour: string;
-            formatter: utils.formatting.IValueFormatter;
             selectionId: powerbi.visuals.ISelectionId;
             dataPoints: number[];
             dataKde: IDataPointKde[];
