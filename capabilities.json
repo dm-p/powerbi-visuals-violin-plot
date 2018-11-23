@@ -50,13 +50,6 @@
                         "integer": true
                     }
                 },
-                "clamp": {
-                    "displayName": "Clamp to Min/Max",
-                    "description": "TBD",
-                    "type": {
-                        "bool": true
-                    }
-                },
                 "lineType": {
                     "displayName": "Line Type",
                     "description": "Specify how the violin line points are plotted",
@@ -78,10 +71,6 @@
                     "description": "TBD",
                     "type": {
                         "enumeration": [
-                            {
-                                "displayName": "Low",
-                                "value": "10"
-                            },
                             {
                                 "displayName": "Standard",
                                 "value": "25"
