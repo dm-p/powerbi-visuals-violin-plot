@@ -40,8 +40,8 @@ module powerbi.extensibility.visual {
         import LegendIcon = powerbi.extensibility.utils.chart.legend.LegendIcon;
         import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
 
-    /** powerbi.extensibility.utils.type */
-        import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
+    /** powerbi.extensibility.utils.formatting */
+        import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
     /** ViolinPlotHelpers */
         import visualCategoryStatistics = ViolinPlotHelpers.visualCategoryStatistics;
@@ -375,7 +375,9 @@ module powerbi.extensibility.visual {
                 },
                 {
                     displayName: '# Samples',
-                    value: f.format(v.dataPoints.length)
+                    value: valueFormatter.create({
+                        format: "#,##0"
+                    }).format(v.dataPoints.length)
                 }
             );
 
