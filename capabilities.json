@@ -70,22 +70,6 @@
                         "integer": true
                     }
                 },
-                "lineType": {
-                    "displayName": "Line Type",
-                    "description": "Specify how the violin line points are plotted",
-                    "type": {
-                        "enumeration": [
-                            {
-                                "displayName": "Curved",
-                                "value": "basis"
-                            },
-                            {
-                                "displayName": "Straight",
-                                "value": "linear"
-                            }
-                        ]
-                    }
-                },
                 "resolution": {
                     "displayName": "Sampling Resolution",
                     "description": "TBD",
