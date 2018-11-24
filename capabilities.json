@@ -1,12 +1,6 @@
 {
     "dataRoles": [
         {
-            "displayName": "Category",
-            "name": "category",
-            "kind": "Grouping",
-            "description": "The category that you wish to group your data into."
-        },
-        {
             "displayName": "Sampling",
             "name": "sampling",
             "kind": "Grouping",
@@ -22,6 +16,12 @@
                     "numeric": true
                 }
             ]
+        },
+        {
+            "displayName": "Category",
+            "name": "category",
+            "kind": "Grouping",
+            "description": "The category that you wish to group your data into."
         }
     ],
     "objects": {
