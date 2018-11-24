@@ -1206,17 +1206,17 @@
                     "select": [
                         {
                             "for": {
-                                "in": "sampling"
+                                "in": "category"
                             }
                         },
                         {
                             "for": {
-                                "in": "category"
+                                "in": "sampling"
                             }
                         }
                     ],
                     "dataReductionAlgorithm": {
-                        "window": {
+                        "top": {
                             "count": 30000
                         }
                     }

@@ -112,10 +112,10 @@ module powerbi.extensibility.visual {
             /** Otherwise, let's get that data! */
                 debug.log('Data mapping conditions met. Proceeding with view model transform.');
                 let values = dataViews[0].categorical.values,
-                    category = dataViews[0].categorical.categories && dataViews[0].categorical.categories[1]
-                        ?   dataViews[0].categorical.categories[1]
-                        :   null,
                     metadata = dataViews[0].metadata,
+                    category = metadata.columns.filter(c => c.roles['category'])[0]
+                        ?   dataViews[0].categorical.categories[0]
+                        :   null,
                     categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
                     measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
                     categoryTextProperties = {
