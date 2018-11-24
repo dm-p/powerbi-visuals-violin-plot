@@ -161,6 +161,10 @@ module powerbi.extensibility.visual {
                         debug.log('We have all the data we can get!');
                     }
 
+        }
+
+        private renderVisual(options, debug) {
+
             /** Get initial categores and statistics for the view model. We can use this in rendering the legend */
                 this.viewModel = visualCategoryStatistics(options, this.settings, this.host, this.colourPalette);
 
