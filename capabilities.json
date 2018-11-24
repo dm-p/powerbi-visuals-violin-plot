@@ -25,6 +25,33 @@
         }
     ],
     "objects": {
+        "dataLimit": {
+            "displayName": "Data Limit Options",
+            "description": "Custom visuals have a typical limit of 30,000 rows. If you have more than this available to your data set, then this allows you to override the default limit at the cost of performance.\n\nNOTE: reloads are costly and will trigger after any change. If you are making changes to your visual, then it's recommended that you turn these options off while doing that and then back on when you're finished.",
+            "properties": {
+                "override": {
+                    "displayName": "Override Row Limit",
+                    "description": "Allow loading of additional data from the model to the visual, if it is available.\n\nNote that Power BI still may not be able to supply all data, depending on memory constraints.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showInfo": {
+                    "displayName": "Show Loading Progress",
+                    "description": "Display information and explanation when fetching more data from the model if the row limit is exceeded.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showCustomVisualNotes": {
+                    "displayName": "Show Custom Visual Notes",
+                    "description": "Display information about the custom visual limitations and recommendations for end users.\n\nThis option allows you to turn this info off for end-users if you feel it is not relevant to them.",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "violin": {
             "displayName": "Violin Options",
             "description": "Configure how the violin is displayed in your chart",

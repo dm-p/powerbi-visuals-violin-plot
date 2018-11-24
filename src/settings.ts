@@ -42,6 +42,7 @@ module powerbi.extensibility.visual {
         public yAxis: yAxisSettings = new yAxisSettings();
         public xAxis: xAxisSettings = new xAxisSettings();
         public sorting: sortingSettings = new sortingSettings();
+        public dataLimit: dataLimitSettings = new dataLimitSettings();
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
         public boxPlot: boxPlotSettings = new boxPlotSettings();
@@ -210,6 +211,14 @@ module powerbi.extensibility.visual {
         public by: string = 'category';
         /** Sort order */
         public order: string = 'ascending';
+    }
+
+    /** Data Limit */
+    export class dataLimitSettings {
+        public enabled: boolean = false;
+        public override: boolean = false;
+        public showInfo: boolean = true;
+        public showCustomVisualNotes: boolean = true;
     }
 
     /** Used to hold about info and manage debugging */
