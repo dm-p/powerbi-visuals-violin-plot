@@ -1019,13 +1019,13 @@ module powerbi.extensibility.visual {
                         });
 
                 /** Area - no point bothering if we're fully transparent */
-                    if (settings.violin.transparency != 100) {
+                    if (settings.dataColours.transparency != 100) {
                         violinContainer.append('path')
                             .classed('violinPlotViolinArea', true)
                             .attr('d', d => d.areaGen(d.dataKde))
                             .style({
                                 'fill': d => d.colour,
-                                'fill-opacity': 1 - (settings.violin.transparency / 100),
+                                'fill-opacity': 1 - (settings.dataColours.transparency / 100),
                                 'stroke-width': 0
                             });
                     }

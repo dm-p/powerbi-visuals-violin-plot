@@ -63,13 +63,6 @@
                         "integer": true
                     }
                 },
-                "transparency": {
-                    "displayName": "Transparency",
-                    "description": "Level of transparency to apply to the violin fill",
-                    "type": {
-                        "integer": true
-                    }
-                },
                 "strokeWidth": {
                     "displayName": "Stroke Width",
                     "description": "Width of the lines bordering the violin plot",
@@ -219,6 +212,13 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "transparency": {
+                    "displayName": "Transparency",
+                    "description": "Level of transparency to apply to the violin fill",
+                    "type": {
+                        "integer": true
                     }
                 },
                 "categoryFillColour": {
