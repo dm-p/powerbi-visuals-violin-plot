@@ -676,7 +676,6 @@ module powerbi.extensibility.visual {
                                             .interpolate(settings.violin.lineType)
                                             .x(d => viewModel.xVaxis.scale(d.x))
                                             .y0(v.yVScale(0))
-                                            // .y0(-0.5) /** This fixes a whitespace issue between each side */
                                             .y1(d => v.yVScale(d.y));
 
                             });
