@@ -398,6 +398,7 @@ module powerbi.extensibility.visual {
 
                         /** Tooltips */
                             if (this.settings.tooltip.show) {
+                                debug.log('Adding tooltip events...');
                                 this.tooltipServiceWrapper.addTooltip(
                                     violinPlotCanvas.selectAll('.violinPlotSeries'),
                                     (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
@@ -424,6 +425,8 @@ module powerbi.extensibility.visual {
         }
 
         private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
+            let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+            debug.log('Instantiating tooltip...');
             let v = value as ICategory,
                 s = settings.tooltip,
                 f = viewModel.yAxis.labelFormatter,
@@ -442,6 +445,7 @@ module powerbi.extensibility.visual {
                     }).format(v.dataPoints.length)
                 }
             );
+            debug.log('Pushed category and samples');
 
             if (s.showMaxMin) {
                 tooltips.push(
@@ -454,6 +458,7 @@ module powerbi.extensibility.visual {
                         value: f.format(v.statistics.min)
                     }
                 );
+                debug.log('Pushed max/min');
             }
 
             if (s.showSpan) {
@@ -461,6 +466,7 @@ module powerbi.extensibility.visual {
                     displayName: 'Span (Min to Max)',
                     value: f.format(v.statistics.span)
                 });
+                debug.log('Pushed span');
             }
 
             if (s.showMedian) {
@@ -468,6 +474,7 @@ module powerbi.extensibility.visual {
                     displayName: 'Median',
                     value: f.format(v.statistics.median)
                 });
+                debug.log('Pushed median');
             }
 
             if (s.showMean) {
@@ -475,6 +482,7 @@ module powerbi.extensibility.visual {
                     displayName: 'Mean',
                     value: f.format(v.statistics.mean)
                 });
+                debug.log('Pushed mean');
             }
 
             if (s.showDeviation) {
@@ -482,6 +490,7 @@ module powerbi.extensibility.visual {
                     displayName: 'Standard Deviation',
                     value: f.format(v.statistics.deviation)
                 });
+                debug.log('Pushed standard deviation');
             }
 
             if (s.showQuartiles) {
@@ -495,6 +504,7 @@ module powerbi.extensibility.visual {
                         value: f.format(v.statistics.quartile1)
                     }
                 );
+                debug.log('Pushed upper/lower quartile');
             }
 
             if (s.showIqr) {
@@ -502,6 +512,7 @@ module powerbi.extensibility.visual {
                     displayName: 'Inter Quartile Range',
                     value: f.format(v.statistics.iqr)
                 });
+                debug.log('Pushed IQR');
             }
 
             if (s.showConfidence) {
@@ -515,6 +526,7 @@ module powerbi.extensibility.visual {
                         value: f.format(v.statistics.confidenceLower)
                     }
                 );
+                debug.log('Pushed confidence');
             }
 
             if (s.showBandwidth) {
@@ -523,13 +535,15 @@ module powerbi.extensibility.visual {
                         displayName: 'Bandwidth (Specified)',
                         value: f.format(viewModel.statistics.bandwidthActual)
                     });
+                    debug.log('Pushed specified bandwidth');
                 }
                 tooltips.push({
                     displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
                     value: f.format(viewModel.statistics.bandwidthSilverman)
-                });                
+                });
+                debug.log('Pushed estimated bandwidth');
             }
-
+            debug.log('Tooltip Data', tooltips);
             return tooltips;
         }
 
