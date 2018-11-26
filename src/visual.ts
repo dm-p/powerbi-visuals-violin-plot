@@ -78,20 +78,20 @@ module powerbi.extensibility.visual {
             this.host = options.host;
             this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(this.host.tooltipService, options.element);
             this.defaultColour = this.colourPalette['colors'][0].value;
-
-            /** Visual container */
-                this.container = d3.select(options.element)
-                    .append('div')
-                    .classed('violinPlotContainer', true);
-
+            
             /** Legend container */
                 this.legend = createLegend(
                     options.element,
                     false,
                     null,
-                    false,
+                    true,
                     LegendPosition.Top
                 );
+
+            /** Visual container */
+                this.container = d3.select(options.element)
+                    .append('div')
+                        .classed('violinPlotContainer', true);
 
         }
 
@@ -122,8 +122,8 @@ module powerbi.extensibility.visual {
             
             /** Size our initial container to match the viewport */
                 this.container.attr({
-                    width: `${options.viewport.width}%`,
-                    height: `${options.viewport.height}%`,
+                    width: `${options.viewport.width}`,
+                    height: `${options.viewport.height}`,
                 });
 
             /** Things that can terminate the update process early */

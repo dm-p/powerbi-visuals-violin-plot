@@ -1,8 +1,17 @@
+@import (less) "node_modules/powerbi-visuals-utils-formattingutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
 
 .violinPlotContainer {
     position: absolute;
+}
+
+.violinPlotCanvas {
+    position: absolute;
+}
+
+svg:not(:root) {
+    overflow: hidden;
 }
 
 .violinPlotError {
