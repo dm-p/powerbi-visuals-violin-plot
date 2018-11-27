@@ -229,7 +229,7 @@ module powerbi.extensibility.visual {
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugProperties: boolean = false;
-        public development: boolean = true; /** SET TO false FOR RELEASE */
+        public development: boolean = false; /** SET TO `false` FOR RELEASE */
     }
 
 }
