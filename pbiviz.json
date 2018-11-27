@@ -1,7 +1,7 @@
 {
   "visual": {
     "name": "violinPlot",
-    "displayName": "Violin Plot",
+    "displayName": "Violin Plot (1.0.0.0)",
     "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D972",
     "visualClassName": "ViolinPlot",
     "version": "1.0.0.0",
