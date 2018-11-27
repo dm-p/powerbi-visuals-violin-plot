@@ -454,8 +454,8 @@ module powerbi.extensibility.visual {
 
                                     viewModel.xAxis.generator.tickFormat(function(d) {
                                     
-                                        /** If all our ticks got collapse, we might as well not have them... */
-                                            if (viewModel.categoriesAllCollapsed) {
+                                        /** If all our ticks got collapsed, we might as well not have them... */
+                                            if (viewModel.categoriesAllCollapsed || !settings.xAxis.showLabels) {
                                                 return '';
                                             } else {
                                                 return xTickMapper[d];
