@@ -651,7 +651,7 @@ module powerbi.extensibility.visual {
                                 /** Set back to capability window cap if removed */
                                 this.settings.dataLimit.override = false;
                             }
-
+                        break;
                     }
                     case 'about' : {
                         /** Switch off and hide debug mode if development flag is disabled */
@@ -663,10 +663,11 @@ module powerbi.extensibility.visual {
                         /** Reset the individual flags if debug mode switched off */
                             if(!this.settings.about.debugMode) {
                                 instances[0].properties['debugMode'] = false;
+                                this.settings.about.debugVisualUpdate = false;
+                                this.settings.about.debugProperties = false;
                                 delete instances[0].properties['debugVisualUpdate'];
                                 delete instances[0].properties['debugProperties'];
-                                instances[0].properties['debugVisualUpdate'] = false;
-                                instances[0].properties['debugProperties'] = false;
+                                
                             }
                             break;
                     }
