@@ -215,6 +215,7 @@ module powerbi.extensibility.visual {
 
     /** Data Limit */
     export class dataLimitSettings {
+        /** Enable feature - currently off; refer to notes in visual.ts for details */
         public enabled: boolean = false;
         public override: boolean = false;
         public showInfo: boolean = true;
@@ -224,7 +225,7 @@ module powerbi.extensibility.visual {
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.0.0';
+        public version: string = '1.0.0.0';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugProperties: boolean = false;
