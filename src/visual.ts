@@ -49,7 +49,6 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
-        import wrapText = ViolinPlotHelpers.wrapText;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
