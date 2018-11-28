@@ -447,7 +447,6 @@ module powerbi.extensibility.visual {
 
                                 });
 
-                                viewModel.categoryCollapsedCount = collapsedCount;
                                 viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
 
                                 if (viewModel.xAxis.generator){
