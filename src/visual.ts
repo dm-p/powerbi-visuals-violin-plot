@@ -669,7 +669,7 @@ module powerbi.extensibility.visual {
                                                     )
                                             )
                                 ) {
-                                    delete instances[0];
+                                    instances[0] = null;
                                     /** Set back to capability window cap if removed */
                                     this.settings.dataLimit.override = false;
                                 }
@@ -753,7 +753,7 @@ module powerbi.extensibility.visual {
                         case 'sorting': {
                             /** Disable/hide if not using categories */
                                 if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
-                                    delete instances[0];
+                                    instances[0] = null;
                                 }
                             break;
                         }
@@ -782,6 +782,9 @@ module powerbi.extensibility.visual {
                                 if (this.settings.dataColours.colourByCategory && !this.errorState) {
                                     delete instances[0].properties['defaultFillColour'];
                                     for (let category of this.viewModel.categories) {
+                                        if (!category) {
+                                            continue;    
+                                        }
                                         instances.push({
                                             objectName: objectName,
                                             displayName: category.displayName.formattedName,
@@ -798,13 +801,13 @@ module powerbi.extensibility.visual {
                                 }
                             break;
                         }
-                        case 'legend' :{
+                        case 'legend': {
                             /** Disable/hide if not using Data Colours by Category */
                                 if (!this.settings.dataColours.colourByCategory) {
-                                    delete instances[0];
+                                    instances[0] = null;
                                 }
                             /** Legend title toggle */
-                                if (!this.settings.legend.showTitle) {
+                                if (!this.settings.legend.show && !this.settings.legend.showTitle) {
                                     delete instances[0].properties['titleText'];
                                 }
                             break;
