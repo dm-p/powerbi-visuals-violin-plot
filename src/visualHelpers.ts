@@ -525,6 +525,7 @@ module powerbi.extensibility.visual {
                 /** Set up debugging */
                     let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
                     debug.log('Syncing view model dimensions...');
+                    debug.profileStart();
 
                 let xAxis = viewModel.xAxis,
                     yAxis = viewModel.yAxis;
@@ -758,8 +759,9 @@ module powerbi.extensibility.visual {
                                     viewModel.boxPlot.actualMeanRadius = viewModel.boxPlot.actualMeanDiameter / 2;
                                     viewModel.boxPlot.xLeft = (viewModel.violinPlot.categoryWidth / 2) - (viewModel.boxPlot.width / 2);
                                     viewModel.boxPlot.xRight = (viewModel.violinPlot.categoryWidth / 2) + (viewModel.boxPlot.width / 2);
-
-                            if (viewModel.xVaxis) {
+                                    
+                            if (viewModel.xVaxis && viewModel.xAxis.domain && viewModel.xVaxis.scale) {
+                                debug.log('Assigning xVaxis scale...');
                                 viewModel.xVaxis.scale
                                     .domain(viewModel.xVaxis.domain)
                                     .nice()
@@ -767,9 +769,17 @@ module powerbi.extensibility.visual {
                             }
 
                         }
-            
-                    viewModel.yAxis = yAxis;
-                    viewModel.xAxis = xAxis;
+                        
+                    /** Transfer variables to view model */
+                        if (viewModel && viewModel.yAxis) {
+                            viewModel.yAxis = yAxis;
+                        }
+                        if (viewModel && viewModel.xAxis) {
+                            viewModel.xAxis = xAxis;
+                        }
+
+                    debug.log('visualTransform complete');
+                    debug.reportExecutionTime();
 
             }
 
