@@ -46,6 +46,23 @@ module powerbi.extensibility.visual {
                         console.log('|\t', ...args);
                     }
                 }
+
+                profileStart() {
+                    if (this.enabled) {
+                        this.log('Profiling started.')
+                        this.startTime = performance.now();
+                    }                    
+                }
+
+                reportExecutionTime() {
+                    if (this.enabled) {
+                        if (this.startTime) {
+                            this.log(`Total execution time: ${(performance.now() - this.startTime).toLocaleString()}ms`);
+                        } else {
+                            this.log('Unable to get execution time. Did you start profiling higher up in your code?');
+                        }
+                    }
+                }
         }
 
     }
