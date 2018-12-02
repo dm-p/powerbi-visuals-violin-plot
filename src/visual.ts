@@ -44,7 +44,7 @@ module powerbi.extensibility.visual {
         import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
     /** ViolinPlotHelpers */
-        import visualCategoryStatistics = ViolinPlotHelpers.visualCategoryStatistics;
+        import ViewModelHandler = ViolinPlotHelpers.ViewModelHandler;
         import visualTransform = ViolinPlotHelpers.visualTransform;
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
@@ -62,6 +62,7 @@ module powerbi.extensibility.visual {
         private colourPalette: ISandboxExtendedColorPalette;
         private defaultColour: string;
         private host: IVisualHost;
+        private viewModelHandler: ViewModelHandler;
         private viewModel: ViolinPlotModels.IViewModel;
         private tooltipServiceWrapper: ITooltipServiceWrapper;
         private errorState: boolean;
@@ -81,7 +82,8 @@ module powerbi.extensibility.visual {
                 this.host = options.host;
                 this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(this.host.tooltipService, options.element);
                 this.defaultColour = this.colourPalette['colors'][0].value;
-                
+                this.viewModelHandler = new ViewModelHandler();
+
                 /** Legend container */
                     this.legend = createLegend(
                         options.element,
@@ -110,9 +112,12 @@ module powerbi.extensibility.visual {
                 this.viewport = options.viewport;
 
                 /** Initial debugging for visual update */
+                    this.viewModelHandler.debug = this.settings.about.debugMode && this.settings.about.debugVisualUpdate;
                     let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
                     debug.clear();
                     debug.heading('Visual Update');
+                    debug.log(`Update type: ${VisualUpdateType[options.type]}, enum Value: ${options.type}`);
+                    debug.profileStart();
                     debug.log('Settings', this.settings);
                     debug.log('Viewport (Pre-legend)', options.viewport);
 
@@ -127,7 +132,9 @@ module powerbi.extensibility.visual {
                 /** Clear down existing plot */
                     this.container.selectAll('*').remove();
                 
-                /** Size our initial container to match the viewport */
+                /** Size our initial container to match the viewport 
+                 *  TODO: we could compare this on resize and do the appropriate calculations to minimise rework
+                 */
                     this.container.attr({
                         width: `${options.viewport.width}`,
                         height: `${options.viewport.height}`,
@@ -231,13 +238,28 @@ module powerbi.extensibility.visual {
         /**
          * Decoupling of the chart rendering, just in case we needed to load more data above (which will fire the `update()` method again and
          * it makes no sense to actually render the visual if we're going back to the well...)
+         * 
          * @param options 
          * @param debug 
          */
             private renderVisual(options, debug) {
 
-                /** Get initial categores and statistics for the view model. We can use this in rendering the legend */
-                    this.viewModel = visualCategoryStatistics(options, this.settings, this.host, this.colourPalette);
+                /** #44: When the visual updates, we don't always need to re-map the view model data, as we already have it. */
+                    switch (options.type) {
+                        case VisualUpdateType.Data:
+                        case VisualUpdateType.All: {
+                            debug.footer();
+                            this.viewModelHandler.mapDataView(options, this.settings, this.host, this.colourPalette);
+                            this.viewModelHandler.calculateStatistics(this.settings);
+                            this.viewModelHandler.sortData(this.settings);
+                            break;
+                        }
+                        default: {
+                            debug.log('No need to re-map data. Skipping over...');
+                        }
+                    }
+
+                    this.viewModel = this.viewModelHandler.viewModel;
 
                 /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
                     if (this.viewModel.categoryNames) {
@@ -432,6 +454,7 @@ module powerbi.extensibility.visual {
 
                 /** Success! */
                     debug.log('Visual fully rendered!');
+                    debug.reportExecutionTime();
                     debug.footer();
 
             }
@@ -571,6 +594,7 @@ module powerbi.extensibility.visual {
 
             let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
             debug.log('Rendering legend...');
+            debug.profileStart();
             
             /** Only show if legend is enabled and we colour by category */
                 let position: LegendPosition = this.settings.legend.show 
@@ -578,7 +602,7 @@ module powerbi.extensibility.visual {
                     && this.settings.dataColours.colourByCategory
                         ?   LegendPosition[this.settings.legend.position]
                         :   LegendPosition.None;
-                debug.log(`Position: ${position}`);
+                debug.log(`Position: ${LegendPosition[position]}`);
 
             /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
                 this.legend.changeOrientation(position);
@@ -618,7 +642,10 @@ module powerbi.extensibility.visual {
                     this.viewport.height -= this.legend.getMargins().height;
                 }
                 Legend.positionChartArea(this.container, this.legend);
-                debug.log('Legend positioned.');
+                debug.log('Legend fully positioned.');
+                debug.reportExecutionTime();
+                debug.footer();
+
         }
 
         /**

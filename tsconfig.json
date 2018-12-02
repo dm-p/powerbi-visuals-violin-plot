@@ -19,6 +19,7 @@
     "node_modules/powerbi-models/dist/models-noexports.d.ts",
     "src/models.ts",
     "src/debug.ts",
+    "src/viewModelHandler.ts",
     "src/kde.ts",
     "src/visualHelpers.ts",
     "src/settings.ts",
