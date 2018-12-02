@@ -7,6 +7,8 @@ module powerbi.extensibility.visual {
          */
         export class VisualDebugger {
             enabled: boolean = false;
+            private startTime: number;
+
             constructor(condition: boolean) {
                 this.enabled = condition;
             }
