@@ -69,7 +69,9 @@ module powerbi.extensibility.visual {
                 
                 /** Set up debugging */
                     let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+                    debug.footer();
                     debug.log('Completing view model...');
+                    debug.profileStart();
 
                 /** Other pre-requisites */
                     let dataViews = options.dataViews,
@@ -464,6 +466,7 @@ module powerbi.extensibility.visual {
                         }
 
                 debug.log('View model completely mapped!');
+                debug.reportExecutionTime();
                 return viewModel;
 
             }
