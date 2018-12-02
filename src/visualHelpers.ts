@@ -282,6 +282,7 @@ module powerbi.extensibility.visual {
                             let yMin = viewModel.yAxis.domain[0],
                                 yMax = viewModel.yAxis.domain[1];
                         
+                            debug.reportExecutionTime();
                             debug.log('Kernel Density Estimation...');
 
                             /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */

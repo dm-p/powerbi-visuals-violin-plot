@@ -593,6 +593,7 @@ module powerbi.extensibility.visual {
         private renderLegend(): void {
 
             let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
+            debug.footer();
             debug.log('Rendering legend...');
             debug.profileStart();
             
