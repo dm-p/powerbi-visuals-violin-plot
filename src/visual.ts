@@ -62,12 +62,10 @@ module powerbi.extensibility.visual {
         private defaultColour: string;
         private host: IVisualHost;
         private viewModelHandler: ViewModelHandler;
-        private viewModel: ViolinPlotModels.IViewModel;
         private tooltipServiceWrapper: ITooltipServiceWrapper;
         private errorState: boolean;
         private legend: ILegend;
         private legendData: LegendData;
-        private viewport: IViewport;
         private canFetchMore: boolean;
         private windowsLoaded: number;
 
@@ -107,11 +105,14 @@ module powerbi.extensibility.visual {
                 this.options = options;
                 this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
                 this.errorState = false;
-                this.legendData = {dataPoints: []};
                 this.viewModelHandler.clearProfiling();
-                this.viewModelHandler.viewport = options.viewport;
                 this.viewModelHandler.settings = this.settings;
-                this.viewport = options.viewport;
+                this.viewModelHandler.viewport = options.viewport;
+                if (!this.legendData) {
+                    this.legendData = {
+                        dataPoints: []
+                    };
+                }
 
                 /** Initial debugging for visual update */
                     this.viewModelHandler.debug = this.settings.about.debugMode && this.settings.about.debugVisualUpdate;
@@ -292,19 +293,19 @@ module powerbi.extensibility.visual {
                             debug.log('No need to re-map data. Skipping over...');
                         }
                     }
-
+console.log(this.legendData);
                     this.renderLegend();
-                    debug.log('Viewport (Post-legend)', this.viewport);
+                    debug.log('Viewport (Post-legend)', this.viewModelHandler.viewport);
                     debug.log('Data View', options.dataViews[0]);
                     
                 /** Map the rest of the view model */
                     this.viewModelHandler.processAxisText(); 
                     this.viewModelHandler.doKde();  
-                    this.viewModel = this.viewModelHandler.viewModel;
-                    debug.log('View model', this.viewModel);
+                    let viewModel = this.viewModelHandler.viewModel;
+                    debug.log('View model', viewModel);
 
                 /** We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator */
-                    if (this.viewModel.yAxis.collapsed || this.viewModel.xAxis.collapsed) {
+                    if (viewModel.yAxis.collapsed || viewModel.xAxis.collapsed) {
 
                         debug.log('Visual fully collapsed due to viewport size!');
                         let errorContainer = this.container
@@ -335,13 +336,13 @@ module powerbi.extensibility.visual {
                                     .append('g')
                                         .classed('yAxisContainer', true)
                                         .style({
-                                            'font-size': this.viewModel.yAxis.labelTextProperties.fontSize,
+                                            'font-size': viewModel.yAxis.labelTextProperties.fontSize,
                                             'font-family': this.settings.yAxis.fontFamily,
                                             'fill': this.settings.yAxis.fontColor,
                                         });
 
                                 /** Add title if required */
-                                    if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleDisplayName && this.viewModel.yAxis.titleDimensions.width > 0) {
+                                    if (this.settings.yAxis.showTitle && viewModel.yAxis.titleDisplayName && viewModel.yAxis.titleDimensions.width > 0) {
                                         
                                         debug.log('Plotting y-axis title...');
                                         yAxisContainer
@@ -349,17 +350,17 @@ module powerbi.extensibility.visual {
                                                 .classed('yAxisTitle', true)
                                                 .attr({
                                                     transform: 'rotate(-90)',
-                                                    x: this.viewModel.yAxis.titleDimensions.x,
-                                                    y: this.viewModel.yAxis.titleDimensions.y,
+                                                    x: viewModel.yAxis.titleDimensions.x,
+                                                    y: viewModel.yAxis.titleDimensions.y,
                                                     dy: '1em'
                                                 })
                                                 .style({
                                                     'text-anchor': 'middle',
-                                                    'font-size': this.viewModel.yAxis.titleDisplayName.textProperties.fontSize,
+                                                    'font-size': viewModel.yAxis.titleDisplayName.textProperties.fontSize,
                                                     'font-family': this.settings.yAxis.titleFontFamily,
                                                     'fill': this.settings.yAxis.titleColor
                                                 })
-                                                .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
+                                                .text(viewModel.yAxis.titleDisplayName.tailoredName)
                                     }
 
                                 debug.log('Plotting y-axis ticks...');
@@ -369,8 +370,8 @@ module powerbi.extensibility.visual {
                                             'yAxis': true,
                                             'grid': true
                                         })
-                                        .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, 0)`)
-                                    .call(this.viewModel.yAxis.generator);
+                                        .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, 0)`)
+                                    .call(viewModel.yAxis.generator);
 
                                 /** Apply gridline styling */
                                     debug.log('Applying y-axis gridline styling...');
@@ -393,7 +394,7 @@ module powerbi.extensibility.visual {
                                     .append('g')
                                     .classed('xAxisContainer', true)
                                         .style({
-                                            'font-size': this.viewModel.xAxis.labelTextProperties.fontSize,
+                                            'font-size': viewModel.xAxis.labelTextProperties.fontSize,
                                             'font-family': this.settings.xAxis.fontFamily,
                                             'fill': this.settings.xAxis.fontColor
                                         });
@@ -405,8 +406,8 @@ module powerbi.extensibility.visual {
                                             'xAxis': true,
                                             'grid': true
                                         })
-                                        .attr('transform', `translate(${this.viewModel.yAxis.dimensions.width}, ${options.viewport.height - this.viewModel.xAxis.dimensions.height})`)
-                                    .call(this.viewModel.xAxis.generator);
+                                        .attr('transform', `translate(${viewModel.yAxis.dimensions.width}, ${options.viewport.height - viewModel.xAxis.dimensions.height})`)
+                                    .call(viewModel.xAxis.generator);
 
                                 /** Apply gridline styling */
                                     debug.log('Applying x-axis gridline styling...');
@@ -420,24 +421,24 @@ module powerbi.extensibility.visual {
                                         .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
                                 /** Add title if required */
-                                    if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName && this.viewModel.xAxis.titleDimensions.height > 0) {
+                                    if (this.settings.xAxis.showTitle && viewModel.xAxis.titleDisplayName && viewModel.xAxis.titleDimensions.height > 0) {
 
                                         debug.log('Plotting x-axis title...');
                                         xAxisContainer
                                             .append('text')
                                                 .classed('xAxisTitle', true)
                                                 .attr({
-                                                    x: this.viewModel.xAxis.titleDimensions.x,
-                                                    y: this.viewModel.xAxis.titleDimensions.y,
+                                                    x: viewModel.xAxis.titleDimensions.x,
+                                                    y: viewModel.xAxis.titleDimensions.y,
                                                     dy: '1em'
                                                 })
                                                 .style({
                                                     'text-anchor': 'middle',
-                                                    'font-size': this.viewModel.xAxis.titleDisplayName.textProperties.fontSize,
+                                                    'font-size': viewModel.xAxis.titleDisplayName.textProperties.fontSize,
                                                     'font-family': this.settings.xAxis.titleFontFamily,
                                                     'fill': this.settings.xAxis.titleColor,
                                                 })
-                                                .text(this.viewModel.xAxis.titleDisplayName.tailoredName);
+                                                .text(viewModel.xAxis.titleDisplayName.tailoredName);
                                     }
 
                             }
@@ -447,15 +448,15 @@ module powerbi.extensibility.visual {
                             /** Add series elements */
                                 debug.log('Plotting category elements...');
                                 let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
-                                    .data(this.viewModel.categories)
+                                    .data(viewModel.categories)
                                     .enter()
                                     .append('g')
                                         .classed({
                                             'violinPlotSeries': true
                                         })
                                         .attr({
-                                            'transform': (d) => `translate(${this.viewModel.xAxis.scale(d.name) + this.viewModel.yAxis.dimensions.width}, 0)`,
-                                            'width': this.viewModel.xAxis.scale.rangeBand()
+                                            'transform': (d) => `translate(${viewModel.xAxis.scale(d.name) + viewModel.yAxis.dimensions.width}, 0)`,
+                                            'width': viewModel.xAxis.scale.rangeBand()
                                         });
 
                             /** Tooltips */
@@ -463,26 +464,26 @@ module powerbi.extensibility.visual {
                                     debug.log('Adding tooltip events...');
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, this.viewModel),
+                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, viewModel),
                                         (tooltipEvent: TooltipEventArgs<number>) => null
                                     )
                                 }
 
                             /** Violin plot */
                                 debug.log('Rendering violins...');
-                                renderViolin(seriesContainer, this.viewModel, this.settings);
+                                renderViolin(seriesContainer, viewModel, this.settings);
 
                             /** Box plot */
                                 if (this.settings.boxPlot.show) {
                                     debug.log('Rendering box plots...');
-                                    renderBoxPlot(seriesContainer, this.viewModel, this.settings);
+                                    renderBoxPlot(seriesContainer, viewModel, this.settings);
                                 }
 
                     }
 
                 /** Success! */
                     debug.log('Visual fully rendered!');
-                    this.viewModel.profiling.categories.push(debug.getSummary('Total'));
+                    viewModel.profiling.categories.push(debug.getSummary('Total'));
                     debug.footer();
 
             }
@@ -636,7 +637,7 @@ module powerbi.extensibility.visual {
             /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
                 this.legend.changeOrientation(position);
                 debug.log('Legend orientation set.');
-                this.legend.drawLegend(this.legendData, this.viewport);
+                this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
                 debug.log('Legend drawn.');
 
             /** If this exceeds our limits, then we will hide and re-draw prior to render */
@@ -647,28 +648,29 @@ module powerbi.extensibility.visual {
                     case LegendPosition.Right:
                     case LegendPosition.RightCenter:
                         legendBreaksViewport = 
-                                (this.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
-                            ||  (this.viewport.height < this.settings.legend.heightLimit);
+                                (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
+                            ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
                         break;
                     case LegendPosition.Top:
                     case LegendPosition.TopCenter:
                     case LegendPosition.Bottom:
                     case LegendPosition.BottomCenter:
                     legendBreaksViewport =         
-                                (this.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
-                            ||  (this.viewport.width < this.settings.legend.widthLimit);
+                                (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
+                            ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
                         break;
                 }
 
             /** Adjust viewport (and hide legend) as appropriate */
+                debug.log('Legend dimensions', this.legend.getMargins());
                 if (legendBreaksViewport) {
                     debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
                     this.legend.changeOrientation(LegendPosition.None);
-                    this.legend.drawLegend(this.legendData, this.viewport);
+                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
                 } else {
                     debug.log('Legend dimensions are good to go!');
-                    this.viewport.width -= this.legend.getMargins().width;
-                    this.viewport.height -= this.legend.getMargins().height;
+                    this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
+                    this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
                 }
                 Legend.positionChartArea(this.container, this.legend);
                 debug.log('Legend fully positioned.');
@@ -837,7 +839,7 @@ module powerbi.extensibility.visual {
                             /** Add categories if we want to colour by them */
                                 if (this.settings.dataColours.colourByCategory && !this.errorState) {
                                     delete instances[0].properties['defaultFillColour'];
-                                    for (let category of this.viewModel.categories) {
+                                    for (let category of this.viewModelHandler.viewModel.categories) {
                                         if (!category) {
                                             continue;    
                                         }
