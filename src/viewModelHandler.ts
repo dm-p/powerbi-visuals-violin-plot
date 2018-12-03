@@ -17,10 +17,6 @@ module powerbi.extensibility.visual {
 
         /** KDE helpers */
             import IKernel = KDE.IKernel;
-            import kernelDensityEstimator = KDE.kernelDensityEstimator;
-            import kernelDensityRoot = KDE.kernelDensityRoot;
-            import kernelDensityInterpolator = KDE.kernelDensityInterpolator;
-            import ELimit = KDE.ELimit;
 
         /** powerbi.extensibility.utils.type */
             import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
@@ -55,9 +51,9 @@ module powerbi.extensibility.visual {
              * Populates the core data from the data view, meaning that if we don't need to re-do this (e.g. for resizes or other non-data-volatile
              * operations), then we can omit it.
              * 
-             * @param options
-             * @param host 
-             * @param colourPalette 
+             * @param options                                   - visual update options
+             * @param host                                      - visual host
+             * @param colourPalette                             - visual colour palette object (for colour assignment to categories)
              */
                 mapDataView(options: VisualUpdateOptions, host: IVisualHost, colourPalette: IColorPalette) {
                                 
@@ -188,6 +184,12 @@ module powerbi.extensibility.visual {
                         debug.footer();
                 }
 
+            /**
+             * Pushes an IProfilerCategory into the view model `profiling` object
+             * 
+             * @param debug                                     - `VisualDebugger` instance to attach
+             * @param category                                  - name of profiling category
+             */
                 addDebugProfile(debug: VisualDebugger, category: string) {
                     this.viewModel.profiling.categories.push(debug.getSummary(category));
                 }
@@ -318,8 +320,9 @@ module powerbi.extensibility.visual {
                 }
 
             /**
+             * Creates the bare-bones a and y axis objects in the view model.
              * 
-             * @param options 
+             * @param options                                   - visual update options
              */
                 initialiseAxes(options: VisualUpdateOptions) {
                     
@@ -393,7 +396,7 @@ module powerbi.extensibility.visual {
                 }
 
             /**
-             * 
+             * Set up the display of the axis title and labels, and manage any sizing calculations and re-draws as necessary.
              */
                 processAxisText() {
 
@@ -522,6 +525,217 @@ module powerbi.extensibility.visual {
                         debug.log('Finished processAxisText');
                         this.addDebugProfile(debug, 'processAxisText');
                         debug.footer();
+                }
+
+            /**
+             * Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin.
+             */
+                doKde() {
+
+                    /** Set up debugging */
+                        let debug = new VisualDebugger(this.debug);
+                        debug.log('Starting doKde');
+                        debug.log('Performing KDE on visual data...'); 
+                        debug.profileStart();
+
+                    if (this.settings.violin.type == 'line' && !this.viewModel.yAxis.collapsed) {
+
+                        /** Keep track of the axis limits so that we can adjust them later if necessary */
+                        let yMin = this.viewModel.yAxis.domain[0],
+                            yMax = this.viewModel.yAxis.domain[1];
+                    
+                        debug.reportExecutionTime();
+                        debug.log('Kernel Density Estimation...');
+
+                        /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
+                            this.viewModel.categories.map(v => {
+
+                                /** Makes logging a bit less complex when discerning between series */
+                                    let series = v.name ? v.name : 'ALL';
+
+                                /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
+                                 *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
+                                 *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
+                                 *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the 
+                                 *  process sufficiently straightforward for the end-user...
+                                 */
+                                    let kde = KDE.kernelDensityEstimator(
+                                            this.kernel.window,
+                                            this.viewModel.statistics.bandwidthActual,
+                                            this.viewModel.xVaxis.scale.ticks(parseInt(this.settings.violin.resolution))
+                                        );
+
+                                    /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out 
+                                     *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
+                                     */
+                                        let kdeData = kde(v.dataPoints),
+                                        /** If not clamping then we'll always cap at the min/max boundaries of the series */
+                                            interpolateMin = v.statistics.min,
+                                            interpolateMax = v.statistics.max;
+                                            debug.log(`[${series}] Interpolation checkpoint #1 (min/max) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`);
+
+                                        if (!this.settings.violin.clamp) {
+
+                                            /** Second phase - we try to converge the chart within the confines of the series min/max */
+                                                debug.log(`[${series}] Convergence required on violin plot. Doing further interpolation checks and processing...`);
+                                                interpolateMin = d3.max(
+                                                    kdeData.filter(d => d.x < v.statistics.min && d.y == 0), (d) => d.x
+                                                ),
+                                                interpolateMax = d3.min(
+                                                    kdeData.filter(d => d.x > v.statistics.max && d.y == 0), (d) => d.x
+                                                );
+                                                debug.log(`[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`);
+                                            
+                                            /** Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one */
+                                                if (!interpolateMin || !interpolateMax) {
+                                                    debug.log(`[${series}] Couldn\'t converge following checkpoint #2. Applying further KDE to data to find a suitable point...`);
+                                                    let kdeRoot = KDE.kernelDensityRoot(
+                                                        this.kernel.window,
+                                                        this.viewModel.statistics.bandwidthActual,
+                                                        v.dataPoints
+                                                    );
+                                                    
+                                                    if (!interpolateMin) {
+                                                        interpolateMin = KDE.kernelDensityInterpolator(v.statistics.min, KDE.ELimit.min, kdeRoot);
+                                                        debug.log(`[${series}] Applied KDE to minimum value. New value: ${interpolateMin}`);
+                                                    }
+                                                    if (!interpolateMax) {
+                                                        interpolateMax = KDE.kernelDensityInterpolator(v.statistics.max, KDE.ELimit.max, kdeRoot);
+                                                        debug.log(`[${series}] Applied KDE to maximum value. New value: ${interpolateMax}`);
+                                                    }
+                                                    debug.log(`[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`);
+                                                }                                            
+
+                                            /** If our KDE value exceeds the y-axis domain, then we need to extend it to fit the plot.
+                                             *  There are some other adjustments to make as well (detailed in comments below).
+                                             */
+                                                if (interpolateMin && interpolateMin < yMin) {
+                                                    debug.log(`[${series}] Interpolation exceeds y-axis minimum (currently ${yMin}). Reducing to ${interpolateMin}`);
+                                                    yMin = interpolateMin;
+                                                }
+                                                if (interpolateMax && interpolateMax > yMax) {
+                                                    debug.log(`[${series}] Interpolation exceeds y-axis maximum (currently ${yMax}). Extending to ${interpolateMax}`);
+                                                    yMax = interpolateMax;
+                                                }
+
+                                            /** Add an array element to the KDE if less than our original test ranges. Otherwise, set our lowest
+                                             *  sample to zero to make it converge nicely (this is a bit hacky but prevents us from extending the axis
+                                             *  if we don't really need to for these edge cases).
+                                             */
+                                                if (interpolateMin < kdeData[0].x) {
+                                                    debug.log(`[${series}] Interpolation minimum exceeds KDE values. Adding convergence point to start of KDE array.`);
+                                                    kdeData.unshift({
+                                                        x: interpolateMin,
+                                                        y: 0,
+                                                        remove: false
+                                                    })
+                                                };
+
+                                            /** Highest value is a little different, as it can exist somewhere before the end of the array, so we need
+                                             *  to find the correct element in there to apply the convergence point.
+                                             */
+                                                if (interpolateMax > kdeData[kdeData.length - 1].x) {
+                                                    debug.log(`[${series}] Interpolation maximum exceeds KDE values. Adding convergence point to end of KDE array.`);
+                                                    kdeData.push({
+                                                        x: interpolateMax,
+                                                        y: 0,
+                                                        remove: false
+                                                    })
+                                                }
+
+                                            /** We'll now re-process the array to ensure that we filter out the correct erroneous KDE values */
+                                                    debug.log(`[${series}] Finding suitable KDE array min/max convergence points...`);
+                                                    let foundExtentMax = false;
+
+                                                    kdeData = kdeData.map(function (d, i) {
+                                                        /** Grab the current data point; we'll return it unprocessed if no conditions are hit */
+                                                            let kdePoint = {
+                                                                    x: d.x,
+                                                                    y: d.y,
+                                                                    remove: false
+                                                                } as IDataPointKde;
+                                                            
+                                                        /** Converge anything outside of the min/max extents */
+                                                            if (d.x <= interpolateMin || d.x >= interpolateMax) {
+                                                                kdePoint.y = 0;
+                                                            }
+
+                                                        /** If we hit the minimum extent, then flag anything else that comes ahead of it, as we've already moved past them */
+                                                            if (    d.x < interpolateMin
+                                                                &&  kdeData[i + 1]
+                                                                &&  kdeData[i + 1].x < interpolateMin
+                                                            ) {
+                                                                kdePoint.remove = true;
+                                                            }
+
+                                                        /** Deal with max extent */
+                                                            if (d.x >= interpolateMax) {
+                                                                if (!foundExtentMax) {
+                                                                    foundExtentMax = true;
+                                                                } else {
+                                                                    kdePoint.remove = true;
+                                                                }
+                                                                kdePoint.y = 0;
+                                                            }
+
+                                                        return kdePoint;
+                                                    });
+
+                                            /** Filter out the data we don't need after processing it and we are go! */
+                                                debug.log(`[${series}] Removing erroneous KDE array elements...`);
+                                                v.dataKde = kdeData
+                                                    .filter((d) => 
+                                                        d.remove == false
+                                                    );
+
+                                        } else {
+                                            /** Just filter out anything outside the ranges, as we're not converging */
+                                                v.dataKde = kdeData
+                                                    .filter(d => !interpolateMin || (d.x >= interpolateMin && d.y != 0))    
+                                                    .filter(d => !interpolateMax || (d.x <= interpolateMax && d.y != 0));
+                                        }
+                                        
+                                    /** Adjust violin scale to account for inner padding preferences */
+                                        v.yVScale = d3.scale.linear()
+                                            .range([
+                                                0, 
+                                                this.viewModel.violinPlot.width / 2
+                                            ])
+                                            .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
+                                            .clamp(true);
+
+                                    /** Now we have our scaling, we can generate the functions for each series */
+                                        v.lineGen = d3.svg.line<IDataPointKde>()
+                                            .interpolate(this.settings.violin.lineType)
+                                            .x(d => this.viewModel.xVaxis.scale(d.x))
+                                            .y(d => v.yVScale(d.y));
+                                        v.areaGen = d3.svg.area<IDataPointKde>()
+                                            .interpolate(this.settings.violin.lineType)
+                                            .x(d => this.viewModel.xVaxis.scale(d.x))
+                                            .y0(v.yVScale(0))
+                                            .y1(d => v.yVScale(d.y));
+
+                            });
+
+                        /** This adjusts the domain of each axis to match any adjustments we made earlier on.
+                         *  It's repeated code for now, so we should see if we can normalise later on when we clean up.
+                         */
+                            this.updateYDomain([yMin, yMax], debug);
+                            this.resyncDimensions();
+                            
+                    }
+
+                    /** We're done! */
+                        debug.log('Finished doKde');
+                        this.addDebugProfile(debug, 'doKde');
+                        debug.footer();
+                }
+
+            /** Clears down the profiling data so that multiple updates don't accumulate */
+                clearProfiling() {
+                    if (this.viewModel.profiling) {
+                        this.viewModel.profiling.categories = [];
+                    }
                 }
 
             /**
@@ -692,7 +906,9 @@ module powerbi.extensibility.visual {
                                     }
                                     if (xWidth < xAxis.widthLimit && yAxis.dimensions.width == 0) {
                                         debug.log('X-axis too narrow to render properly!');
-                                        this.viewModel.xAxis.collapsed = true;
+                                        xAxis.collapsed = true;
+                                    } else {
+                                        xAxis.collapsed = false;
                                     }
                                     if (this.settings.xAxis.showTitle && xAxis.titleDisplayName) {
                                         debug.log('Re-checking and adjusting X-axis title...');
@@ -792,16 +1008,24 @@ module powerbi.extensibility.visual {
                 }
 
             /**
+             * The y-axis can grow if the KDE calculations require it. This manages the update of both dependent axes (the main chart and the violin) in that particular
+             * event.
              * 
-             * @param domain 
-             * @param debug 
+             * @param domain                                    - [number, number] aray of min and max value
+             * @param debug                                     - debugger to attach
              */
                 updateYDomain(domain: [number, number], debug: VisualDebugger) {
                     debug.log(`Updating y-axis domain to [${domain}]`);
-                    this.viewModel.yAxis.domain = domain;
+                    if (this.viewModel.yAxis) {
+                        this.viewModel.yAxis.domain = domain;
+                    }
+                    if (this.viewModel.xVaxis) {
+                        this.viewModel.xVaxis.domain = domain;
+                    }
                 }
 
             /**
+             * Manages the formatting of the y-axis title, based on the value of the y-axis Title Style property.
              * 
              * @param debug 
              */

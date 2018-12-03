@@ -45,7 +45,6 @@ module powerbi.extensibility.visual {
 
     /** ViolinPlotHelpers */
         import ViewModelHandler = ViolinPlotHelpers.ViewModelHandler;
-        import visualTransform = ViolinPlotHelpers.visualTransform;
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
@@ -109,6 +108,7 @@ module powerbi.extensibility.visual {
                 this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
                 this.errorState = false;
                 this.legendData = {dataPoints: []};
+                this.viewModelHandler.clearProfiling();
                 this.viewModelHandler.viewport = options.viewport;
                 this.viewModelHandler.settings = this.settings;
                 this.viewport = options.viewport;
@@ -298,14 +298,15 @@ module powerbi.extensibility.visual {
                     debug.log('Data View', options.dataViews[0]);
                     
                 /** Map the rest of the view model */
-                    this.viewModelHandler.processAxisText();    
+                    this.viewModelHandler.processAxisText(); 
+                    this.viewModelHandler.doKde();  
                     this.viewModel = this.viewModelHandler.viewModel;
-                    this.viewModel = visualTransform(options, this.viewModel, this.settings, this.viewport);
                     debug.log('View model', this.viewModel);
 
                 /** We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator */
                     if (this.viewModel.yAxis.collapsed || this.viewModel.xAxis.collapsed) {
 
+                        debug.log('Visual fully collapsed due to viewport size!');
                         let errorContainer = this.container
                             .append('div')
                             .classed('violinPlotError', true);
