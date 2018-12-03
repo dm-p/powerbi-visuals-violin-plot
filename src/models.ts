@@ -5,6 +5,17 @@ module powerbi.extensibility.visual {
 
     export module ViolinPlotModels {
 
+            export interface IProfilerCategory {
+                name: string;
+                duration: number;
+                startTime: number;
+                endTime: number;
+            }
+
+            export interface IVisualProfiler {
+                categories: IProfilerCategory[];
+            }
+
         /**
          * View model for entire violin plot visual
          * 
@@ -28,6 +39,7 @@ module powerbi.extensibility.visual {
                 xVaxis: IAxisLinear;
                 violinPlot: IViolinPlot;
                 boxPlot: IBoxPlot;
+                profiling: IVisualProfiler;
             }
 
         /**
@@ -87,7 +99,8 @@ module powerbi.extensibility.visual {
          * @property {IDimensions} titleDimensions              - Computed dimensions of axis title based on viewport, other axes and visual settings
          * @property {TextProperties} titleTextProperties       - Used to determine display of axis title, and compute size requirements
          * @property {IDisplayName} titleDisplayName            - Formatted/tailored title details, based on text properties and sizing
-         * @property {IValueFormatter} labelFormatter           - Used to handle formatting of the y-axis labels, based on data model and visual settings
+         * @property {IValueFormatter} labelFormatter           - Used to handle formatting of the axis labels, based on data model and visual settings
+         * @property {IValueFormatter} titleFormatter           - Used to handle formatting of the axis title, based on data model and visual settings
          * @property {TextProperties} labelTextProperties       - Used to determine display of axis labels, and compute size requirements
          * @property {IPadding} padding                         - Any padding requirements for the axis
          */
@@ -105,6 +118,7 @@ module powerbi.extensibility.visual {
                 titleTextProperties: TextProperties;
                 titleDisplayName: IDisplayName;
                 labelFormatter: IValueFormatter;
+                titleFormatter: IValueFormatter;
                 labelTextProperties: TextProperties;
                 padding: IPadding;
             }

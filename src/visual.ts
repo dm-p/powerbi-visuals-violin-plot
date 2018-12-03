@@ -110,6 +110,7 @@ module powerbi.extensibility.visual {
                 this.errorState = false;
                 this.legendData = {dataPoints: []};
                 this.viewModelHandler.viewport = options.viewport;
+                this.viewModelHandler.settings = this.settings;
                 this.viewport = options.viewport;
 
                 /** Initial debugging for visual update */
@@ -245,20 +246,22 @@ module powerbi.extensibility.visual {
          */
             private renderVisual(options, debug) {
 
-                /** #44: When the visual updates, we don't always need to re-map the view model data, as we already have it. */
+                /** #44: When the visual updates, we don't always need to re-map the view model data, as we already have it. 
+                 *  We only want to do the things that depend on data change vents and de-couple the rest so they fire on the events that don't require it
+                 */
                     switch (options.type) {
                         case VisualUpdateType.Data:
                         case VisualUpdateType.All: {
                             
                             debug.footer();
 
-                            this.viewModelHandler.mapDataView(options, this.settings, this.host, this.colourPalette);
-                            this.viewModelHandler.calculateStatistics(this.settings);
-                            this.viewModelHandler.sortData(this.settings);
+                            this.viewModelHandler.mapDataView(options, this.host, this.colourPalette);
+                            this.viewModelHandler.calculateStatistics();
+                            this.viewModelHandler.sortData();
 
                             /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
                                 if (this.viewModelHandler.viewModel.categoryNames) {
-                                    debug.log('Constructing legend...');
+                                    debug.log('Creating legend data...');
                                     this.legendData = {
                                         title: this.settings.legend.showTitle 
                                                     ? this.settings.legend.titleText 
@@ -277,9 +280,11 @@ module powerbi.extensibility.visual {
                                             }
                                         ))
                                     }
+                                    debug.log('Legend data instantiated.');
+                                    debug.footer();
                                 }
                                 
-                            this.viewModelHandler.initialiseAxes(options, this.settings);
+                            this.viewModelHandler.initialiseAxes(options);
 
                             break;
                         }
@@ -288,12 +293,13 @@ module powerbi.extensibility.visual {
                         }
                     }
 
-                    this.viewModel = this.viewModelHandler.viewModel;
                     this.renderLegend();
                     debug.log('Viewport (Post-legend)', this.viewport);
                     debug.log('Data View', options.dataViews[0]);
-
+                    
                 /** Map the rest of the view model */
+                    this.viewModelHandler.processAxisText();    
+                    this.viewModel = this.viewModelHandler.viewModel;
                     this.viewModel = visualTransform(options, this.viewModel, this.settings, this.viewport);
                     debug.log('View model', this.viewModel);
 
@@ -311,17 +317,19 @@ module powerbi.extensibility.visual {
                     } else {
 
                         /** Add our main SVG */
+                            debug.log('Plotting SVG canvas...');
                             let violinPlotCanvas = this.container
-                            .append('svg')
-                                .classed('violinPlotCanvas', true)
-                                .attr({
-                                    width: `${options.viewport.width}`,
-                                    height: `${options.viewport.height}`
-                                });
+                                .append('svg')
+                                    .classed('violinPlotCanvas', true)
+                                    .attr({
+                                        width: `${options.viewport.width}`,
+                                        height: `${options.viewport.height}`
+                                    });
 
                         /** Create a Y axis */
                             if (this.settings.yAxis.show) {
 
+                                debug.log('Plotting y-axis...');
                                 let yAxisContainer = violinPlotCanvas
                                     .append('g')
                                         .classed('yAxisContainer', true)
@@ -333,6 +341,8 @@ module powerbi.extensibility.visual {
 
                                 /** Add title if required */
                                     if (this.settings.yAxis.showTitle && this.viewModel.yAxis.titleDisplayName && this.viewModel.yAxis.titleDimensions.width > 0) {
+                                        
+                                        debug.log('Plotting y-axis title...');
                                         yAxisContainer
                                             .append('text')
                                                 .classed('yAxisTitle', true)
@@ -351,6 +361,7 @@ module powerbi.extensibility.visual {
                                                 .text(this.viewModel.yAxis.titleDisplayName.tailoredName)
                                     }
 
+                                debug.log('Plotting y-axis ticks...');
                                 let yAxisTicks = yAxisContainer
                                     .append('g')
                                         .classed({
@@ -361,6 +372,7 @@ module powerbi.extensibility.visual {
                                     .call(this.viewModel.yAxis.generator);
 
                                 /** Apply gridline styling */
+                                    debug.log('Applying y-axis gridline styling...');
                                     yAxisTicks.selectAll('line')
                                         .attr({
                                             stroke: this.settings.yAxis.gridlineColor,
@@ -374,6 +386,8 @@ module powerbi.extensibility.visual {
                         
                         /** Create an X-axis */
                             if (this.settings.xAxis.show) {
+
+                                debug.log('Plotting x-axis...');
                                 let xAxisContainer = violinPlotCanvas
                                     .append('g')
                                     .classed('xAxisContainer', true)
@@ -383,6 +397,7 @@ module powerbi.extensibility.visual {
                                             'fill': this.settings.xAxis.fontColor
                                         });
                                 
+                                debug.log('Plotting x-axis ticks...');
                                 let xAxisTicks = xAxisContainer
                                     .append('g')
                                         .classed({
@@ -393,6 +408,7 @@ module powerbi.extensibility.visual {
                                     .call(this.viewModel.xAxis.generator);
 
                                 /** Apply gridline styling */
+                                    debug.log('Applying x-axis gridline styling...');
                                     xAxisTicks.selectAll('line')
                                         .attr({
                                             stroke: this.settings.xAxis.gridlineColor,
@@ -404,6 +420,8 @@ module powerbi.extensibility.visual {
 
                                 /** Add title if required */
                                     if (this.settings.xAxis.showTitle && this.viewModel.xAxis.titleDisplayName && this.viewModel.xAxis.titleDimensions.height > 0) {
+
+                                        debug.log('Plotting x-axis title...');
                                         xAxisContainer
                                             .append('text')
                                                 .classed('xAxisTitle', true)
@@ -426,6 +444,7 @@ module powerbi.extensibility.visual {
                         /** Do the rest, if required */
                         
                             /** Add series elements */
+                                debug.log('Plotting category elements...');
                                 let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
                                     .data(this.viewModel.categories)
                                     .enter()
@@ -449,10 +468,12 @@ module powerbi.extensibility.visual {
                                 }
 
                             /** Violin plot */
+                                debug.log('Rendering violins...');
                                 renderViolin(seriesContainer, this.viewModel, this.settings);
 
                             /** Box plot */
                                 if (this.settings.boxPlot.show) {
+                                    debug.log('Rendering box plots...');
                                     renderBoxPlot(seriesContainer, this.viewModel, this.settings);
                                 }
 
@@ -460,7 +481,7 @@ module powerbi.extensibility.visual {
 
                 /** Success! */
                     debug.log('Visual fully rendered!');
-                    debug.reportExecutionTime();
+                    this.viewModel.profiling.categories.push(debug.getSummary('Total'));
                     debug.footer();
 
             }
@@ -650,7 +671,7 @@ module powerbi.extensibility.visual {
                 }
                 Legend.positionChartArea(this.container, this.legend);
                 debug.log('Legend fully positioned.');
-                debug.reportExecutionTime();
+                this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
                 debug.footer();
 
         }

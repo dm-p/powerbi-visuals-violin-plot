@@ -74,14 +74,14 @@ module powerbi.extensibility.visual {
                     debug.profileStart();
 
                 /** Other pre-requisites */
-                    let dataViews = options.dataViews,
-                        metadata = dataViews[0].metadata,
-                        categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
-                        measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
-                        categoryTextProperties = {
-                            fontFamily: settings.xAxis.fontFamily,
-                            fontSize: PixelConverter.toString(settings.xAxis.fontSize)
-                        },
+                    let //dataViews = options.dataViews,
+                        // metadata = dataViews[0].metadata,
+                        // categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0],
+                        // measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0],
+                        // categoryTextProperties = {
+                        //     fontFamily: settings.xAxis.fontFamily,
+                        //     fontSize: PixelConverter.toString(settings.xAxis.fontSize)
+                        // },
                         kernel = settings.violin.type == 'line'
                             ?   KDE.kernels[settings.violin.kernel]
                             :   {} as IKernel;
@@ -90,15 +90,15 @@ module powerbi.extensibility.visual {
 
                         // /** Y-axis (initial) */
                         //     debug.log('Initial Y-Axis setup...');
-                            let yFormat = valueFormatter.create({
-                                format: measureMetadata.format,
-                                value: settings.yAxis.labelDisplayUnits == 0
-                                    ?   viewModel.statistics.max
-                                    :   settings.yAxis.labelDisplayUnits,
-                                precision: settings.yAxis.precision != null
-                                    ?   settings.yAxis.precision
-                                    :   null
-                            });
+                            // let yFormat = valueFormatter.create({
+                            //     format: measureMetadata.format,
+                            //     value: settings.yAxis.labelDisplayUnits == 0
+                            //         ?   viewModel.statistics.max
+                            //         :   settings.yAxis.labelDisplayUnits,
+                            //     precision: settings.yAxis.precision != null
+                            //         ?   settings.yAxis.precision
+                            //         :   null
+                            // });
 
                         //     viewModel.yAxis = {
                         //         padding: {
@@ -134,143 +134,143 @@ module powerbi.extensibility.visual {
                         //     } as IAxisCategorical;
 
                         /** Initial sizing work */
-                            resyncDimensions(viewModel, settings, viewport);
+                            // resyncDimensions(viewModel, settings, viewport);
 
                         /** Manage Y-axis label/title and sizing */
                             
-                            /** Y-axis title */
-                                if (settings.yAxis.showTitle) {
+                            // /** Y-axis title */
+                            //     if (settings.yAxis.showTitle) {
                                         
-                                    debug.log('Y-axis title initial setup...')
-                                    let yAxisTitleFormatted = function() {            
-                                        /** If we supplied a title, use that, otherwise format our measure names */
-                                            let title = (!settings.yAxis.titleText) 
-                                                ? measureMetadata.displayName
-                                                : settings.yAxis.titleText;
+                            //         debug.log('Y-axis title initial setup...')
+                            //         let yAxisTitleFormatted = function() {            
+                            //             /** If we supplied a title, use that, otherwise format our measure names */
+                            //                 let title = (!settings.yAxis.titleText) 
+                            //                     ? measureMetadata.displayName
+                            //                     : settings.yAxis.titleText;
                     
-                                        /** Return the correct title based on our supplied settings */
-                                            if (settings.yAxis.labelDisplayUnits == 1 || !yFormat.displayUnit) {
-                                                return title;
-                                            }
-                                            switch (settings.yAxis.titleStyle) {
-                                                case 'title': {
-                                                    return title;
-                                                }
-                                                case 'unit': {
-                                                    return yFormat.displayUnit.title;
-                                                }
-                                                case 'both': {
-                                                    return `${title} (${yFormat.displayUnit.title})`;
-                                                }
-                                            }
-                                    }();
-                                    viewModel.yAxis.titleDisplayName = getTailoredDisplayName(
-                                        yAxisTitleFormatted,
-                                        {
-                                            fontFamily: settings.yAxis.titleFontFamily,
-                                            fontSize:PixelConverter.toString(settings.yAxis.titleFontSize),
-                                            text: yAxisTitleFormatted
-                                        },
-                                        viewModel.yAxis.dimensions
-                                            ?   viewModel.yAxis.dimensions.height
-                                            :   viewport.height
-                                    )
+                            //             /** Return the correct title based on our supplied settings */
+                            //                 if (settings.yAxis.labelDisplayUnits == 1 || !yFormat.displayUnit) {
+                            //                     return title;
+                            //                 }
+                            //                 switch (settings.yAxis.titleStyle) {
+                            //                     case 'title': {
+                            //                         return title;
+                            //                     }
+                            //                     case 'unit': {
+                            //                         return yFormat.displayUnit.title;
+                            //                     }
+                            //                     case 'both': {
+                            //                         return `${title} (${yFormat.displayUnit.title})`;
+                            //                     }
+                            //                 }
+                            //         }();
+                            //         viewModel.yAxis.titleDisplayName = getTailoredDisplayName(
+                            //             yAxisTitleFormatted,
+                            //             {
+                            //                 fontFamily: settings.yAxis.titleFontFamily,
+                            //                 fontSize:PixelConverter.toString(settings.yAxis.titleFontSize),
+                            //                 text: yAxisTitleFormatted
+                            //             },
+                            //             viewModel.yAxis.dimensions
+                            //                 ?   viewModel.yAxis.dimensions.height
+                            //                 :   viewport.height
+                            //         )
 
-                                }
+                            //     }
 
-                                /** Resync if showing the axis at all */
-                                    if (settings.yAxis.show) {
-                                        resyncDimensions(viewModel, settings, viewport);
-                                    }
+                            //     /** Resync if showing the axis at all */
+                            //         if (settings.yAxis.show) {
+                            //             resyncDimensions(viewModel, settings, viewport);
+                            //         }
 
-                        /** Manage the x-axis label/title and sizing */
-                            debug.log('X-axis label and title sizing...');
+                        // /** Manage the x-axis label/title and sizing */
+                        //     debug.log('X-axis label and title sizing...');
 
-                            /** Manage display label overflow if required. By doing this, we can use the raw,
-                             *  unformatted category name to define our ticks, but format them correctly in the
-                             *  event of us wishing to use ellipses etc.
-                             *  
-                             *  We'll work out the tailored name vs. the original name, and that way we can determine
-                             *  how many categories have been reduced to their ellipses. If all have been reduced then
-                             *  we can just remove the axis labels as they serve no purpose.
-                             */
+                        //     /** Manage display label overflow if required. By doing this, we can use the raw,
+                        //      *  unformatted category name to define our ticks, but format them correctly in the
+                        //      *  event of us wishing to use ellipses etc.
+                        //      *  
+                        //      *  We'll work out the tailored name vs. the original name, and that way we can determine
+                        //      *  how many categories have been reduced to their ellipses. If all have been reduced then
+                        //      *  we can just remove the axis labels as they serve no purpose.
+                        //      */
                                 
-                                if (viewModel.categoryNames){
+                        //         if (viewModel.categoryNames){
 
-                                    debug.log('X-axis labels...');
-                                    let xTickMapper = {},
-                                        collapsedCount = 0;
+                        //             debug.log('X-axis labels...');
+                        //             let xTickMapper = {},
+                        //                 collapsedCount = 0;
 
-                                    viewModel.categories.map(c => {
-                                        c.displayName = getTailoredDisplayName(
-                                            valueFormatter.format(c.name, categoryMetadata.format),
-                                            {
-                                                fontFamily: categoryTextProperties.fontFamily,
-                                                fontSize: categoryTextProperties.fontSize,
-                                                text: valueFormatter.format(c.name, categoryMetadata.format)
-                                            },
-                                            viewModel.xAxis.scale
-                                                ?   viewModel.xAxis.scale.rangeBand()
-                                                :   viewport.width / viewModel.categories.length
-                                        );
+                        //             viewModel.categories.map(c => {
+                        //                 c.displayName = getTailoredDisplayName(
+                        //                     valueFormatter.format(c.name, categoryMetadata.format),
+                        //                     {
+                        //                         fontFamily: categoryTextProperties.fontFamily,
+                        //                         fontSize: categoryTextProperties.fontSize,
+                        //                         text: valueFormatter.format(c.name, categoryMetadata.format)
+                        //                     },
+                        //                     viewModel.xAxis.scale
+                        //                         ?   viewModel.xAxis.scale.rangeBand()
+                        //                         :   viewport.width / viewModel.categories.length
+                        //                 );
                                         
-                                        collapsedCount += c.displayName.collapsed
-                                            ?   1
-                                            :   0;
+                        //                 collapsedCount += c.displayName.collapsed
+                        //                     ?   1
+                        //                     :   0;
                                         
-                                        xTickMapper[`${c.name}`] = c.displayName.tailoredName;
+                        //                 xTickMapper[`${c.name}`] = c.displayName.tailoredName;
 
-                                    });
+                        //             });
 
-                                    viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
+                        //             viewModel.categoriesAllCollapsed = collapsedCount == viewModel.categories.length;
 
-                                    if (viewModel.xAxis.generator){
+                        //             if (viewModel.xAxis.generator){
 
-                                        viewModel.xAxis.generator.tickFormat(function(d) {
+                        //                 viewModel.xAxis.generator.tickFormat(function(d) {
                                         
-                                            /** If all our ticks got collapsed, we might as well not have them... */
-                                                if (viewModel.categoriesAllCollapsed || !settings.xAxis.showLabels) {
-                                                    return '';
-                                                } else {
-                                                    return xTickMapper[d];
-                                                }        
+                        //                     /** If all our ticks got collapsed, we might as well not have them... */
+                        //                         if (viewModel.categoriesAllCollapsed || !settings.xAxis.showLabels) {
+                        //                             return '';
+                        //                         } else {
+                        //                             return xTickMapper[d];
+                        //                         }        
 
-                                        });
+                        //                 });
 
-                                    }
+                        //             }
                                     
-                                } else {
+                        //         } else {
 
-                                    viewModel.xAxis.generator.tickFormat('');
+                        //             viewModel.xAxis.generator.tickFormat('');
 
-                                }
+                        //         }
 
-                            /** Repeat for the X-Axis title */
-                                if (settings.xAxis.showTitle) {
+                        //     /** Repeat for the X-Axis title */
+                        //         if (settings.xAxis.showTitle) {
                                     
-                                    debug.log('X-axis title...');
-                                    let xAxisTitleFormatted = !categoryMetadata 
-                                            ?   ''
-                                            :   (!settings.xAxis.titleText 
-                                                    ?   categoryMetadata.displayName
-                                                    :   settings.xAxis.titleText
-                                                ).trim();
-                                    viewModel.xAxis.titleDisplayName = getTailoredDisplayName(
-                                        xAxisTitleFormatted,
-                                        {
-                                            fontFamily: settings.xAxis.titleFontFamily,
-                                            fontSize:PixelConverter.toString(settings.xAxis.titleFontSize),
-                                            text: xAxisTitleFormatted
-                                        },
-                                        viewModel.xAxis.dimensions.width
-                                    )
+                        //             debug.log('X-axis title...');
+                        //             let xAxisTitleFormatted = !categoryMetadata 
+                        //                     ?   ''
+                        //                     :   (!settings.xAxis.titleText 
+                        //                             ?   categoryMetadata.displayName
+                        //                             :   settings.xAxis.titleText
+                        //                         ).trim();
+                        //             viewModel.xAxis.titleDisplayName = getTailoredDisplayName(
+                        //                 xAxisTitleFormatted,
+                        //                 {
+                        //                     fontFamily: settings.xAxis.titleFontFamily,
+                        //                     fontSize:PixelConverter.toString(settings.xAxis.titleFontSize),
+                        //                     text: xAxisTitleFormatted
+                        //                 },
+                        //                 viewModel.xAxis.dimensions.width
+                        //             )
 
-                                }
+                        //         }
 
-                            /** Resync if showing the axis at all */
-                                if (settings.xAxis.show) {
-                                    resyncDimensions(viewModel, settings, viewport);
-                                }
+                        //     /** Resync if showing the axis at all */
+                        //         if (settings.xAxis.show) {
+                        //             resyncDimensions(viewModel, settings, viewport);
+                        //         }
 
                     /** Add vertical X-axis properties */
                         viewModel.xVaxis = viewModel.yAxis;
@@ -467,7 +467,7 @@ module powerbi.extensibility.visual {
                         }
 
                 debug.log('View model completely mapped!');
-                debug.reportExecutionTime();
+                viewModel.profiling.categories.push(debug.getSummary('visualTransform'));
                 return viewModel;
 
             }

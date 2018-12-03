@@ -1,5 +1,8 @@
 module powerbi.extensibility.visual {
 
+    import IProfilerCategory = ViolinPlotModels.IProfilerCategory;
+    import IVisualProfiler = ViolinPlotModels.IVisualProfiler;
+
     export module ViolinPlotHelpers {
 
         /**
@@ -7,11 +10,15 @@ module powerbi.extensibility.visual {
          */
         export class VisualDebugger {
             enabled: boolean = false;
+            profiler: IVisualProfiler;
             private startTime: number;
             private lastCheckTime: number;
 
             constructor(condition: boolean) {
                 this.enabled = condition;
+                this.profiler = {
+                    categories: []
+                };
             }
 
             /** Clears the console if debugging is enabled */
@@ -68,6 +75,21 @@ module powerbi.extensibility.visual {
                         }
                     }
                 }
+
+                getSummary(name: string): IProfilerCategory {
+                    if (this.enabled) {
+                        this.reportExecutionTime();
+                        return {
+                            name: name,
+                            duration: this.lastCheckTime - this.startTime,
+                            startTime: this.startTime,
+                            endTime: this.lastCheckTime
+                        };
+                    } else {
+                        return null;
+                    }
+                }
+
         }
 
     }
