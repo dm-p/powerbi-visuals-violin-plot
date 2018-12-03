@@ -88,8 +88,8 @@ module powerbi.extensibility.visual {
 
                     /** Add axis properties */
 
-                        /** Y-axis (initial) */
-                            debug.log('Initial Y-Axis setup...');
+                        // /** Y-axis (initial) */
+                        //     debug.log('Initial Y-Axis setup...');
                             let yFormat = valueFormatter.create({
                                 format: measureMetadata.format,
                                 value: settings.yAxis.labelDisplayUnits == 0
@@ -100,38 +100,38 @@ module powerbi.extensibility.visual {
                                     :   null
                             });
 
-                            viewModel.yAxis = {
-                                padding: {
-                                    left: 5
-                                },
-                                heightLimit: settings.yAxis.heightLimit,
-                                labelTextProperties: {
-                                    fontFamily: settings.yAxis.fontFamily,
-                                    fontSize: PixelConverter.toString(settings.yAxis.fontSize)
-                                },
-                                labelFormatter: yFormat,
-                                domain: viewModel.yAxis && viewModel.yAxis.domain
-                                    ?   viewModel.yAxis.domain
-                                    :   [
-                                            viewModel.statistics.min,
-                                            viewModel.statistics.max
-                                        ]
-                            } as IAxisLinear;
+                        //     viewModel.yAxis = {
+                        //         padding: {
+                        //             left: 5
+                        //         },
+                        //         heightLimit: settings.yAxis.heightLimit,
+                        //         labelTextProperties: {
+                        //             fontFamily: settings.yAxis.fontFamily,
+                        //             fontSize: PixelConverter.toString(settings.yAxis.fontSize)
+                        //         },
+                        //         labelFormatter: yFormat,
+                        //         domain: viewModel.yAxis && viewModel.yAxis.domain
+                        //             ?   viewModel.yAxis.domain
+                        //             :   [
+                        //                     viewModel.statistics.min,
+                        //                     viewModel.statistics.max
+                        //                 ]
+                        //     } as IAxisLinear;
 
-                        /** X-Axis (initial) */
-                            debug.log('Initial X-Axis setup...');
-                            viewModel.xAxis = {
-                                padding: {
-                                    top: 5
-                                },
-                                widthLimit: settings.xAxis.widthLimit,
-                                labelTextProperties: {
-                                    fontFamily: settings.xAxis.fontFamily,
-                                    fontSize: PixelConverter.toString(settings.xAxis.fontSize),
-                                    text: viewModel.categories[0].name
-                                },
-                                domain: viewModel.categories.map(d => d.name)
-                            } as IAxisCategorical;
+                        // /** X-Axis (initial) */
+                        //     debug.log('Initial X-Axis setup...');
+                        //     viewModel.xAxis = {
+                        //         padding: {
+                        //             top: 5
+                        //         },
+                        //         widthLimit: settings.xAxis.widthLimit,
+                        //         labelTextProperties: {
+                        //             fontFamily: settings.xAxis.fontFamily,
+                        //             fontSize: PixelConverter.toString(settings.xAxis.fontSize),
+                        //             text: viewModel.categories[0].name
+                        //         },
+                        //         domain: viewModel.categories.map(d => d.name)
+                        //     } as IAxisCategorical;
 
                         /** Initial sizing work */
                             resyncDimensions(viewModel, settings, viewport);

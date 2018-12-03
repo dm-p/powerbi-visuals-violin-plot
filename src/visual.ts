@@ -109,6 +109,7 @@ module powerbi.extensibility.visual {
                 this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
                 this.errorState = false;
                 this.legendData = {dataPoints: []};
+                this.viewModelHandler.viewport = options.viewport;
                 this.viewport = options.viewport;
 
                 /** Initial debugging for visual update */
@@ -248,10 +249,38 @@ module powerbi.extensibility.visual {
                     switch (options.type) {
                         case VisualUpdateType.Data:
                         case VisualUpdateType.All: {
+                            
                             debug.footer();
+
                             this.viewModelHandler.mapDataView(options, this.settings, this.host, this.colourPalette);
                             this.viewModelHandler.calculateStatistics(this.settings);
                             this.viewModelHandler.sortData(this.settings);
+
+                            /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
+                                if (this.viewModelHandler.viewModel.categoryNames) {
+                                    debug.log('Constructing legend...');
+                                    this.legendData = {
+                                        title: this.settings.legend.showTitle 
+                                                    ? this.settings.legend.titleText 
+                                                        ?   this.settings.legend.titleText
+                                                        :   options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0].displayName
+                                                    : null,
+                                        fontSize: this.settings.legend.fontSize,
+                                        labelColor: this.settings.legend.fontColor,
+                                        dataPoints: this.viewModelHandler.viewModel.categories.map(c => (
+                                            {
+                                                label: c.name,
+                                                color: c.colour,
+                                                icon: LegendIcon.Circle,
+                                                selected: false,
+                                                identity: c.selectionId
+                                            }
+                                        ))
+                                    }
+                                }
+                                
+                            this.viewModelHandler.initialiseAxes(options, this.settings);
+
                             break;
                         }
                         default: {
@@ -260,29 +289,6 @@ module powerbi.extensibility.visual {
                     }
 
                     this.viewModel = this.viewModelHandler.viewModel;
-
-                /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
-                    if (this.viewModel.categoryNames) {
-                        debug.log('Constructing legend...');
-                        this.legendData = {
-                            title: this.settings.legend.showTitle 
-                                        ? this.settings.legend.titleText 
-                                            ?   this.settings.legend.titleText
-                                            :   options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0].displayName
-                                        : null,
-                            fontSize: this.settings.legend.fontSize,
-                            labelColor: this.settings.legend.fontColor,
-                            dataPoints: this.viewModel.categories.map(c => (
-                                {
-                                    label: c.name,
-                                    color: c.colour,
-                                    icon: LegendIcon.Circle,
-                                    selected: false,
-                                    identity: c.selectionId
-                                }
-                            ))
-                        }
-                    }
                     this.renderLegend();
                     debug.log('Viewport (Post-legend)', this.viewport);
                     debug.log('Data View', options.dataViews[0]);

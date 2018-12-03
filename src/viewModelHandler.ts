@@ -25,9 +25,13 @@ module powerbi.extensibility.visual {
         /** powerbi.extensibility.utils.type */
             import PixelConverter = powerbi.extensibility.utils.type.PixelConverter;
 
+        /** powerbi.extensibility.utils.formatting */
+            import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
+
         export class ViewModelHandler {
 
             viewModel: IViewModel;
+            viewport: IViewport;
             private allDataPoints: number[];
             debug: boolean;
             constructor() {
@@ -294,6 +298,77 @@ module powerbi.extensibility.visual {
                         debug.log('Finished sortData');
                         debug.reportExecutionTime();
                         debug.footer();
+                }
+
+                
+                initialiseAxes(options: VisualUpdateOptions, settings: VisualSettings) {
+                    
+                    /** Set up debugging */
+                        let debug = new VisualDebugger(this.debug);
+                        debug.log('Starting initialiseAxes');
+                        debug.log('Creating bare-minimum axis objects...'); 
+                        debug.profileStart();
+
+                    /** Other pre-requisites */
+                        let dataViews = options.dataViews,
+                            metadata = dataViews[0].metadata,
+                            measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
+
+                    /** Y-axis (initial) */
+                        debug.log('Initial Y-Axis setup...');
+                        let yFormat = valueFormatter.create({
+                            format: measureMetadata.format,
+                            value: settings.yAxis.labelDisplayUnits == 0
+                                ?   this.viewModel.statistics.max
+                                :   settings.yAxis.labelDisplayUnits,
+                            precision: settings.yAxis.precision != null
+                                ?   settings.yAxis.precision
+                                :   null
+                        });
+
+                        this.viewModel.yAxis = {
+                            padding: {
+                                left: 5
+                            },
+                            heightLimit: settings.yAxis.heightLimit,
+                            labelTextProperties: {
+                                fontFamily: settings.yAxis.fontFamily,
+                                fontSize: PixelConverter.toString(settings.yAxis.fontSize)
+                            },
+                            labelFormatter: yFormat
+                        } as IAxisLinear;
+
+                        /** Initial domain based on view model statistics */
+                            this.updateYDomain([
+                                this.viewModel.statistics.min,
+                                this.viewModel.statistics.max
+                            ], debug);
+
+                    /** X-Axis (initial) */
+                        debug.log('Initial X-Axis setup...');
+                        this.viewModel.xAxis = {
+                            padding: {
+                                top: 5
+                            },
+                            widthLimit: settings.xAxis.widthLimit,
+                            labelTextProperties: {
+                                fontFamily: settings.xAxis.fontFamily,
+                                fontSize: PixelConverter.toString(settings.xAxis.fontSize),
+                                text: this.viewModel.categories[0].name
+                            },
+                            domain: this.viewModel.categories.map(d => d.name)
+                        } as IAxisCategorical;
+
+                    /** We're done! */
+                        debug.log('Finished initialiseAxes');
+                        debug.reportExecutionTime();
+                        debug.footer();
+
+                }
+
+                updateYDomain(domain: [number, number], debug: VisualDebugger) {
+                    debug.log(`Updating y-axis domain to ${domain}`);
+                    this.viewModel.yAxis.domain = domain;
                 }
 
         }
