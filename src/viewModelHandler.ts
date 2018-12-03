@@ -38,6 +38,7 @@ module powerbi.extensibility.visual {
             viewModel: IViewModel;
             viewport: IViewport;
             settings: VisualSettings;
+            kernel: IKernel;
             measureMetadata: DataViewMetadataColumn;
             categoryMetadata: DataViewMetadataColumn;
             categoryTextProperties: TextProperties;
@@ -248,21 +249,20 @@ module powerbi.extensibility.visual {
                         if (this.settings.violin.type == 'line') {
 
                             debug.log('Instantiating KDE kernel and bandwidth settings...');
-                            let kernel = {} as IKernel;
                         
                             /** Sigma function to account for outliers */
                                 let bwSigma = Math.min(this.viewModel.statistics.deviation, this.viewModel.statistics.iqr / 1.349);
                                 
                             /** Allocate the selected kernel from the properties pane */
                                 debug.log(`Using ${this.settings.violin.kernel} kernel`);
-                                kernel = KDE.kernels[this.settings.violin.kernel];
+                                this.kernel = KDE.kernels[this.settings.violin.kernel];
 
                             /** Because bandwidth is subjective, we use Silverman's rule-of-thumb to try and predict the bandwidth based on the spread of data.
                                  *  The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
                                  *  to obtain from the tooltip, should they wish to 
                                  */
                                 this.viewModel.statistics.bandwidthSilverman = 
-                                        kernel.factor 
+                                        this.kernel.factor 
                                     *   bwSigma 
                                     *   Math.pow(this.allDataPoints.length, -1/5);
                                 this.viewModel.statistics.bandwidthActual = this.settings.violin.specifyBandwidth && this.settings.violin.bandwidth
@@ -377,6 +377,10 @@ module powerbi.extensibility.visual {
                             },
                             domain: this.viewModel.categories.map(d => d.name)
                         } as IAxisCategorical;
+
+                    /** Add vertical X-axis properties */
+                        debug.log('Cloning y-axis into vertical x-axis...');
+                        this.viewModel.xVaxis = this.viewModel.yAxis;
 
                     /** Initial sizing */
                         this.resyncDimensions();

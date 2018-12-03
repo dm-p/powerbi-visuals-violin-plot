@@ -272,8 +272,8 @@ module powerbi.extensibility.visual {
                         //             resyncDimensions(viewModel, settings, viewport);
                         //         }
 
-                    /** Add vertical X-axis properties */
-                        viewModel.xVaxis = viewModel.yAxis;
+                    // /** Add vertical X-axis properties */
+                    //     viewModel.xVaxis = viewModel.yAxis;
 
                     /** Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin */
                         if (settings.violin.type == 'line' && !viewModel.yAxis.collapsed) {
