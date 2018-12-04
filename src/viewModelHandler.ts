@@ -110,6 +110,12 @@ module powerbi.extensibility.visual {
                                     .slice(0)
                                     .sort(d3.ascending);
 
+                            /** #44: We can get the overall min/max direct fro mpower BI without doing a d3.js compute over the array */
+                                viewModel.statistics = {
+                                    min: values[0].minLocal,
+                                    max: values[0].maxLocal
+                                } as IStatistics
+
                             if (!category) {
                                 
                                 viewModel.categoryNames = false;
@@ -207,33 +213,38 @@ module powerbi.extensibility.visual {
                     
                     /** All data points */
                         debug.log('All data points...');
-                        this.viewModel.statistics = {
-                            min: d3.min(this.allDataPoints),
-                            max: d3.max(this.allDataPoints),
-                            deviation: d3.deviation(this.allDataPoints),
-                            iqr: d3.quantile(this.allDataPoints, 0.75) - d3.quantile(this.allDataPoints, 0.25),
-                            span: d3.max(this.allDataPoints) - d3.min(this.allDataPoints)
-                        } as IStatistics;
+                        this.viewModel.statistics.deviation = d3.deviation(this.allDataPoints);
+                        this.viewModel.statistics.quartile1 = d3.quantile(this.allDataPoints, 0.25);
+                        this.viewModel.statistics.quartile3 = d3.quantile(this.allDataPoints, 0.75);
+                        this.viewModel.statistics.iqr = this.viewModel.statistics.quartile3 - this.viewModel.statistics.quartile1;
+                        this.viewModel.statistics.span = this.viewModel.statistics.max - this.viewModel.statistics.min;
 
-                    /** Process the remainder of the view model by category */
+                    /** Process the remainder of the view model by category 
+                     *  #44: For no categories, we can re-use the min/max/iqr/deviation/span/quartiles withough going back to the d3.js well.
+                     *          For those with categories, we'll caculate all data points once and re-use where we can to avoid unnecessary
+                     *          array processing operations.
+                     */
                         debug.log('Updating categories...');
                         this.viewModel.categories.map((c, i) => {
                             c.dataPoints
                                 .sort(d3.ascending)
                                 .filter(v => v !== null);
                             c.statistics = {
-                                min: d3.min(c.dataPoints),
+                                min: this.viewModel.categoryNames ? d3.min(c.dataPoints) : this.viewModel.statistics.min,
+                                max: this.viewModel.categoryNames ? d3.max(c.dataPoints) : this.viewModel.statistics.max,
+                                deviation: this.viewModel.categoryNames ? d3.deviation(c.dataPoints) : this.viewModel.statistics.deviation,
+                                quartile1: this.viewModel.categoryNames ? d3.quantile(c.dataPoints, 0.25) : this.viewModel.statistics.quartile1,
+                                quartile3: this.viewModel.categoryNames ? d3.quantile(c.dataPoints, 0.75) : this.viewModel.statistics.quartile3,
+                                iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
+                                span: d3.max(c.dataPoints) - d3.min(c.dataPoints),
                                 confidenceLower: d3.quantile(c.dataPoints, 0.05),
-                                quartile1: d3.quantile(c.dataPoints, 0.25),
                                 median: d3.median(c.dataPoints),
                                 mean: d3.mean(c.dataPoints),
-                                quartile3: d3.quantile(c.dataPoints, 0.75),
-                                confidenceUpper: d3.quantile(c.dataPoints, 0.95),
-                                max: d3.max(c.dataPoints),
-                                deviation: d3.deviation(c.dataPoints),
-                                iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
-                                span: d3.max(c.dataPoints) - d3.min(c.dataPoints)
+                                confidenceUpper: d3.quantile(c.dataPoints, 0.95)
                             } as IStatistics
+                            
+                            c.statistics.iqr = c.statistics.quartile3 - c.statistics.quartile1;
+                            c.statistics.span = c.statistics.max - c.statistics.min;
                         });
 
                     /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
