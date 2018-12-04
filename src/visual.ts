@@ -293,7 +293,7 @@ module powerbi.extensibility.visual {
                             debug.log('No need to re-map data. Skipping over...');
                         }
                     }
-console.log(this.legendData);
+
                     this.renderLegend();
                     debug.log('Viewport (Post-legend)', this.viewModelHandler.viewport);
                     debug.log('Data View', options.dataViews[0]);
