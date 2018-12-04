@@ -311,6 +311,8 @@ module powerbi.extensibility.visual {
                                     }
                                 }
                             });
+                        } else {
+                            debug.log('No sorting required!');
                         }
 
                     /** We're done! */
