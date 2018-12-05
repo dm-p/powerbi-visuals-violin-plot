@@ -43,7 +43,11 @@ module powerbi.extensibility.visual {
             private allDataPoints: number[];
 
             constructor() {
-                this.viewModel = {} as IViewModel;
+                this.viewModel = {
+                    profiling: {
+                        categories: []
+                    }
+                } as IViewModel;
                 this.debug = false;
             }
 
@@ -66,11 +70,7 @@ module powerbi.extensibility.visual {
                     let dataViews = options.dataViews;
 
                     /** Create bare-minimum view model */
-                        let viewModel = {
-                            profiling: {
-                                categories: []
-                            }
-                        } as IViewModel;
+                        let viewModel = this.viewModel;
     
                     /** Return this bare-minimum model if the conditions for our data view are not satisfied (basically don't draw the chart) */
                         if (!dataViews
