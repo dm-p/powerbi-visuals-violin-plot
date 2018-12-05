@@ -221,5 +221,40 @@ module powerbi.extensibility.visual {
 
             }
 
+        /**
+         * Display usage information within the viewport
+         * 
+         * @param containingElement                             - The element to attach the message to
+         */
+            export function visualUsage(containingElement: d3.Selection<{}>) {
+                let container = containingElement
+                    .append('div')
+                        .classed('card', true)
+                        .classed('border-0', true)
+                    .append('div')
+                        .classed('card-body', true);
+                container
+                    .append('h5')
+                        .classed('card-title', true)
+                        .html('Usage');
+                container     
+                    .append('p')
+                        .classed('card-text', true)
+                        .html('Please ensure that you have added data to the <strong>Sampling</strong>\
+                            and <strong>Measure Data</strong> fields &#128522;');
+            }
+
+        /**
+         * Display 'collapsed' state of the visual
+         * 
+         * @param containingElement                              - The element to attach the message to
+         */
+            export function visualCollapsed(containingElement: d3.Selection<{}>) {
+                containingElement
+                    .append('div')
+                        .classed('container', true)
+                        .html('&nbsp;');
+            }
+
     }
 }

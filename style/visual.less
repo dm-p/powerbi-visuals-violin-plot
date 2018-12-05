@@ -1,9 +1,12 @@
 @import (less) "node_modules/powerbi-visuals-utils-formattingutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
 @import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
+@import (less) "node_modules/bootstrap/dist/css/bootstrap.css";
 
 .violinPlotContainer {
     position: absolute;
+    width: 100vw;
+    height: 100vh;
 }
 
 .violinPlotCanvas {
@@ -14,6 +17,7 @@ svg:not(:root) {
     overflow: hidden;
 }
 
+/* This can be removed when we've migrated the fetchMoreData work */
 .violinPlotError {
     width: 100vw;
     height: 100vh;

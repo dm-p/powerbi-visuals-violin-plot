@@ -48,6 +48,8 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+        import visualUsage = ViolinPlotHelpers.visualUsage;
+        import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
@@ -154,14 +156,7 @@ module powerbi.extensibility.visual {
                         ) {
                             this.errorState = true;
                             this.renderLegend();
-                            let errorContainer = this.container
-                                .append('div')
-                                    .classed('violinPlotError', true);
-                            errorContainer                        
-                                .append('div')
-                                    .html('Please ensure that you have added data to the <strong>Sampling</strong>\
-                                        and <strong>Measure Data</strong> fields &#128522;');
-
+                            visualUsage(this.container);
                             if (debug) {
                                 debug.log('Update cancelled due to incomplete fields.');
                                 debug.footer();
@@ -178,6 +173,8 @@ module powerbi.extensibility.visual {
                      *  memory leak issues, which don't help with diagnosis. The fecthMoreData() function is also broken in v2.1 and v2.2 of the custom
                      *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just 
                      *  switch it on once I find a suitable API version.
+                     *  
+                     *  TODO: Convert to bootstrap layout
                      */
                         if (this.settings.dataLimit.enabled) {
                             if (options.operationKind == VisualDataChangeOperationKind.Create) {
@@ -307,15 +304,9 @@ module powerbi.extensibility.visual {
                 /** We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator */
                     if (viewModel.yAxis.collapsed || viewModel.xAxis.collapsed) {
 
+                        visualCollapsed(this.container);
                         debug.log('Visual fully collapsed due to viewport size!');
-                        let errorContainer = this.container
-                            .append('div')
-                            .classed('violinPlotError', true);
-                        errorContainer                        
-                            .append('div')
-                                .style('opacity', '0.5')
-                                .html('&#128202;');
-
+                        
                     } else {
 
                         /** Add our main SVG */

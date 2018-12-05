@@ -27,6 +27,8 @@
     "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.js",
     "node_modules/powerbi-visuals-utils-chartutils/lib/index.js",
     "node_modules/d3/d3.min.js",
+    "node_modules/jquery/dist/jquery.slim.min.js",
+    "node_modules/bootstrap/dist/js/bootstrap.min.js",
     "node_modules/powerbi-visuals-utils-tooltiputils/lib/index.js"
   ],
   "style": "style/visual.less",
