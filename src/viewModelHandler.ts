@@ -44,6 +44,7 @@ module powerbi.extensibility.visual {
 
             constructor() {
                 this.viewModel = {
+                    categoriesReduced: false,
                     profiling: {
                         categories: []
                     }
@@ -148,6 +149,7 @@ module powerbi.extensibility.visual {
 
                             if (!category) {
                                 
+                                debug.log('No categories specified. Setting up single category for all data points...');
                                 viewModel.categoryNames = false;
                                 viewModel.categories.push({
                                     name: '',
@@ -163,56 +165,71 @@ module powerbi.extensibility.visual {
 
                             } else {
 
-                                /** Get unique category values */
-                                    let distinctCategories = category.values.reduce(function(accum, current, idx) {
-                                        if (!accum.filter(c => c.category == `${current}`)[0]) {
-                                            accum.push({
-                                                category: current,
-                                                sortOrder: 1,
+                                /** Get unique category values and data points
+                                 * 
+                                 *  #44: We used an `Array.prototype.reduce()` here previously but this would take ages to iterate over and check for duplicates
+                                 *  when we had put a high-cardinality field in the Category well and we couldn't break out. The `for` loop is less elegant but
+                                 *  performs much better and allows us to break out when we hit our prescribed limit.
+                                 */
+                                    debug.log('Getting unique category values...');
+                                    let distinctCategories: ICategory[] = [],
+                                        distinctCategoriesFound = 0,
+                                        distinctCategoryLimit = this.settings.dataLimit.categoryLimit;
+
+                                    for (let i = 0; i < category.values.length; i++) {
+
+                                        let categoryName = category.values[i].toString(),
+                                            value = parseFloat(<string>values[0].values[i]) 
+                                                        ?   Number(values[0].values[i]) 
+                                                        :   null;
+
+                                        if (!distinctCategories.filter(c => c.name == `${categoryName}`)[0]) {
+
+                                            if (distinctCategoriesFound == distinctCategoryLimit) {
+                                                debug.log(`Category limit of ${distinctCategoryLimit} reached. Ending category resolution to avoid performance issues.`);
+                                                this.viewModel.categoriesReduced = true;
+                                                break;
+                                            }
+
+                                            distinctCategoriesFound ++;
+
+                                            let defaultColour: Fill = {
+                                                solid: {
+                                                    color: colourPalette.getColor(categoryName).value
+                                                }
+                                            }
+
+                                            distinctCategories.push({
+                                                name: categoryName,
+                                                sortOrder: distinctCategoriesFound,
                                                 selectionId: host.createSelectionIdBuilder()
-                                                    .withCategory(category, idx)
+                                                    .withCategory(category, i)
                                                     .createSelectionId(),
-                                                objectIndex: idx
-                                            });
+                                                objectIndex: i,
+                                                dataPoints: [],
+                                                colour: this.settings.dataColours.colourByCategory
+                                                    ?   getCategoricalObjectValue<Fill>(
+                                                            category,
+                                                            i,
+                                                            'dataColours',
+                                                            'categoryFillColour',
+                                                            defaultColour
+                                                        ).solid.color
+                                                    :   this.settings.dataColours.defaultFillColour,
+                                            } as ICategory);
+                                            
                                         }
-                                        return accum;
-                                    }, []);
+
+                                        /** Add the value, to save us doing one iteration of a potentially large value array later on */
+                                            distinctCategories[distinctCategoriesFound - 1].dataPoints.push(value);
+                                    }
                                     
                                 viewModel.categoryNames = true;
 
                                 /** Create view model template */
-                                    distinctCategories.map((v, i) => {                     
-                                        let defaultColour: Fill = {
-                                            solid: {
-                                                color: colourPalette.getColor(v.category).value
-                                            }
-                                        }
-                                        
-                                        viewModel.categories.push({
-                                            name: `${v.category}`,
-                                            sortOrder: i,
-                                            objectIndex: v.objectIndex,
-                                            dataPoints: [],
-                                            colour: this.settings.dataColours.colourByCategory
-                                                ?   getCategoricalObjectValue<Fill>(
-                                                        category,
-                                                        v.objectIndex,
-                                                        'dataColours',
-                                                        'categoryFillColour',
-                                                        defaultColour
-                                                    ).solid.color
-                                                :   this.settings.dataColours.defaultFillColour,
-                                            selectionId: v.selectionId
-                                        } as ICategory);
-                                    });
-
-                                /** Now we can put the values into the right categories */
-                                    values[0].values.map((v, i) => {
-                                        viewModel.categories
-                                            .filter(c => c.name == `${category.values[i]}`)[0]
-                                            .dataPoints.push(parseFloat(<string>v) ? Number(v) : null);
-                                    });
-
+                                    debug.log(`${distinctCategoriesFound} distinct categories found (or capped).`);
+                                    debug.log('Mapping distinct categories into view model...');
+                                    viewModel.categories = distinctCategories;
                             }
 
                     /** We're done! */
