@@ -138,6 +138,7 @@ module powerbi.extensibility.visual {
                                         if (!accum.filter(c => c.category == `${current}`)[0]) {
                                             accum.push({
                                                 category: current,
+                                                sortOrder: 1,
                                                 selectionId: host.createSelectionIdBuilder()
                                                     .withCategory(category, idx)
                                                     .createSelectionId(),
@@ -159,6 +160,7 @@ module powerbi.extensibility.visual {
                                         
                                         viewModel.categories.push({
                                             name: `${v.category}`,
+                                            sortOrder: i,
                                             objectIndex: v.objectIndex,
                                             dataPoints: [],
                                             colour: this.settings.dataColours.colourByCategory
@@ -291,11 +293,8 @@ module powerbi.extensibility.visual {
                     
                 }
 
-            /** If we're sorting, sort the categories appropriately. 
-             *  TODO: If we're sorting by name then we should respect the order they get added, as Power BI will provide us 
-             *  the category already sorted by any manual columns in the data model
-             */
-                sortData() {
+            /** If we're sorting, sort the categories appropriately. */
+                sortAndFilterData() {
 
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
@@ -309,7 +308,7 @@ module powerbi.extensibility.visual {
                             this.viewModel.categories.sort((x, y) => {
                                 switch (this.settings.sorting.by) {
                                     case 'category': {
-                                        return d3[`${this.settings.sorting.order}`](x.name, y.name);
+                                        return d3[`${this.settings.sorting.order}`](x.sortOrder, y.sortOrder);
                                     }
                                     case 'samples': {
                                         return d3[`${this.settings.sorting.order}`](x.dataPoints.length, y.dataPoints.length);

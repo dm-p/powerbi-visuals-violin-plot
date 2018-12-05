@@ -196,6 +196,8 @@ module powerbi.extensibility.visual {
          * Used to hold data to render a category within the visual
          * 
          * @property {string} name                              - Category name (unformatted & untailored)
+         * @property {number} sortOrder                         - The order in which the category is added to the view model; allows us to 
+         *                                                          ensure that we respect the 'sort by column' from the data model
          * @property {IDisplayName} displayName                 - The display name and/or tailored name of the category
          * @property {number} objectIndex                       - Position in the category array in the `dataView` in which the metadata
          *                                                          for visual settings or defaults should be stored (first instance)
@@ -214,6 +216,7 @@ module powerbi.extensibility.visual {
          */
             export interface ICategory {
                 name: string;
+                sortOrder: number;
                 displayName: IDisplayName;
                 objectIndex: number;
                 colour: string;
