@@ -220,6 +220,8 @@ module powerbi.extensibility.visual {
         public override: boolean = false;
         public showInfo: boolean = true;
         public showCustomVisualNotes: boolean = true;
+        /** Use to prevent the visual from rendering too many categories and breaking the browser */
+        public categoryLimit: number = 50;
     }
 
     /** Used to hold about info and manage debugging */

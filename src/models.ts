@@ -22,17 +22,20 @@ module powerbi.extensibility.visual {
          * @property {ICategory[]} categories                   - Category data and all necessary supporting objects and values
          * @property {boolean} categoryNames                    - Flag indicating whether category names are present (typically if the Category field well is not used)
          * @property {boolean} categoriesAllCollapsed           - Flag indicating if all categories have been collapsed (for responsiveness handling)
+         * @property {boolean} categoriesReduced                - Flag that we reduced our categories to the limit in our settings, preventing the visual
+         *                                                          from attempting to do KDE and plot on way too many (which is a massive performance hit)
          * @property {IStatistics} statistics                   - Statistics across entire data set, irrespective of category
          * @property {IAxisCategorical} xAxis                   - X-axis (categorical) rendering
          * @property {IAxisLinear} yAxis                        - Y-axis (linear) rendering
          * @property {IAxisLinear} xVaxis                       - 'X'-axis used for rendering violin KDE plot
          * @property {IViolinPlot} violinPlot                   - Specifics for rendering a violin, outside other properties
-         * @property {IBoxPlot} boxPlot                         - Specifics fro rendering a box plot, outside other properties
+         * @property {IBoxPlot} boxPlot                         - Specifics for rendering a box plot, outside other properties
          */
             export interface IViewModel {
                 categories: ICategory[];
                 categoryNames: boolean;
                 categoriesAllCollapsed: boolean;
+                categoriesReduced: boolean;
                 statistics: IStatistics;
                 xAxis: IAxisCategorical;
                 yAxis: IAxisLinear;

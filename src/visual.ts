@@ -255,7 +255,7 @@ module powerbi.extensibility.visual {
 
                             this.viewModelHandler.mapDataView(options, this.host, this.colourPalette);
                             this.viewModelHandler.calculateStatistics();
-                            this.viewModelHandler.sortData();
+                            this.viewModelHandler.sortAndFilterData();
 
                             /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
                                 if (this.viewModelHandler.viewModel.categoryNames) {

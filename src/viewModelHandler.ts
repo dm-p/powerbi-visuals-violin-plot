@@ -98,12 +98,42 @@ module powerbi.extensibility.visual {
                         viewModel.categories = [];
 
                         /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
-                         *  Note that while it makes sense to put the category above the sampling from an analytical perspective, it actually creates blank values
-                         *  for every unique sampling value under categories that do not contain it, and this ultimately blows up the granularity of the data
-                         *  set significantly for even a few hundred rows. Byr grouping by sampling and then by category, we get the same number of rows as
-                         *  there are in our base data. What this means is that we need to get the unique category values from the 'lower level' category in our
-                         *  data view mapping and then assign our groupings once we know what they are.
-                        */
+                         *
+                         *  WHY ARE WE USING A CATEGORICAL DATA VIEW MAPPING IN THIS WAY? 
+                         * 
+                         *  Using a matrix, table or categorical mapping with grouping makes more sense, but as our sampling value is typically unique to each 
+                         *  row, this means that Power BI needs to calculate and retrieve an aggregate for every combination of sampling and category. This will
+                         *  mean that of the data that comes back, it will be mostly `null` values, for each category, with the actual values in there somewhere.
+                         *  This creates a lot of data to transfer over HTTP and a lot of memory to process and organise when we get it.
+                         * 
+                         *  By doing it this way, we get sinlge-dimension arrays for all category/sampling combinations, and then values, so at most this gives us
+                         *  a 30K row limit (until we can implement `fetchmoreData` successfully). We trade-off a bit of WTF this side as a result. Maybe I'll
+                         *  revisit when I'm a bit wiser.
+                         * 
+                         *  We also have an issue in that the user could conceivably add a high-cardinality-field to the category, when they actually
+                         *  meant to put it in the sampling field and vice-versa. This would cause us to render up to 30K categories, with a single data
+                         *  point in them, which is also incredibly costly from a KDE perspective. 
+                         * 
+                         *  This actually cause the visual to fail validation due to the MS tester trying this out. I was a little too close to the project
+                         *  and made sure that the "happy path" was working well, but hadn't considered this scenario. It is entirely possible and should be
+                         *  mitigated. 
+                         * 
+                         *  In this scenario, we'd normally use the `dataReductionAlgorithm` setting in the `capabilities.json` file to manage this
+                         *  but the sacrifices we made to the data view mapping (see notes in `mapDataView`), we don't get the flexibility we need to
+                         *  prevent a user from killing their own browser.
+                         * 
+                         *  So, we leverage the `categoryLimit` setting in the `dataLimitSettings` class to place an arbitrary restriction on this that we
+                         *  may be able to relax in a user setting later on, should it be successful, or we can better manage with the `capabilities.json'
+                         *  file if yours truly gets a bit smarter further down the track.
+                         * 
+                         *  We filter down the array here, as we need to calculate stats for all categories obtained from the data model so that we can do the
+                         *  requisite sorting on them. The stats calculation is pretty negligible in terms of processing time for large datasets (< 200ms
+                         *  on average).
+                         * 
+                         *  By doing this we can also avoid unnecessary KDE operations, which outside of rendering are the biggest cost by far.
+                         * 
+                         *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.                         * 
+                         */
 
                             /** Copy our values array and sort */
                                 this.allDataPoints = <number[]>values[0].values
