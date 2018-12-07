@@ -47,7 +47,8 @@ module powerbi.extensibility.visual {
                     categoriesReduced: false,
                     profiling: {
                         categories: []
-                    }
+                    },
+                    statistics: {}
                 } as IViewModel;
                 this.debug = false;
             }
@@ -136,20 +137,14 @@ module powerbi.extensibility.visual {
                          *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.                         * 
                          */
 
-                            /** Copy our values array and sort */
-                                this.allDataPoints = <number[]>values[0].values
-                                    .slice(0)
-                                    .sort(d3.ascending);
-
-                            /** #44: We can get the overall min/max direct fro mpower BI without doing a d3.js compute over the array */
-                                viewModel.statistics = {
-                                    min: values[0].minLocal,
-                                    max: values[0].maxLocal
-                                } as IStatistics
+                            /** Create our allDatapoints array for later (as we only want to include datapoints that are in the final set after 
+                             *  category reduction, if applicable) */
+                                this.allDataPoints = [];
 
                             if (!category) {
-                                
                                 debug.log('No categories specified. Setting up single category for all data points...');
+                                this.allDataPoints = <number[]>values[0].values
+                                    .sort(d3.ascending);
                                 viewModel.categoryNames = false;
                                 viewModel.categories.push({
                                     name: '',
@@ -222,6 +217,7 @@ module powerbi.extensibility.visual {
 
                                         /** Add the value, to save us doing one iteration of a potentially large value array later on */
                                             distinctCategories[distinctCategoriesFound - 1].dataPoints.push(value);
+                                            this.allDataPoints.push(value);
                                     }
                                     
                                 viewModel.categoryNames = true;
@@ -259,9 +255,11 @@ module powerbi.extensibility.visual {
                         debug.log('Starting calculateStatistics');
                         debug.log('Calculating statistics over view model data...'); 
                         debug.profileStart();
-                    
+
                     /** All data points */
                         debug.log('All data points...');
+                        this.viewModel.statistics.max = d3.max(this.allDataPoints);
+                        this.viewModel.statistics.min = d3.min(this.allDataPoints);
                         this.viewModel.statistics.deviation = d3.deviation(this.allDataPoints);
                         this.viewModel.statistics.quartile1 = d3.quantile(this.allDataPoints, 0.25);
                         this.viewModel.statistics.quartile3 = d3.quantile(this.allDataPoints, 0.75);
@@ -279,13 +277,11 @@ module powerbi.extensibility.visual {
                                 .sort(d3.ascending)
                                 .filter(v => v !== null);
                             c.statistics = {
-                                min: this.viewModel.categoryNames ? d3.min(c.dataPoints) : this.viewModel.statistics.min,
-                                max: this.viewModel.categoryNames ? d3.max(c.dataPoints) : this.viewModel.statistics.max,
-                                deviation: this.viewModel.categoryNames ? d3.deviation(c.dataPoints) : this.viewModel.statistics.deviation,
-                                quartile1: this.viewModel.categoryNames ? d3.quantile(c.dataPoints, 0.25) : this.viewModel.statistics.quartile1,
-                                quartile3: this.viewModel.categoryNames ? d3.quantile(c.dataPoints, 0.75) : this.viewModel.statistics.quartile3,
-                                iqr: d3.quantile(c.dataPoints, 0.75) - d3.quantile(c.dataPoints, 0.25),
-                                span: d3.max(c.dataPoints) - d3.min(c.dataPoints),
+                                min: d3.min(c.dataPoints),
+                                max: d3.max(c.dataPoints),
+                                deviation: d3.deviation(c.dataPoints),
+                                quartile1: d3.quantile(c.dataPoints, 0.25),
+                                quartile3: d3.quantile(c.dataPoints, 0.75),
                                 confidenceLower: d3.quantile(c.dataPoints, 0.05),
                                 median: d3.median(c.dataPoints),
                                 mean: d3.mean(c.dataPoints),

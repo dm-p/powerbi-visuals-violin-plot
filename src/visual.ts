@@ -319,6 +319,18 @@ module powerbi.extensibility.visual {
                                         height: `${options.viewport.height}`
                                     });
 
+                        /** Handle category reduction, if applied */
+                            if (viewModel.categoriesReduced) {
+                                violinPlotCanvas
+                                    .append('g')
+                                        .classed('condensedWarning', true)
+                                        .attr({
+                                            'transform': `translate(${this.viewModelHandler.viewport.width - 16}, ${16})`,
+                                        })
+                                    .append('text')
+                                        .html('&#9888;');
+                            }
+
                         /** Create a Y axis */
                             if (this.settings.yAxis.show) {
 
