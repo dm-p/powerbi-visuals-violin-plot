@@ -470,6 +470,11 @@ module powerbi.extensibility.visual {
                                         (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, viewModel),
                                         (tooltipEvent: TooltipEventArgs<number>) => null
                                     )
+                                    this.tooltipServiceWrapper.addTooltip(
+                                        violinPlotCanvas.selectAll('.condensedWarning'),
+                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(),
+                                        (tooltipEvent: TooltipEventArgs<number>) => null
+                                    )
                                 }
 
                             /** Violin plot */
@@ -489,6 +494,18 @@ module powerbi.extensibility.visual {
                     viewModel.profiling.categories.push(debug.getSummary('Total'));
                     debug.footer();
 
+            }
+
+        /** Tooltip to display in the event of too many categories for the visual. As we handle this independently of the dataReductionAlgorithm,
+         *  we need to indicate this to the user some other way.
+         */
+            private static getTruncationTooltipData(): VisualTooltipDataItem[] {
+                return [
+                    {
+                        displayName: `Too many Category values. not displaying all data. Filter the data or choose another field.`,
+                        value: ''
+                    }
+                ]
             }
 
         /**
