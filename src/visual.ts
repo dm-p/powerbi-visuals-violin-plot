@@ -321,14 +321,28 @@ module powerbi.extensibility.visual {
 
                         /** Handle category reduction, if applied */
                             if (viewModel.categoriesReduced) {
-                                violinPlotCanvas
+                                debug.log('Plotting warning icon and interactivity...');
+                                let warningElement = violinPlotCanvas
                                     .append('g')
                                         .classed('condensedWarning', true)
                                         .attr({
-                                            'transform': `translate(${this.viewModelHandler.viewport.width - 16}, ${16})`,
+                                            'transform': `translate(${this.viewModelHandler.viewport.width - 20}, ${20})`,
+                                            'opacity': '0.6'
                                         })
                                     .append('text')
-                                        .html('&#9888;');
+                                        .html('&#9888;')
+                                        .style('display', 'none');
+
+                                /** Add mouse events to show/hide warning on mouseover (we don't want it showing all the time,
+                                 *  but we should inform the user what's going on as this is not part of the dataReductionAlgorithm
+                                 *  stuff) 
+                                 */
+                                    violinPlotCanvas.on('mouseover', () => {
+                                        warningElement.style('display', null);
+                                    });
+                                    violinPlotCanvas.on('mouseout', () => {
+                                        warningElement.style('display', 'none');
+                                    });
                             }
 
                         /** Create a Y axis */
@@ -472,7 +486,7 @@ module powerbi.extensibility.visual {
                                     )
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.condensedWarning'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(),
+                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(this.settings),
                                         (tooltipEvent: TooltipEventArgs<number>) => null
                                     )
                                 }
@@ -499,10 +513,11 @@ module powerbi.extensibility.visual {
         /** Tooltip to display in the event of too many categories for the visual. As we handle this independently of the dataReductionAlgorithm,
          *  we need to indicate this to the user some other way.
          */
-            private static getTruncationTooltipData(): VisualTooltipDataItem[] {
+            private static getTruncationTooltipData(settings: VisualSettings): VisualTooltipDataItem[] {
                 return [
                     {
-                        displayName: `Too many Category values. not displaying all data. Filter the data or choose another field.`,
+                        displayName: `Category values limited to ${settings.dataLimit.categoryLimit} unique values for \
+                            performance reasons. Not displaying all data. Filter the data or choose another field.`,
                         value: ''
                     }
                 ]
