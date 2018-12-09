@@ -5,29 +5,44 @@ module powerbi.extensibility.visual {
 
     export module ViolinPlotModels {
 
+            export interface IProfilerCategory {
+                name: string;
+                duration: number;
+                startTime: number;
+                endTime: number;
+            }
+
+            export interface IVisualProfiler {
+                categories: IProfilerCategory[];
+            }
+
         /**
          * View model for entire violin plot visual
          * 
          * @property {ICategory[]} categories                   - Category data and all necessary supporting objects and values
          * @property {boolean} categoryNames                    - Flag indicating whether category names are present (typically if the Category field well is not used)
          * @property {boolean} categoriesAllCollapsed           - Flag indicating if all categories have been collapsed (for responsiveness handling)
+         * @property {boolean} categoriesReduced                - Flag that we reduced our categories to the limit in our settings, preventing the visual
+         *                                                          from attempting to do KDE and plot on way too many (which is a massive performance hit)
          * @property {IStatistics} statistics                   - Statistics across entire data set, irrespective of category
          * @property {IAxisCategorical} xAxis                   - X-axis (categorical) rendering
          * @property {IAxisLinear} yAxis                        - Y-axis (linear) rendering
          * @property {IAxisLinear} xVaxis                       - 'X'-axis used for rendering violin KDE plot
          * @property {IViolinPlot} violinPlot                   - Specifics for rendering a violin, outside other properties
-         * @property {IBoxPlot} boxPlot                         - Specifics fro rendering a box plot, outside other properties
+         * @property {IBoxPlot} boxPlot                         - Specifics for rendering a box plot, outside other properties
          */
             export interface IViewModel {
                 categories: ICategory[];
                 categoryNames: boolean;
                 categoriesAllCollapsed: boolean;
+                categoriesReduced: boolean;
                 statistics: IStatistics;
                 xAxis: IAxisCategorical;
                 yAxis: IAxisLinear;
                 xVaxis: IAxisLinear;
                 violinPlot: IViolinPlot;
                 boxPlot: IBoxPlot;
+                profiling: IVisualProfiler;
             }
 
         /**
@@ -87,7 +102,8 @@ module powerbi.extensibility.visual {
          * @property {IDimensions} titleDimensions              - Computed dimensions of axis title based on viewport, other axes and visual settings
          * @property {TextProperties} titleTextProperties       - Used to determine display of axis title, and compute size requirements
          * @property {IDisplayName} titleDisplayName            - Formatted/tailored title details, based on text properties and sizing
-         * @property {IValueFormatter} labelFormatter           - Used to handle formatting of the y-axis labels, based on data model and visual settings
+         * @property {IValueFormatter} labelFormatter           - Used to handle formatting of the axis labels, based on data model and visual settings
+         * @property {IValueFormatter} titleFormatter           - Used to handle formatting of the axis title, based on data model and visual settings
          * @property {TextProperties} labelTextProperties       - Used to determine display of axis labels, and compute size requirements
          * @property {IPadding} padding                         - Any padding requirements for the axis
          */
@@ -105,6 +121,7 @@ module powerbi.extensibility.visual {
                 titleTextProperties: TextProperties;
                 titleDisplayName: IDisplayName;
                 labelFormatter: IValueFormatter;
+                titleFormatter: IValueFormatter;
                 labelTextProperties: TextProperties;
                 padding: IPadding;
             }
@@ -182,6 +199,8 @@ module powerbi.extensibility.visual {
          * Used to hold data to render a category within the visual
          * 
          * @property {string} name                              - Category name (unformatted & untailored)
+         * @property {number} sortOrder                         - The order in which the category is added to the view model; allows us to 
+         *                                                          ensure that we respect the 'sort by column' from the data model
          * @property {IDisplayName} displayName                 - The display name and/or tailored name of the category
          * @property {number} objectIndex                       - Position in the category array in the `dataView` in which the metadata
          *                                                          for visual settings or defaults should be stored (first instance)
@@ -200,6 +219,7 @@ module powerbi.extensibility.visual {
          */
             export interface ICategory {
                 name: string;
+                sortOrder: number;
                 displayName: IDisplayName;
                 objectIndex: number;
                 colour: string;
