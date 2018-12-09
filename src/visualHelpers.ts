@@ -226,7 +226,7 @@ module powerbi.extensibility.visual {
          * 
          * @param containingElement                             - The element to attach the message to
          */
-            export function visualUsage(containingElement: d3.Selection<{}>) {
+            export function visualUsage(containingElement: d3.Selection<{}>, host: IVisualHost, settings: VisualSettings) {
                 let container = containingElement
                     .append('div')
                         .classed('card', true)
@@ -242,6 +242,22 @@ module powerbi.extensibility.visual {
                         .classed('card-text', true)
                         .html('Please ensure that you have added data to the <strong>Sampling</strong>\
                             and <strong>Measure Data</strong> fields &#128522;');
+                container
+                    .append('p')
+                        .classed('card-text', true)
+                        .html('You can also supply an optional <strong>Category</strong> to plot multiple \
+                            violins within your data set.');
+                let usageLink = container
+                    .append('a')
+                        .attr('href', '#')
+                        .attr('role', 'button')
+                        .classed('btn', true)
+                        .classed('btn-outline-info', true)
+                        .classed('btn-sm', true)
+                        .html('Detailed Help (External Site)');
+                usageLink.on('click', () => {
+                    host.launchUrl(settings.about.usageUrl);
+                })
             }
 
         /**

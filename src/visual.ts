@@ -156,7 +156,7 @@ module powerbi.extensibility.visual {
                         ) {
                             this.errorState = true;
                             this.renderLegend();
-                            visualUsage(this.container);
+                            visualUsage(this.container, this.host, this.settings);
                             if (debug) {
                                 debug.log('Update cancelled due to incomplete fields.');
                                 debug.footer();
