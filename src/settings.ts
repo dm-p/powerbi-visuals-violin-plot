@@ -221,18 +221,18 @@ module powerbi.extensibility.visual {
         public showInfo: boolean = true;
         public showCustomVisualNotes: boolean = true;
         /** Use to prevent the visual from rendering too many categories and breaking the browser */
-        public categoryLimit: number = 50;
         public categoryLimit: number = 100;
     }
 
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.0.0.0';
+        public version: string = '1.0.0.1';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugProperties: boolean = false;
         public development: boolean = false; /** SET TO `false` FOR RELEASE */
+        public usageUrl: string = 'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
     }
 
 }
