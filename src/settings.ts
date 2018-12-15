@@ -227,8 +227,8 @@ module powerbi.extensibility.visual {
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.0.0.1';
-        public debugMode: boolean = false;
+        public version: string = '1.1.0.0';
+        public debugMode: boolean = true;
         public debugVisualUpdate: boolean = false;
         public debugProperties: boolean = false;
         public development: boolean = false; /** SET TO `false` FOR RELEASE */
