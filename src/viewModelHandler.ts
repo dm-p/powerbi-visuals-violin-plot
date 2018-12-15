@@ -1017,11 +1017,10 @@ module powerbi.extensibility.visual {
                                             width: xAxis.scale.rangeBand() - (xAxis.scale.rangeBand() * (this.settings.violin.innerPadding / 100))
                                         } as IViolinPlot;
                                         
-
                                     /** Box plot specifics */
                                         debug.log('Box plot dimensions...');
                                         this.viewModel.boxPlot = {
-                                            width: this.viewModel.violinPlot.width - (this.viewModel.violinPlot.width * (this.settings.boxPlot.innerPadding / 100)),
+                                            width: this.viewModel.violinPlot.width - (this.viewModel.violinPlot.width * (this.settings.dataPoints.innerPadding / 100)),
                                             maxMeanRadius: 3
                                         } as IBoxPlot;
                                         this.viewModel.boxPlot.maxMeanDiameter = this.viewModel.boxPlot.maxMeanRadius * 2;

@@ -45,7 +45,7 @@ module powerbi.extensibility.visual {
         public dataLimit: dataLimitSettings = new dataLimitSettings();
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
-        public boxPlot: boxPlotSettings = new boxPlotSettings();
+        public dataPoints: dataPointSettings = new dataPointSettings();
         public tooltip: tooltipSettings = new tooltipSettings();
         public legend: legendSettings = new legendSettings();
         public about: aboutSettings = new aboutSettings();
@@ -143,9 +143,11 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold box plot settings */
-    export class boxPlotSettings{
-        /** Show box plot */
+    export class dataPointSettings{
+        /** Show data points */
         public show: boolean = true;
+        /** Plot type */
+        public plotType: string = 'boxPlot';
         /** Box plot line stroke width */
         public strokeWidth: number = 2;
         /** Box fill colour */

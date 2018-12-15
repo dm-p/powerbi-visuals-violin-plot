@@ -496,7 +496,7 @@ module powerbi.extensibility.visual {
                                 renderViolin(seriesContainer, viewModel, this.settings);
 
                             /** Box plot */
-                                if (this.settings.boxPlot.show) {
+                                if (this.settings.dataPoints.show && this.settings.dataPoints.plotType == 'boxPlot') {
                                     debug.log('Rendering box plots...');
                                     renderBoxPlot(seriesContainer, viewModel, this.settings);
                                 }
@@ -833,11 +833,11 @@ module powerbi.extensibility.visual {
                                     },
                                 };
                             /** Toggle median colour */
-                                if (!this.settings.boxPlot.showMedian) {
+                                if (!this.settings.dataPoints.showMedian) {
                                     delete instances[0].properties['medianFillColour'];
                                 }
                             /** Toggle mean colours */
-                                if (!this.settings.boxPlot.showMean) {
+                                if (!this.settings.dataPoints.showMean) {
                                     delete instances[0].properties['meanFillColour'];
                                     delete instances[0].properties['meanFillColourInner'];
                                 }

@@ -132,8 +132,8 @@ module powerbi.extensibility.visual {
                                 ?   d.statistics.quartile1
                                 :   d.statistics.quartile3
                         ),
-                        'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                        'stroke': `${settings.boxPlot.boxFillColour}`
+                        'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                        'stroke': `${settings.dataPoints.boxFillColour}`
                     });
 
             }
@@ -147,7 +147,7 @@ module powerbi.extensibility.visual {
          */
             export function renderBoxPlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
-                if (viewModel.boxPlot.width > settings.boxPlot.strokeWidth) {
+                if (viewModel.boxPlot.width > settings.dataPoints.strokeWidth) {
 
                     /** Add the box */
                         let boxContainer = seriesContainer
@@ -166,36 +166,36 @@ module powerbi.extensibility.visual {
                                 'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
                                 'width': viewModel.boxPlot.width,
                                 'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
-                                'stroke': `${settings.boxPlot.boxFillColour}`,
-                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                                'fill': `${settings.boxPlot.boxFillColour}`,
-                                'fill-opacity': 1 - (settings.boxPlot.transparency / 100)
+                                'stroke': `${settings.dataPoints.boxFillColour}`,
+                                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                                'fill': `${settings.dataPoints.boxFillColour}`,
+                                'fill-opacity': 1 - (settings.dataPoints.transparency / 100)
                             });
 
                     /** Do the whiskers, if we need them */
-                        if (settings.boxPlot.showWhiskers) {
+                        if (settings.dataPoints.showWhiskers) {
                             renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
                             renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
                         }
 
                     /** Mean and median */
-                        if (settings.boxPlot.showMedian){
+                        if (settings.dataPoints.showMedian){
                             boxContainer.append('line')
                             .classed({
                                 'violinPlotBoxPlot': true,
                                 'median': true
                             })
                             .attr({
-                                'x1': viewModel.boxPlot.xLeft + (settings.boxPlot.strokeWidth / 2),
-                                'x2': viewModel.boxPlot.xRight - (settings.boxPlot.strokeWidth / 2),
+                                'x1': viewModel.boxPlot.xLeft + (settings.dataPoints.strokeWidth / 2),
+                                'x2': viewModel.boxPlot.xRight - (settings.dataPoints.strokeWidth / 2),
                                 'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
                                 'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
-                                'stroke': `${settings.boxPlot.medianFillColour}`,
-                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
+                                'stroke': `${settings.dataPoints.medianFillColour}`,
+                                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
                             });
                         }
 
-                        if (settings.boxPlot.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
+                        if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
                             boxContainer.append('circle')
                                 .classed({
                                     'violinPlotBoxPlot': true,
@@ -211,9 +211,9 @@ module powerbi.extensibility.visual {
                                             :   viewModel.boxPlot.actualMeanRadius
                                 })
                                 .style({
-                                    'fill': settings.boxPlot.meanFillColourInner,
-                                    'stroke': settings.boxPlot.meanFillColour,
-                                    'stroke-width': `${settings.boxPlot.strokeWidth}px`
+                                    'fill': settings.dataPoints.meanFillColourInner,
+                                    'stroke': settings.dataPoints.meanFillColour,
+                                    'stroke-width': `${settings.dataPoints.strokeWidth}px`
                                 });
                         }
 

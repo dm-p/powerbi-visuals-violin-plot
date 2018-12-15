@@ -224,13 +224,33 @@
                 }
             }
         },
-        "boxPlot": {
-            "displayName": "Box Plot",
+        "dataPoints": {
+            "displayName": "Data Points",
             "properties": {
                 "show": {
-                    "displayName": "Enable/Disable Y-Axis",
+                    "displayName": "Enable/Disable Data Point Plotting (either Box Plot, Barcode or Beeswarm)",
                     "type": {
                         "bool": true
+                    }
+                },
+                "plotType": {
+                    "displayName": "Plot Type",
+                    "description": "",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Barcode",
+                                "value": "barcode"
+                            },
+                            {
+                                "displayName": "Box Plot",
+                                "value": "boxPlot"
+                            },
+                            {
+                                "displayName": "Beeswarm",
+                                "value": "beeswarm"
+                            }
+                        ]
                     }
                 },
                 "strokeWidth": {
