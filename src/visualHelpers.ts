@@ -138,6 +138,13 @@ module powerbi.extensibility.visual {
 
             }
 
+            export function renderBarcodePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+
+                if (viewModel.barcodePlot.width > settings.dataPoints.strokeWidth) {
+                }
+
+            }
+
         /**
          * Handle rendering of box plot
          * 

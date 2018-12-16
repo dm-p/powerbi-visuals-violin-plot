@@ -42,6 +42,7 @@ module powerbi.extensibility.visual {
                 xVaxis: IAxisLinear;
                 violinPlot: IViolinPlot;
                 boxPlot: IBoxPlot;
+                barcodePlot: IBarcodePlot;
                 profiling: IVisualProfiler;
             }
 
@@ -82,6 +83,12 @@ module powerbi.extensibility.visual {
                 maxMeanDiameter: number;
                 actualMeanRadius: number;
                 actualMeanDiameter: number;
+                xLeft: number;
+                xRight: number;
+            }
+
+            export interface IBarcodePlot {
+                width: number;
                 xLeft: number;
                 xRight: number;
             }

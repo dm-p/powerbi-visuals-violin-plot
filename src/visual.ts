@@ -48,6 +48,7 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+        import renderBarcodePlot = ViolinPlotHelpers.renderBarcodePlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
 
@@ -496,9 +497,26 @@ module powerbi.extensibility.visual {
                                 renderViolin(seriesContainer, viewModel, this.settings);
 
                             /** Box plot */
+                                if (this.settings.dataPoints.show) {
+                                    switch (this.settings.dataPoints.plotType) {
+
+                                        case 'boxPlot': {
+                                            debug.log('Rendering box plots...');
+                                            renderBoxPlot(seriesContainer, viewModel, this.settings);
+                                            break;
+                                        }
+
+                                        case 'barcode': {
+                                            debug.log('Rendering barcode plots...');
+                                            renderBarcodePlot(seriesContainer, viewModel, this.settings);
+                                            break;
+                                        }
+
+                                    }
+                                }
+
                                 if (this.settings.dataPoints.show && this.settings.dataPoints.plotType == 'boxPlot') {
-                                    debug.log('Rendering box plots...');
-                                    renderBoxPlot(seriesContainer, viewModel, this.settings);
+                                    
                                 }
 
                     }
