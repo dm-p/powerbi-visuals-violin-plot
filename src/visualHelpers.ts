@@ -141,6 +141,21 @@ module powerbi.extensibility.visual {
             export function renderBarcodePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
                 if (viewModel.barcodePlot.width > settings.dataPoints.strokeWidth) {
+
+                    /** Add the container */
+                        let barcodeContainer = seriesContainer
+                            .append('g')
+                                .classed('violinPlotBarcodeContainer', true)
+                                .attr({
+                                    'shape-rendering': 'geometricPrecision'
+                                });
+
+                        barcodeContainer.selectAll('.barcodeDataPoint')
+                            .data(d => d.dataPoints)
+                            .enter()
+                            .append('g')
+                                .classed('barcodeDataPoint', true);
+
                 }
 
             }
