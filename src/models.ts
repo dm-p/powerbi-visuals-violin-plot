@@ -35,6 +35,7 @@ module powerbi.extensibility.visual {
          * @property {boolean} categoriesAllCollapsed           - Flag indicating if all categories have been collapsed (for responsiveness handling)
          * @property {boolean} categoriesReduced                - Flag that we reduced our categories to the limit in our settings, preventing the visual
          *                                                          from attempting to do KDE and plot on way too many (which is a massive performance hit)
+         * @property {string} measure                           - Display name for measure
          * @property {IStatistics} statistics                   - Statistics across entire data set, irrespective of category
          * @property {IAxisCategorical} xAxis                   - X-axis (categorical) rendering
          * @property {IAxisLinear} yAxis                        - Y-axis (linear) rendering
@@ -47,6 +48,7 @@ module powerbi.extensibility.visual {
                 categoryNames: boolean;
                 categoriesAllCollapsed: boolean;
                 categoriesReduced: boolean;
+                measure: string;
                 statistics: IStatistics;
                 xAxis: IAxisCategorical;
                 yAxis: IAxisLinear;
