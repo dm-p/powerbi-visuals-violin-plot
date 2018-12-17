@@ -4,6 +4,8 @@ module powerbi.extensibility.visual {
 
         /** Internal view models */
             import IViewModel = ViolinPlotModels.IViewModel;
+            import ICategory = ViolinPlotModels.ICategory;
+            import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
 
@@ -158,15 +160,20 @@ module powerbi.extensibility.visual {
                                 });
 
                         barcodeContainer.selectAll('.barcodeDataPoint')
-                            .data(d => <number[]>d.dataPoints)
+                            .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
+                                ({
+                                    value: dp,
+                                    categoryIndex: i
+                                })
+                            ))
                             .enter()
                             .append('line')
                                 .classed('barcodeDataPoint', true)
                                 .attr({
                                     'x1': viewModel.barcodePlot.xLeft,
                                     'x2': viewModel.barcodePlot.xRight,
-                                    'y1': (d) => viewModel.yAxis.scale(d),
-                                    'y2': (d) => viewModel.yAxis.scale(d),
+                                    'y1': (d) => viewModel.yAxis.scale(d.value),
+                                    'y2': (d) => viewModel.yAxis.scale(d.value),
                                     'stroke': `${settings.dataPoints.barColour}`,
                                     'stroke-width': `${settings.dataPoints.strokeWidth}px`,
                                     'stroke-linecap': 'square',
