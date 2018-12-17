@@ -17,6 +17,17 @@ module powerbi.extensibility.visual {
             }
 
         /**
+         *  Used to bind individual data points (for non-box data plots)
+         *  
+         *  @property {number} value                            - Data point value
+         *  @property {number} categoryIndex                    - Index of category that the value belongs to (used for looking up ICategory)
+         */
+            export interface IVisualDataPoint {
+                value: number,
+                categoryIndex: number
+            }
+
+        /**
          * View model for entire violin plot visual
          * 
          * @property {ICategory[]} categories                   - Category data and all necessary supporting objects and values
