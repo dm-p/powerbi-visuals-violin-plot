@@ -500,7 +500,7 @@ module powerbi.extensibility.visual {
                                 if (this.settings.dataPoints.show) {
                                     switch (this.settings.dataPoints.plotType) {
 
-                                        case 'boxPlot': {
+                                        case 'box': {
                                             debug.log('Rendering box plots...');
                                             renderBoxPlot(seriesContainer, viewModel, this.settings);
                                             break;
@@ -835,7 +835,7 @@ module powerbi.extensibility.visual {
                                 };
                             break;
                         }
-                        case 'boxPlot': {
+                        case 'dataPoints': {
                             /** Range validation on stroke width */
                                 instances[0].validValues = instances[0].validValues || {};
                                 instances[0].validValues.strokeWidth = {
@@ -851,15 +851,45 @@ module powerbi.extensibility.visual {
                                         max: 90
                                     },
                                 };
-                            /** Toggle median colour */
-                                if (!this.settings.dataPoints.showMedian) {
-                                    delete instances[0].properties['medianFillColour'];
+
+                            /** Data point-plot specific behaviour */
+                                switch (this.settings.dataPoints.plotType) {
+
+                                    case 'box': {
+
+                                        /** Remove non-box plot properties */
+                                            delete instances[0].properties['barColour'];
+
+                                        /** Toggle median colour */
+                                            if (!this.settings.dataPoints.showMedian) {
+                                                delete instances[0].properties['medianFillColour'];
+                                            }
+                                        /** Toggle mean colours */
+                                            if (!this.settings.dataPoints.showMean) {
+                                                delete instances[0].properties['meanFillColour'];
+                                                delete instances[0].properties['meanFillColourInner'];
+                                            }
+
+                                        break;
+                                    }
+
+                                    case 'barcode': {
+
+                                        /** Remove non-barcode plot properties */
+                                            delete instances[0].properties['boxFillColour'];
+                                            delete instances[0].properties['showWhiskers'];
+                                            delete instances[0].properties['showMedian'];
+                                            delete instances[0].properties['medianFillColour'];
+                                            delete instances[0].properties['showMean'];
+                                            delete instances[0].properties['meanFillColour'];
+                                            delete instances[0].properties['meanFillColourInner'];
+
+                                        break;
+                                    }
+
                                 }
-                            /** Toggle mean colours */
-                                if (!this.settings.dataPoints.showMean) {
-                                    delete instances[0].properties['meanFillColour'];
-                                    delete instances[0].properties['meanFillColourInner'];
-                                }
+
+                            
                             break;
                         }
                         case 'sorting': {

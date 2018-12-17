@@ -147,15 +147,17 @@ module powerbi.extensibility.visual {
         /** Show data points */
         public show: boolean = true;
         /** Plot type */
-        public plotType: string = 'boxPlot';
+        public plotType: string = 'box';
+        /** Width (as % of violin) */
+        public innerPadding: number = 75;
         /** Box plot line stroke width */
         public strokeWidth: number = 2;
         /** Box fill colour */
         public boxFillColour: string = defaultBoxFillColour;
+        /** Bar stroke colour */
+        public barColour: string = defaultBoxFillColour;
         /** How transparent the box plot fill should be */
         public transparency: number = 40;
-        /** Width (as % of violin) */
-        public innerPadding: number = 75;
         /** Whisker toggle */
         public showWhiskers: boolean = true;
         /** Median toggle */

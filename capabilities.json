@@ -243,8 +243,8 @@
                                 "value": "barcode"
                             },
                             {
-                                "displayName": "Box Plot",
-                                "value": "boxPlot"
+                                "displayName": "Box",
+                                "value": "box"
                             },
                             {
                                 "displayName": "Beeswarm",
@@ -255,7 +255,7 @@
                 },
                 "strokeWidth": {
                     "displayName": "Stroke Width",
-                    "description": "Width of the lines bordering the box plot",
+                    "description": "Width of the lines used in the selected data point plot",
                     "type": {
                         "integer": true
                     }
@@ -270,9 +270,19 @@
                         }
                     }
                 },
+                "barColour": {
+                    "displayName": "Bar Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
                 "transparency": {
                     "displayName": "Transparency",
-                    "description": "Level of transparency to apply to the box plot fill",
+                    "description": "Level of transparency to apply to the data plot fill",
                     "type": {
                         "integer": true
                     }
