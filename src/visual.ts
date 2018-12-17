@@ -55,6 +55,7 @@ module powerbi.extensibility.visual {
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
         import ICategory = ViolinPlotModels.ICategory;
+        import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -551,10 +552,23 @@ module powerbi.extensibility.visual {
             private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
                 debug.log('Instantiating tooltip...');
-                let v = value as ICategory,
+
+                let v: ICategory,
                     s = settings.tooltip,
                     f = viewModel.yAxis.labelFormatter,
                     tooltips: VisualTooltipDataItem[] = [];
+
+                /** We might be submitting either an ICategory or an IVisualDataPoint, depending on where we're hovering. In each case
+                 *  the 'shape' of our data will be different, so we can do a check here to ensure we retrieve the right data accordingly.
+                 */
+
+                    if (<IVisualDataPoint>value.categoryIndex !== undefined) {
+                        debug.log('Data Point Highlighted');
+                        v = viewModel.categories[value.categoryIndex];
+                    } else {
+                        debug.log('Category Highlighted');
+                        v = value;
+                    }
 
                 tooltips.push(
                     {
