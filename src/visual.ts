@@ -683,6 +683,7 @@ module powerbi.extensibility.visual {
                 let position: LegendPosition = this.settings.legend.show 
                     && !this.errorState 
                     && this.settings.dataColours.colourByCategory
+                    && this.viewModelHandler.viewModel.categoryNames
                         ?   LegendPosition[this.settings.legend.position]
                         :   LegendPosition.None;
                 debug.log(`Position: ${LegendPosition[position]}`);
