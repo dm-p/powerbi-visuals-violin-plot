@@ -138,6 +138,13 @@ module powerbi.extensibility.visual {
 
             }
 
+        /**
+         * Handle rendering of barcode plot, which will plot a horizontal line for each data point in the category
+         * 
+         * @param seriesContainer                               - Container to apply the box plot to
+         * @param viewModel                                     - View model to use when calculating
+         * @param settings                                      - Visual settings
+         */
             export function renderBarcodePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
                 if (viewModel.barcodePlot.width > settings.dataPoints.strokeWidth) {
@@ -151,10 +158,20 @@ module powerbi.extensibility.visual {
                                 });
 
                         barcodeContainer.selectAll('.barcodeDataPoint')
-                            .data(d => d.dataPoints)
+                            .data(d => <number[]>d.dataPoints)
                             .enter()
-                            .append('g')
-                                .classed('barcodeDataPoint', true);
+                            .append('line')
+                                .classed('barcodeDataPoint', true)
+                                .attr({
+                                    'x1': viewModel.barcodePlot.xLeft,
+                                    'x2': viewModel.barcodePlot.xRight,
+                                    'y1': (d) => viewModel.yAxis.scale(d),
+                                    'y2': (d) => viewModel.yAxis.scale(d),
+                                    'stroke': `${settings.dataPoints.barColour}`,
+                                    'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                                    'stroke-linecap': 'square',
+                                    'stroke-opacity': 1 - (settings.dataPoints.transparency / 100)
+                                });
 
                 }
 
