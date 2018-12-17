@@ -52,6 +52,7 @@ module powerbi.extensibility.visual {
                         .classed({
                             'violinPlotViolin': true
                         })
+                        .datum(d => d)
                         .classed(`${EViolinSide[side]}`, true)
                         .attr({
                             'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`,
