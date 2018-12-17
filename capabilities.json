@@ -225,7 +225,7 @@
             }
         },
         "dataPoints": {
-            "displayName": "Data Points",
+            "displayName": "Combo Plot",
             "properties": {
                 "show": {
                     "displayName": "Enable/Disable Data Point Plotting (either Box Plot, Barcode or Beeswarm)",
@@ -245,10 +245,6 @@
                             {
                                 "displayName": "Box",
                                 "value": "box"
-                            },
-                            {
-                                "displayName": "Beeswarm",
-                                "value": "beeswarm"
                             }
                         ]
                     }
