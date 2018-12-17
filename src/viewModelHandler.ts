@@ -93,10 +93,12 @@ module powerbi.extensibility.visual {
                                 ?   dataViews[0].categorical.categories[0]
                                 :   null;
                         this.categoryMetadata = metadata.columns.filter(c => c.roles['category'])[0];
+                        this.measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
                         this.categoryTextProperties = {
                             fontFamily: this.settings.xAxis.fontFamily,
                             fontSize: PixelConverter.toString(this.settings.xAxis.fontSize)
                         };
+                        viewModel.measure = this.measureMetadata.displayName;
                         viewModel.categories = [];
 
                         /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
@@ -388,9 +390,7 @@ module powerbi.extensibility.visual {
                         debug.profileStart();
 
                     /** Other pre-requisites */
-                        let dataViews = options.dataViews,
-                            metadata = dataViews[0].metadata;
-                        this.measureMetadata = metadata.columns.filter(c => c.roles['measure'])[0];
+                        let dataViews = options.dataViews;
 
                     /** Y-axis (initial) */
                         debug.log('Initial Y-Axis setup...');
@@ -462,19 +462,18 @@ module powerbi.extensibility.visual {
                         debug.profileStart();
 
                     /** Y-axis title */
+                        this.viewModel.yAxis.titleTextProperties = {
+                            fontFamily: this.settings.yAxis.titleFontFamily,
+                            fontSize:PixelConverter.toString(this.settings.yAxis.titleFontSize),
+                            text: this.formatYAxistitle(debug)
+                        };
                         if (this.settings.yAxis.showTitle) {
                                     
                             debug.log('Y-axis title initial setup...');
-                            
-                            let title = this.formatYAxistitle(debug);
 
                             this.viewModel.yAxis.titleDisplayName = this.getTailoredDisplayName(
-                                title,
-                                {
-                                    fontFamily: this.settings.yAxis.titleFontFamily,
-                                    fontSize:PixelConverter.toString(this.settings.yAxis.titleFontSize),
-                                    text: title
-                                },
+                                this.viewModel.yAxis.titleTextProperties.text,
+                                this.viewModel.yAxis.titleTextProperties,
                                 this.viewModel.yAxis.dimensions
                                     ?   this.viewModel.yAxis.dimensions.height
                                     :   this.viewport.height

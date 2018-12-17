@@ -556,6 +556,7 @@ module powerbi.extensibility.visual {
                 let v: ICategory,
                     s = settings.tooltip,
                     f = viewModel.yAxis.labelFormatter,
+                    dataPoint: boolean,
                     tooltips: VisualTooltipDataItem[] = [];
 
                 /** We might be submitting either an ICategory or an IVisualDataPoint, depending on where we're hovering. In each case
@@ -565,6 +566,7 @@ module powerbi.extensibility.visual {
                     if (<IVisualDataPoint>value.categoryIndex !== undefined) {
                         debug.log('Data Point Highlighted');
                         v = viewModel.categories[value.categoryIndex];
+                        dataPoint = true;
                     } else {
                         debug.log('Category Highlighted');
                         v = value;
@@ -681,6 +683,15 @@ module powerbi.extensibility.visual {
                     });
                     debug.log('Pushed estimated bandwidth');
                 }
+
+                if (dataPoint) {
+                    tooltips.push({
+                        displayName: viewModel.measure,
+                        value: f.format(value.value)
+                    });
+                    debug.log('Pushed data point value');
+                }
+
                 debug.log('Tooltip Data', tooltips);
                 return tooltips;
             }
