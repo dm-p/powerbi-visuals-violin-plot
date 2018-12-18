@@ -1214,6 +1214,12 @@
                         "bool": true
                     }
                 },
+                "debugTooltipEvents": {
+                    "displayName": "Tooltip Events",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "debugProperties": {
                     "displayName": "Properties",
                     "type": {

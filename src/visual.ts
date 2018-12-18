@@ -516,10 +516,6 @@ module powerbi.extensibility.visual {
                                     }
                                 }
 
-                                if (this.settings.dataPoints.show && this.settings.dataPoints.plotType == 'boxPlot') {
-                                    
-                                }
-
                     }
 
                 /** Success! */
@@ -587,107 +583,107 @@ module powerbi.extensibility.visual {
                 );
                 debug.log('Pushed category and samples');
 
-                if (s.showMaxMin) {
-                    tooltips.push(
-                        {
-                            displayName: 'Maximum',
-                            value: f.format(v.statistics.max)
-                        },
-                        {
-                            displayName: 'Minimum',
-                            value: f.format(v.statistics.min)
-                        }
-                    );
-                    debug.log('Pushed max/min');
-                }
+                // if (s.showMaxMin) {
+                //     tooltips.push(
+                //         {
+                //             displayName: 'Maximum',
+                //             value: f.format(v.statistics.max)
+                //         },
+                //         {
+                //             displayName: 'Minimum',
+                //             value: f.format(v.statistics.min)
+                //         }
+                //     );
+                //     debug.log('Pushed max/min');
+                // }
 
-                if (s.showSpan) {
-                    tooltips.push({
-                        displayName: 'Span (Min to Max)',
-                        value: f.format(v.statistics.span)
-                    });
-                    debug.log('Pushed span');
-                }
+                // if (s.showSpan) {
+                //     tooltips.push({
+                //         displayName: 'Span (Min to Max)',
+                //         value: f.format(v.statistics.span)
+                //     });
+                //     debug.log('Pushed span');
+                // }
 
-                if (s.showMedian) {
-                    tooltips.push({
-                        displayName: 'Median',
-                        value: f.format(v.statistics.median)
-                    });
-                    debug.log('Pushed median');
-                }
+                // if (s.showMedian) {
+                //     tooltips.push({
+                //         displayName: 'Median',
+                //         value: f.format(v.statistics.median)
+                //     });
+                //     debug.log('Pushed median');
+                // }
 
-                if (s.showMean) {
-                    tooltips.push({
-                        displayName: 'Mean',
-                        value: f.format(v.statistics.mean)
-                    });
-                    debug.log('Pushed mean');
-                }
+                // if (s.showMean) {
+                //     tooltips.push({
+                //         displayName: 'Mean',
+                //         value: f.format(v.statistics.mean)
+                //     });
+                //     debug.log('Pushed mean');
+                // }
 
-                if (s.showDeviation) {
-                    tooltips.push({
-                        displayName: 'Standard Deviation',
-                        value: f.format(v.statistics.deviation)
-                    });
-                    debug.log('Pushed standard deviation');
-                }
+                // if (s.showDeviation) {
+                //     tooltips.push({
+                //         displayName: 'Standard Deviation',
+                //         value: f.format(v.statistics.deviation)
+                //     });
+                //     debug.log('Pushed standard deviation');
+                // }
 
-                if (s.showQuartiles) {
-                    tooltips.push(
-                        {
-                            displayName: 'Upper Quartile',
-                            value: f.format(v.statistics.quartile3)
-                        },
-                        {
-                            displayName: 'Lower Quartile',
-                            value: f.format(v.statistics.quartile1)
-                        }
-                    );
-                    debug.log('Pushed upper/lower quartile');
-                }
+                // if (s.showQuartiles) {
+                //     tooltips.push(
+                //         {
+                //             displayName: 'Upper Quartile',
+                //             value: f.format(v.statistics.quartile3)
+                //         },
+                //         {
+                //             displayName: 'Lower Quartile',
+                //             value: f.format(v.statistics.quartile1)
+                //         }
+                //     );
+                //     debug.log('Pushed upper/lower quartile');
+                // }
 
-                if (s.showIqr) {
-                    tooltips.push({
-                        displayName: 'Inter Quartile Range',
-                        value: f.format(v.statistics.iqr)
-                    });
-                    debug.log('Pushed IQR');
-                }
+                // if (s.showIqr) {
+                //     tooltips.push({
+                //         displayName: 'Inter Quartile Range',
+                //         value: f.format(v.statistics.iqr)
+                //     });
+                //     debug.log('Pushed IQR');
+                // }
 
-                if (s.showConfidence) {
-                    tooltips.push(
-                        {
-                            displayName: 'Upper Whisker (95%)',
-                            value: f.format(v.statistics.confidenceUpper)
-                        },
-                        {
-                            displayName: 'Lower Whisker (5%)',
-                            value: f.format(v.statistics.confidenceLower)
-                        }
-                    );
-                    debug.log('Pushed confidence');
-                }
+                // if (s.showConfidence) {
+                //     tooltips.push(
+                //         {
+                //             displayName: 'Upper Whisker (95%)',
+                //             value: f.format(v.statistics.confidenceUpper)
+                //         },
+                //         {
+                //             displayName: 'Lower Whisker (5%)',
+                //             value: f.format(v.statistics.confidenceLower)
+                //         }
+                //     );
+                //     debug.log('Pushed confidence');
+                // }
 
-                if (s.showBandwidth) {
-                    if (settings.violin.specifyBandwidth) {
-                        tooltips.push({
-                            displayName: 'Bandwidth (Specified)',
-                            value: f.format(viewModel.statistics.bandwidthActual)
-                        });
-                        debug.log('Pushed specified bandwidth');
-                    }
-                    tooltips.push({
-                        displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
-                        value: f.format(viewModel.statistics.bandwidthSilverman)
-                    });
-                    debug.log('Pushed estimated bandwidth');
-                }
+                // if (s.showBandwidth) {
+                //     if (settings.violin.specifyBandwidth) {
+                //         tooltips.push({
+                //             displayName: 'Bandwidth (Specified)',
+                //             value: f.format(viewModel.statistics.bandwidthActual)
+                //         });
+                //         debug.log('Pushed specified bandwidth');
+                //     }
+                //     tooltips.push({
+                //         displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
+                //         value: f.format(viewModel.statistics.bandwidthSilverman)
+                //     });
+                //     debug.log('Pushed estimated bandwidth');
+                // }
 
                 if (dataPoint) {
                     tooltips.push({
                         displayName: viewModel.measure,
-                        value: f.format(value.value)
+                        value: f.format(tooltipEvent.data.value)
                     });
                     debug.log('Pushed data point value');
                 }
@@ -817,14 +813,17 @@ module powerbi.extensibility.visual {
                                 if(!this.settings.about.development) {
                                     delete instances[0].properties['debugMode'];
                                     delete instances[0].properties['debugVisualUpdate'];
+                                    delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
                                 }
                             /** Reset the individual flags if debug mode switched off */
                                 if(!this.settings.about.debugMode) {
                                     instances[0].properties['debugMode'] = false;
                                     this.settings.about.debugVisualUpdate = false;
+                                    this.settings.about.debugTooltipEvents = false;
                                     this.settings.about.debugProperties = false;
                                     delete instances[0].properties['debugVisualUpdate'];
+                                    delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
                                     
                                 }
