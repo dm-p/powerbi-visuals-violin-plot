@@ -483,7 +483,11 @@ module powerbi.extensibility.visual {
                                     debug.log('Adding tooltip events...');
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, viewModel),
+                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(
+                                            tooltipEvent, 
+                                            this.settings, 
+                                            viewModel
+                                        ),
                                         (tooltipEvent: TooltipEventArgs<number>) => null
                                     )
                                     this.tooltipServiceWrapper.addTooltip(
@@ -545,11 +549,13 @@ module powerbi.extensibility.visual {
          * @param settings 
          * @param viewModel 
          */
-            private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
-                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+            private static getTooltipData(tooltipEvent: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
+                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
                 debug.log('Instantiating tooltip...');
+                console.log(tooltipEvent);
 
                 let v: ICategory,
+                    tte = <TooltipEventArgs<Number>>tooltipEvent,
                     s = settings.tooltip,
                     f = viewModel.yAxis.labelFormatter,
                     dataPoint: boolean,
@@ -559,15 +565,19 @@ module powerbi.extensibility.visual {
                  *  the 'shape' of our data will be different, so we can do a check here to ensure we retrieve the right data accordingly.
                  */
 
-                    if (<IVisualDataPoint>value.categoryIndex !== undefined) {
-                        debug.log('Data Point Highlighted');
-                        v = viewModel.categories[value.categoryIndex];
-                        dataPoint = true;
+                    if (tooltipEvent.context.classList.contains('violinPlotViolinPlot')) {
+                        console.log('Category Highlighted');
+                        v = tooltipEvent.data;
                     } else {
-                        debug.log('Category Highlighted');
-                        v = value;
+                        console.log('Data Point Highlighted');
+                        console.log(tte.data);
+                        v = viewModel.categories[tooltipEvent.data.categoryIndex];
+                        d3.select(tte.context)
+                            .select('circle')
+                                .attr('transform', () => `translate(${100}, ${200})`)
+                        dataPoint = true;
                     }
-
+console.log(v);
                 tooltips.push(
                     {
                         displayName: 'Category',
