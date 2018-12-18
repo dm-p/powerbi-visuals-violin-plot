@@ -62,7 +62,8 @@ module powerbi.extensibility.visual {
                 /** Area - no point bothering if we're fully transparent */
                     if (settings.dataColours.transparency != 100) {
                         violinContainer.append('path')
-                            .classed('violinPlotViolinArea', true)
+                            .classed('violinPlotViolinPlot', true)
+                            .classed('area', true)
                             .attr('d', d => d.areaGen(d.dataKde))
                             .style({
                                 'fill': d => d.colour,
@@ -73,7 +74,8 @@ module powerbi.extensibility.visual {
 
                 /** Line  */
                     violinContainer.append('path')
-                        .classed('violinPlotViolinLine', true)
+                        .classed('violinPlotViolinPlot', true)
+                        .classed('line', true)
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
@@ -160,6 +162,24 @@ module powerbi.extensibility.visual {
                                     'shape-rendering': 'geometricPrecision'
                                 });
 
+                    /** Add overlay for interactivity */
+                        let overlay = barcodeContainer
+                            .append('rect')
+                                .classed('violinPlotComboPlotOverlay', true)
+                                .attr({
+                                    width: viewModel.barcodePlot.width,
+                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.max) - viewModel.yAxis.scale(d.statistics.min)),
+                                    x: viewModel.barcodePlot.xLeft,
+                                    y: (d) => viewModel.yAxis.scale(d.statistics.max)
+                                });
+
+                        barcodeContainer.append('circle')
+                            .attr({
+                                r: 3,
+                                fill: (d) => d.colour
+                            })
+
+                    /** Plot data points */
                         barcodeContainer.selectAll('.barcodeDataPoint')
                             .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
                                 ({
@@ -177,7 +197,7 @@ module powerbi.extensibility.visual {
                                     'y2': (d) => viewModel.yAxis.scale(d.value),
                                     'stroke': `${settings.dataPoints.barColour}`,
                                     'stroke-width': `${settings.dataPoints.strokeWidth}px`,
-                                    'stroke-linecap': 'square',
+                                    'stroke-linecap': 'butt',
                                     'stroke-opacity': 1 - (settings.dataPoints.transparency / 100)
                                 });
 
