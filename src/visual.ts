@@ -51,6 +51,7 @@ module powerbi.extensibility.visual {
         import renderBarcodePlot = ViolinPlotHelpers.renderBarcodePlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
+        import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
@@ -488,7 +489,8 @@ module powerbi.extensibility.visual {
                                             this.settings, 
                                             viewModel
                                         ),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null
+                                        (tooltipEvent: TooltipEventArgs<number>) => null,
+                                        true
                                     )
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.condensedWarning'),
@@ -552,32 +554,28 @@ module powerbi.extensibility.visual {
             private static getTooltipData(tooltipEvent: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
                 debug.log('Instantiating tooltip...');
-                console.log(tooltipEvent);
 
-                let v: ICategory,
-                    tte = <TooltipEventArgs<Number>>tooltipEvent,
+                let tte = <TooltipEventArgs<Number>>tooltipEvent,
+                    v: ICategory = tooltipEvent.data,
                     s = settings.tooltip,
                     f = viewModel.yAxis.labelFormatter,
                     dataPoint: boolean,
+                    highlightedValue: number,
                     tooltips: VisualTooltipDataItem[] = [];
 
                 /** We might be submitting either an ICategory or an IVisualDataPoint, depending on where we're hovering. In each case
                  *  the 'shape' of our data will be different, so we can do a check here to ensure we retrieve the right data accordingly.
                  */
 
-                    if (tooltipEvent.context.classList.contains('violinPlotViolinPlot')) {
-                        console.log('Category Highlighted');
-                        v = tooltipEvent.data;
-                    } else {
-                        console.log('Data Point Highlighted');
-                        console.log(tte.data);
-                        v = viewModel.categories[tooltipEvent.data.categoryIndex];
-                        d3.select(tte.context)
-                            .select('circle')
-                                .attr('transform', () => `translate(${100}, ${200})`)
+                    if (tooltipEvent.context.classList.contains('violinPlotComboPlotOverlay')) {
+                        debug.log('Combo Plot Overlay Highlighted');
                         dataPoint = true;
+                        highlightedValue = getHighlightedDataPoints(d3.select(tte.context), tte.coordinates, viewModel.yAxis);
+                        debug.log(`Highlighted Value: ${highlightedValue}`);
+                    } else {
+                        debug.log('Category Highlighted');
                     }
-console.log(v);
+
                 tooltips.push(
                     {
                         displayName: 'Category',
@@ -593,107 +591,107 @@ console.log(v);
                 );
                 debug.log('Pushed category and samples');
 
-                // if (s.showMaxMin) {
-                //     tooltips.push(
-                //         {
-                //             displayName: 'Maximum',
-                //             value: f.format(v.statistics.max)
-                //         },
-                //         {
-                //             displayName: 'Minimum',
-                //             value: f.format(v.statistics.min)
-                //         }
-                //     );
-                //     debug.log('Pushed max/min');
-                // }
+                if (s.showMaxMin) {
+                    tooltips.push(
+                        {
+                            displayName: 'Maximum',
+                            value: f.format(v.statistics.max)
+                        },
+                        {
+                            displayName: 'Minimum',
+                            value: f.format(v.statistics.min)
+                        }
+                    );
+                    debug.log('Pushed max/min');
+                }
 
-                // if (s.showSpan) {
-                //     tooltips.push({
-                //         displayName: 'Span (Min to Max)',
-                //         value: f.format(v.statistics.span)
-                //     });
-                //     debug.log('Pushed span');
-                // }
+                if (s.showSpan) {
+                    tooltips.push({
+                        displayName: 'Span (Min to Max)',
+                        value: f.format(v.statistics.span)
+                    });
+                    debug.log('Pushed span');
+                }
 
-                // if (s.showMedian) {
-                //     tooltips.push({
-                //         displayName: 'Median',
-                //         value: f.format(v.statistics.median)
-                //     });
-                //     debug.log('Pushed median');
-                // }
+                if (s.showMedian) {
+                    tooltips.push({
+                        displayName: 'Median',
+                        value: f.format(v.statistics.median)
+                    });
+                    debug.log('Pushed median');
+                }
 
-                // if (s.showMean) {
-                //     tooltips.push({
-                //         displayName: 'Mean',
-                //         value: f.format(v.statistics.mean)
-                //     });
-                //     debug.log('Pushed mean');
-                // }
+                if (s.showMean) {
+                    tooltips.push({
+                        displayName: 'Mean',
+                        value: f.format(v.statistics.mean)
+                    });
+                    debug.log('Pushed mean');
+                }
 
-                // if (s.showDeviation) {
-                //     tooltips.push({
-                //         displayName: 'Standard Deviation',
-                //         value: f.format(v.statistics.deviation)
-                //     });
-                //     debug.log('Pushed standard deviation');
-                // }
+                if (s.showDeviation) {
+                    tooltips.push({
+                        displayName: 'Standard Deviation',
+                        value: f.format(v.statistics.deviation)
+                    });
+                    debug.log('Pushed standard deviation');
+                }
 
-                // if (s.showQuartiles) {
-                //     tooltips.push(
-                //         {
-                //             displayName: 'Upper Quartile',
-                //             value: f.format(v.statistics.quartile3)
-                //         },
-                //         {
-                //             displayName: 'Lower Quartile',
-                //             value: f.format(v.statistics.quartile1)
-                //         }
-                //     );
-                //     debug.log('Pushed upper/lower quartile');
-                // }
+                if (s.showQuartiles) {
+                    tooltips.push(
+                        {
+                            displayName: 'Upper Quartile',
+                            value: f.format(v.statistics.quartile3)
+                        },
+                        {
+                            displayName: 'Lower Quartile',
+                            value: f.format(v.statistics.quartile1)
+                        }
+                    );
+                    debug.log('Pushed upper/lower quartile');
+                }
 
-                // if (s.showIqr) {
-                //     tooltips.push({
-                //         displayName: 'Inter Quartile Range',
-                //         value: f.format(v.statistics.iqr)
-                //     });
-                //     debug.log('Pushed IQR');
-                // }
+                if (s.showIqr) {
+                    tooltips.push({
+                        displayName: 'Inter Quartile Range',
+                        value: f.format(v.statistics.iqr)
+                    });
+                    debug.log('Pushed IQR');
+                }
 
-                // if (s.showConfidence) {
-                //     tooltips.push(
-                //         {
-                //             displayName: 'Upper Whisker (95%)',
-                //             value: f.format(v.statistics.confidenceUpper)
-                //         },
-                //         {
-                //             displayName: 'Lower Whisker (5%)',
-                //             value: f.format(v.statistics.confidenceLower)
-                //         }
-                //     );
-                //     debug.log('Pushed confidence');
-                // }
+                if (s.showConfidence) {
+                    tooltips.push(
+                        {
+                            displayName: 'Upper Whisker (95%)',
+                            value: f.format(v.statistics.confidenceUpper)
+                        },
+                        {
+                            displayName: 'Lower Whisker (5%)',
+                            value: f.format(v.statistics.confidenceLower)
+                        }
+                    );
+                    debug.log('Pushed confidence');
+                }
 
-                // if (s.showBandwidth) {
-                //     if (settings.violin.specifyBandwidth) {
-                //         tooltips.push({
-                //             displayName: 'Bandwidth (Specified)',
-                //             value: f.format(viewModel.statistics.bandwidthActual)
-                //         });
-                //         debug.log('Pushed specified bandwidth');
-                //     }
-                //     tooltips.push({
-                //         displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
-                //         value: f.format(viewModel.statistics.bandwidthSilverman)
-                //     });
-                //     debug.log('Pushed estimated bandwidth');
-                // }
+                if (s.showBandwidth) {
+                    if (settings.violin.specifyBandwidth) {
+                        tooltips.push({
+                            displayName: 'Bandwidth (Specified)',
+                            value: f.format(viewModel.statistics.bandwidthActual)
+                        });
+                        debug.log('Pushed specified bandwidth');
+                    }
+                    tooltips.push({
+                        displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
+                        value: f.format(viewModel.statistics.bandwidthSilverman)
+                    });
+                    debug.log('Pushed estimated bandwidth');
+                }
 
                 if (dataPoint) {
                     tooltips.push({
                         displayName: viewModel.measure,
-                        value: f.format(tooltipEvent.data.value)
+                        value: f.format(highlightedValue)
                     });
                     debug.log('Pushed data point value');
                 }
