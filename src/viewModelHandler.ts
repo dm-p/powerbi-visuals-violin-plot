@@ -1042,7 +1042,9 @@ module powerbi.extensibility.visual {
                                         this.viewModel.barcodePlot = {
                                             width: this.viewModel.boxPlot.width,
                                             xLeft: this.viewModel.boxPlot.xLeft,
-                                            xRight: this.viewModel.boxPlot.xRight
+                                            xRight: this.viewModel.boxPlot.xRight,
+                                            tooltipWidth: this.viewModel.boxPlot.width * 1.1,
+                                            tooltipXLeft: (this.viewModel.violinPlot.categoryWidth / 2) - ((this.viewModel.boxPlot.width * 1.1) / 2)
                                         };
                                         
                                 if (this.viewModel.xVaxis && this.viewModel.xAxis.domain && this.viewModel.xVaxis.scale) {
