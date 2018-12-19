@@ -6,6 +6,7 @@ module powerbi.extensibility.visual {
             import IViewModel = ViolinPlotModels.IViewModel;
             import ICategory = ViolinPlotModels.ICategory;
             import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
+            import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
 
@@ -177,6 +178,14 @@ module powerbi.extensibility.visual {
                                     y: (d) => viewModel.yAxis.scale(d.statistics.max) - (settings.dataPoints.strokeWidth)
                                 });
 
+                    /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
+                        barcodeContainer.append('line')
+                        .classed('barcodeToolipDataPoint', true)
+                        .attr({
+                            'stroke-width': 3,
+                            fill: settings.dataPoints.barColour
+                        });
+
                     /** Handle dimming of data points on hover and full opacity on exit */
                         overlay.on('mouseover', (d) => {
                             d3.selectAll('.barcodeDataPoint')
@@ -186,12 +195,6 @@ module powerbi.extensibility.visual {
                             d3.selectAll('.barcodeDataPoint')
                                 .attr('stroke-opacity', 1);
                         });
-
-                        barcodeContainer.append('circle')
-                            .attr({
-                                r: 3,
-                                fill: (d) => d.colour
-                            })
 
                     /** Plot data points */
                         barcodeContainer.selectAll('.barcodeDataPoint')
@@ -350,6 +353,28 @@ module powerbi.extensibility.visual {
                     .append('div')
                         .classed('container', true)
                         .html('&nbsp;');
+            }
+
+        /**
+         * Use the mouse position to determine the nearest data point on the y-axis
+         * 
+         * @param overlay                                       - The overlay element to track
+         * @param mouse                                         - Number array of corodinate data
+         * @param yAxis                                         - Axis object to use for scaling
+         */
+            export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): number {
+                let yData = yAxis.scale.invert(mouse[1]),
+                    bisectValue = d3.bisector((d:number) => d).left,
+                    ttv: number;
+                
+                overlay.each((d) => {
+                    let data = d.dataPoints,
+                        idx = bisectValue(data, yData, 1),
+                        d0 = data[idx - 1],
+                        d1 = data[idx] ? data[idx] : d0;
+                    ttv = yData - d0 > d1 - yData ? d1: d0;
+                });              
+                return ttv;
             }
 
     }
