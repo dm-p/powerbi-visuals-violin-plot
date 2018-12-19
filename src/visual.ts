@@ -910,6 +910,7 @@ console.log(v);
                                     case 'barcode': {
 
                                         /** Remove non-barcode plot properties */
+                                            delete instances[0].properties['transparency'];    
                                             delete instances[0].properties['boxFillColour'];
                                             delete instances[0].properties['showWhiskers'];
                                             delete instances[0].properties['showMedian'];

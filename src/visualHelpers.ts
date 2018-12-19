@@ -163,15 +163,29 @@ module powerbi.extensibility.visual {
                                 });
 
                     /** Add overlay for interactivity */
-                        let overlay = barcodeContainer
+                        let overlay = seriesContainer
                             .append('rect')
                                 .classed('violinPlotComboPlotOverlay', true)
                                 .attr({
                                     width: viewModel.barcodePlot.width,
-                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.max) - viewModel.yAxis.scale(d.statistics.min)),
+                                    /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
+                                     *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly) 
+                                     */
+                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.max) - viewModel.yAxis.scale(d.statistics.min))
+                                        +   (settings.dataPoints.strokeWidth * 2),
                                     x: viewModel.barcodePlot.xLeft,
-                                    y: (d) => viewModel.yAxis.scale(d.statistics.max)
+                                    y: (d) => viewModel.yAxis.scale(d.statistics.max) - (settings.dataPoints.strokeWidth)
                                 });
+
+                    /** Handle dimming of data points on hover and full opacity on exit */
+                        overlay.on('mouseover', (d) => {
+                            d3.selectAll('.barcodeDataPoint')
+                                .attr('stroke-opacity', 0.25);
+                        });
+                        overlay.on('mouseout', (d) => {
+                            d3.selectAll('.barcodeDataPoint')
+                                .attr('stroke-opacity', 1);
+                        });
 
                         barcodeContainer.append('circle')
                             .attr({
@@ -197,8 +211,7 @@ module powerbi.extensibility.visual {
                                     'y2': (d) => viewModel.yAxis.scale(d.value),
                                     'stroke': `${settings.dataPoints.barColour}`,
                                     'stroke-width': `${settings.dataPoints.strokeWidth}px`,
-                                    'stroke-linecap': 'butt',
-                                    'stroke-opacity': 1 - (settings.dataPoints.transparency / 100)
+                                    'stroke-linecap': 'butt'
                                 });
 
                 }
