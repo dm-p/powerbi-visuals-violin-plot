@@ -182,18 +182,27 @@ module powerbi.extensibility.visual {
                         barcodeContainer.append('line')
                         .classed('barcodeToolipDataPoint', true)
                         .attr({
-                            'stroke-width': 3,
-                            fill: settings.dataPoints.barColour
-                        });
+                            'stroke-width': 5,
+                            'stroke-opacity': 1,
+                            stroke: settings.dataPoints.barColour,
+                            x1: viewModel.barcodePlot.tooltipXLeft,
+                            x2: viewModel.barcodePlot.tooltipXLeft + viewModel.barcodePlot.tooltipWidth,
+                            y1: 0,
+                            y2: 0
+                        })
+                        .style('display', 'none');
 
                     /** Handle dimming of data points on hover and full opacity on exit */
                         overlay.on('mouseover', (d) => {
                             d3.selectAll('.barcodeDataPoint')
                                 .attr('stroke-opacity', 0.25);
                         });
-                        overlay.on('mouseout', (d) => {
+                        overlay.on('mouseout', function(d) {
                             d3.selectAll('.barcodeDataPoint')
                                 .attr('stroke-opacity', 1);
+                            d3.select(this.parentNode)
+                                .select('.barcodeToolipDataPoint')
+                                    .style('display', 'none');
                         });
 
                     /** Plot data points */
