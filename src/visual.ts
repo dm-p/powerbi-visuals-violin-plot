@@ -563,10 +563,9 @@ module powerbi.extensibility.visual {
                     highlightedValue: number,
                     tooltips: VisualTooltipDataItem[] = [];
 
-                /** We might be submitting either an ICategory or an IVisualDataPoint, depending on where we're hovering. In each case
-                 *  the 'shape' of our data will be different, so we can do a check here to ensure we retrieve the right data accordingly.
+                /** Depending on the element we have in context, we will possibly need to display a highlighted data value in the tooltip, and
+                 *  an assistive element to indicate which one is highlighted. We handle this here.
                  */
-
                     if (tooltipEvent.context.classList.contains('violinPlotComboPlotOverlay')) {
                         debug.log('Combo Plot Overlay Highlighted');
                         dataPoint = true;
