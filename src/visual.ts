@@ -571,6 +571,13 @@ module powerbi.extensibility.visual {
                         debug.log('Combo Plot Overlay Highlighted');
                         dataPoint = true;
                         highlightedValue = getHighlightedDataPoints(d3.select(tte.context), tte.coordinates, viewModel.yAxis);
+                        d3.select(tte.context.parentNode)
+                            .select('.barcodeToolipDataPoint')
+                                .attr({
+                                    y1: viewModel.yAxis.scale(highlightedValue),
+                                    y2: viewModel.yAxis.scale(highlightedValue)
+                                })
+                                .style('display', null);
                         debug.log(`Highlighted Value: ${highlightedValue}`);
                     } else {
                         debug.log('Category Highlighted');
