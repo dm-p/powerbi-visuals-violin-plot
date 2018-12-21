@@ -322,7 +322,7 @@
                     }
                 },
                 "meanFillColour": {
-                    "displayName": "Median Circle Color",
+                    "displayName": "Mean Circle Color",
                     "description": "The color to apply to the mean indicator",
                     "type": {
                         "fill": {
@@ -333,7 +333,7 @@
                     }
                 },
                 "meanFillColourInner": {
-                    "displayName": "Median Circle Color (Inner)",
+                    "displayName": "Mean Circle Color (Inner)",
                     "description": "The inner color to apply to the mean indicator",
                     "type": {
                         "fill": {
