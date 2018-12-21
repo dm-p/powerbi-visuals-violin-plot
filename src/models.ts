@@ -106,15 +106,17 @@ module powerbi.extensibility.visual {
          * @property {number} width                             - Derived width of barcode plot, relative to `IViolinPlot` width and combo plot inner padding setting
          * @property {number} xLeft                             - Calculated left x-coordinate of the box plot based on width calculations
          * @property {number} xRight                            - Calculated right x-coordinate of the box plot based on width calculations
+         * @property {number} featureXLeft                      - Offset of `xLeft` to compensate for feature (tooltip, quartile) widths
+         * @property {number} featureXRight                     - Offset of `xRight` to compensate for feature (tooltip, quartile) widths
          * @property {number} tooltipWidth                      - Proportionally larger width than the `width` property. Used to make a data point stand out when displaying tooltip
-         * @property {number} tooltipXLeft                      - Offset of `xLEft` to compensate for larger tooltip width
          */
             export interface IBarcodePlot {
                 width: number;
                 xLeft: number;
                 xRight: number;
+                featureXLeft: number;
+                featureXRight: number;
                 tooltipWidth: number;
-                tooltipXLeft: number;
             }
 
         /**

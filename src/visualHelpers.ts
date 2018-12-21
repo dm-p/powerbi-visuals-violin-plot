@@ -185,8 +185,8 @@ module powerbi.extensibility.visual {
                             'stroke-width': 5,
                             'stroke-opacity': 1,
                             stroke: settings.dataPoints.barColour,
-                            x1: viewModel.barcodePlot.tooltipXLeft,
-                            x2: viewModel.barcodePlot.tooltipXLeft + viewModel.barcodePlot.tooltipWidth,
+                            x1: viewModel.barcodePlot.featureXLeft,
+                            x2: viewModel.barcodePlot.featureXRight,
                             y1: 0,
                             y2: 0
                         })
