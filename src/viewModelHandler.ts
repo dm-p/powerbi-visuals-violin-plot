@@ -1036,6 +1036,8 @@ module powerbi.extensibility.visual {
                                         this.viewModel.boxPlot.actualMeanRadius = this.viewModel.boxPlot.actualMeanDiameter / 2;
                                         this.viewModel.boxPlot.xLeft = (this.viewModel.violinPlot.categoryWidth / 2) - (this.viewModel.boxPlot.width / 2);
                                         this.viewModel.boxPlot.xRight = (this.viewModel.violinPlot.categoryWidth / 2) + (this.viewModel.boxPlot.width / 2);
+                                        this.viewModel.boxPlot.featureXLeft = this.viewModel.boxPlot.xLeft + (this.settings.dataPoints.strokeWidth / 2);
+                                        this.viewModel.boxPlot.featureXRight = this.viewModel.boxPlot.xRight - (this.settings.dataPoints.strokeWidth / 2);
 
                                     /** Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes */
                                         debug.log('Barcode plot dimensions...');

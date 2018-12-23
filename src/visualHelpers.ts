@@ -282,19 +282,7 @@ module powerbi.extensibility.visual {
 
                     /** Mean and median */
                         if (settings.dataPoints.showMedian){
-                            boxContainer.append('line')
-                            .classed({
-                                'violinPlotBoxPlot': true,
-                                'median': true
-                            })
-                            .attr({
-                                'x1': viewModel.boxPlot.xLeft + (settings.dataPoints.strokeWidth / 2),
-                                'x2': viewModel.boxPlot.xRight - (settings.dataPoints.strokeWidth / 2),
-                                'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
-                                'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
-                                'stroke': `${settings.dataPoints.medianFillColour}`,
-                                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
-                            });
+                            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
 
                         if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {

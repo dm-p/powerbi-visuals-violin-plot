@@ -87,6 +87,8 @@ module powerbi.extensibility.visual {
          * @property {number} actualMeanDiameter                - Essentially `actualMeanRadius * 2`; used for managing width of circle vs. the box plot
          * @property {number} xLeft                             - Calculated left x-coordinate of the box plot based on width calculations
          * @property {number} xRight                            - Calculated right x-coordinate of the box plot based on width calculations
+         * @property {number} featureXLeft                      - Offset of `xLeft` to compensate for feature (median) widths
+         * @property {number} featureXRight                     - Offset of `xRight` to compensate for feature (median) widths
          */
             export interface IBoxPlot {
                 width: number;
@@ -98,6 +100,8 @@ module powerbi.extensibility.visual {
                 actualMeanDiameter: number;
                 xLeft: number;
                 xRight: number;
+                featureXLeft: number;
+                featureXRight: number;
             }
 
         /**
