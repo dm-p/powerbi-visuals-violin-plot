@@ -1045,9 +1045,9 @@ module powerbi.extensibility.visual {
                                             width: this.viewModel.boxPlot.width,
                                             xLeft: this.viewModel.boxPlot.xLeft,
                                             xRight: this.viewModel.boxPlot.xRight,
-                                            tooltipWidth: this.viewModel.boxPlot.width * 1.25,
-                                            featureXLeft: (this.viewModel.violinPlot.categoryWidth / 2) - ((this.viewModel.boxPlot.width * 1.25) / 2),
-                                            featureXRight: (this.viewModel.violinPlot.categoryWidth / 2) + ((this.viewModel.boxPlot.width * 1.25) / 2)
+                                            tooltipWidth: this.viewModel.boxPlot.width * 1.4,
+                                            featureXLeft: (this.viewModel.violinPlot.categoryWidth / 2) - ((this.viewModel.boxPlot.width * 1.4) / 2),
+                                            featureXRight: (this.viewModel.violinPlot.categoryWidth / 2) + ((this.viewModel.boxPlot.width * 1.4) / 2)
                                         };
                                         
                                 if (this.viewModel.xVaxis && this.viewModel.xAxis.domain && this.viewModel.xVaxis.scale) {
