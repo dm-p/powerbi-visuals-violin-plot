@@ -706,67 +706,67 @@ module powerbi.extensibility.visual {
                 return tooltips;
             }
 
-    /** Renders the legend, based on the properties supplied in the update method */
-        private renderLegend(): void {
+        /** Renders the legend, based on the properties supplied in the update method */
+            private renderLegend(): void {
 
-            let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
-            debug.footer();
-            debug.log('Rendering legend...');
-            debug.profileStart();
-            
-            /** Only show if legend is enabled and we colour by category */
-                let position: LegendPosition = this.settings.legend.show 
-                    && !this.errorState 
-                    && this.settings.dataColours.colourByCategory
-                    && this.viewModelHandler.viewModel.categoryNames
-                        ?   LegendPosition[this.settings.legend.position]
-                        :   LegendPosition.None;
-                debug.log(`Position: ${LegendPosition[position]}`);
-
-            /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
-                this.legend.changeOrientation(position);
-                debug.log('Legend orientation set.');
-                this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                debug.log('Legend drawn.');
-
-            /** If this exceeds our limits, then we will hide and re-draw prior to render */
-                let legendBreaksViewport = false;
-                switch (this.legend.getOrientation()) {
-                    case LegendPosition.Left:
-                    case LegendPosition.LeftCenter:
-                    case LegendPosition.Right:
-                    case LegendPosition.RightCenter:
-                        legendBreaksViewport = 
-                                (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
-                            ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
-                        break;
-                    case LegendPosition.Top:
-                    case LegendPosition.TopCenter:
-                    case LegendPosition.Bottom:
-                    case LegendPosition.BottomCenter:
-                    legendBreaksViewport =         
-                                (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
-                            ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
-                        break;
-                }
-
-            /** Adjust viewport (and hide legend) as appropriate */
-                debug.log('Legend dimensions', this.legend.getMargins());
-                if (legendBreaksViewport) {
-                    debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
-                    this.legend.changeOrientation(LegendPosition.None);
-                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                } else {
-                    debug.log('Legend dimensions are good to go!');
-                    this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
-                    this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
-                }
-                Legend.positionChartArea(this.container, this.legend);
-                debug.log('Legend fully positioned.');
-                this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
+                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
                 debug.footer();
+                debug.log('Rendering legend...');
+                debug.profileStart();
+                
+                /** Only show if legend is enabled and we colour by category */
+                    let position: LegendPosition = this.settings.legend.show 
+                        && !this.errorState 
+                        && this.settings.dataColours.colourByCategory
+                        && this.viewModelHandler.viewModel.categoryNames
+                            ?   LegendPosition[this.settings.legend.position]
+                            :   LegendPosition.None;
+                    debug.log(`Position: ${LegendPosition[position]}`);
 
-        }
+                /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
+                    this.legend.changeOrientation(position);
+                    debug.log('Legend orientation set.');
+                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
+                    debug.log('Legend drawn.');
+
+                /** If this exceeds our limits, then we will hide and re-draw prior to render */
+                    let legendBreaksViewport = false;
+                    switch (this.legend.getOrientation()) {
+                        case LegendPosition.Left:
+                        case LegendPosition.LeftCenter:
+                        case LegendPosition.Right:
+                        case LegendPosition.RightCenter:
+                            legendBreaksViewport = 
+                                    (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
+                                ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
+                            break;
+                        case LegendPosition.Top:
+                        case LegendPosition.TopCenter:
+                        case LegendPosition.Bottom:
+                        case LegendPosition.BottomCenter:
+                        legendBreaksViewport =         
+                                    (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
+                                ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
+                            break;
+                    }
+
+                /** Adjust viewport (and hide legend) as appropriate */
+                    debug.log('Legend dimensions', this.legend.getMargins());
+                    if (legendBreaksViewport) {
+                        debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
+                        this.legend.changeOrientation(LegendPosition.None);
+                        this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
+                    } else {
+                        debug.log('Legend dimensions are good to go!');
+                        this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
+                        this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
+                    }
+                    Legend.positionChartArea(this.container, this.legend);
+                    debug.log('Legend fully positioned.');
+                    this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
+                    debug.footer();
+
+            }
 
         /**
          * Parses and gets the visual settings
