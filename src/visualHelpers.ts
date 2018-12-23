@@ -9,6 +9,8 @@ module powerbi.extensibility.visual {
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
+            import EComboPlotType = ViolinPlotModels.EComboPlotType;
+            import EFeatureLineType = ViolinPlotModels.EFeatureLineType;
 
         /**
          * Gets property value for a particular object in a category.
@@ -310,6 +312,34 @@ module powerbi.extensibility.visual {
                         }
 
                 }
+
+            }
+
+        /**
+         * Render a 'feature' line, i.e. a non-standard data point. Currently supports median and 1st/3rd quartiles based on the `EFeatureLineType` enum
+         * 
+         * @param containingElement                             - The element to attach the message to
+         * @param viewModel                                     - View model containing data and other required properties
+         * @param settings                                      - Visual settings
+         * @param lineType                                      - The line type to render
+         * @param comboPlotType                                 - Combination plot type to render line against (used to retrieve specific settings and view model properties)
+         */
+            export function renderFeatureLine(containingElement: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings, lineType: EFeatureLineType, comboPlotType: EComboPlotType) {
+                let featureXLeft: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
+                    featureXRight: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight;                
+                
+                containingElement.append('line')
+                    .classed('violinPlotComboPlotFeatureLine', true)
+                    .classed(`${EFeatureLineType[lineType]}`, true)
+                    .classed(`${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeLineStyle`]}`, true)
+                    .attr({
+                        'x1': featureXLeft,
+                        'x2': featureXRight,
+                        'y1': (d) => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+                        'y2': (d) => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+                        'stroke': `${settings.dataPoints[`${EFeatureLineType[lineType]}FillColour`]}`,
+                        'stroke-width': `${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeWidth`]}px`,
+                    });
 
             }
 
