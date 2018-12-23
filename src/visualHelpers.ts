@@ -228,6 +228,14 @@ module powerbi.extensibility.visual {
                                     'stroke-linecap': 'butt'
                                 });
 
+                    /** Add quartile, mean and median features as appropriate */
+                        if (settings.dataPoints.showMedian) {
+                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.barcodePlot);
+                        }
+                        if (settings.dataPoints.showQuartiles) {
+                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.quartile1, EComboPlotType.barcodePlot);
+                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.quartile3, EComboPlotType.barcodePlot);
+                        }
                 }
 
             }
