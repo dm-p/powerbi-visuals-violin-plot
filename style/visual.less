@@ -51,27 +51,15 @@ svg:not(:root) {
     stroke-width: 0;
 }
 
-.grid .tick line.dashed {
+.grid .tick line.dashed, line.median.dashed, line.quartile1.dashed, line.quartile3.dashed {
     stroke-dasharray: 5, 5;
 }
 
-.grid .tick line.dotted {
+.grid .tick line.dotted, line.median.dotted, line.quartile1.dotted, line.quartile3.dotted {
     stroke-dasharray: 1, 5;
 }
 
-.grid .tick line.dotdash {
-    stroke-dasharray: 5, 5, 1, 5;
-}
-
-line.median.dashed {
-    stroke-dasharray: 5, 5;
-}
-
-line.median.dotted {
-    stroke-dasharray: 1, 5;
-}
-
-line.median.dotdash {
+.grid .tick line.dotdash, line.median.dotdash, line.quartile1.dotdash, line.quartile3.dotdash {
     stroke-dasharray: 5, 5, 1, 5;
 }
 
