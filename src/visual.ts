@@ -48,7 +48,7 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
-        import renderBarcodePlot = ViolinPlotHelpers.renderBarcodePlot;
+        import renderBarcodePlot = ViolinPlotHelpers.renderLinePlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
         import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
@@ -56,6 +56,7 @@ module powerbi.extensibility.visual {
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
         import ICategory = ViolinPlotModels.ICategory;
+        import EComboPlotType = ViolinPlotModels.EComboPlotType;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -514,7 +515,7 @@ module powerbi.extensibility.visual {
 
                                         case 'barcodePlot': {
                                             debug.log('Rendering barcode plots...');
-                                            renderBarcodePlot(seriesContainer, viewModel, this.settings);
+                                            renderBarcodePlot(seriesContainer, viewModel, this.settings, EComboPlotType.barcodePlot);
                                             break;
                                         }
 

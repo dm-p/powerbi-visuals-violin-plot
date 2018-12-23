@@ -147,18 +147,18 @@ module powerbi.extensibility.visual {
             }
 
         /**
-         * Handle rendering of barcode plot, which will plot a horizontal line for each data point in the category
+         * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
          * 
          * @param seriesContainer                               - Container to apply the box plot to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
          */
-            export function renderBarcodePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+            export function renderLinePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, comboPlotType: EComboPlotType) {
 
-                if (viewModel.barcodePlot.width > settings.dataPoints.strokeWidth) {
+                if (viewModel[`${EComboPlotType[comboPlotType]}`].width > settings.dataPoints.strokeWidth) {
 
                     /** Add the container */
-                        let barcodeContainer = seriesContainer
+                        let comboPlotContainer = seriesContainer
                             .append('g')
                                 .classed('violinPlotBarcodeContainer', true)
                                 .attr({
@@ -170,25 +170,25 @@ module powerbi.extensibility.visual {
                             .append('rect')
                                 .classed('violinPlotComboPlotOverlay', true)
                                 .attr({
-                                    width: viewModel.barcodePlot.width,
+                                    width: viewModel[`${EComboPlotType[comboPlotType]}`].width,
                                     /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
                                      *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly) 
                                      */
                                     height: (d) => -(viewModel.yAxis.scale(d.statistics.max) - viewModel.yAxis.scale(d.statistics.min))
                                         +   (settings.dataPoints.strokeWidth * 2),
-                                    x: viewModel.barcodePlot.xLeft,
+                                    x: viewModel[`${EComboPlotType[comboPlotType]}`].xLeft,
                                     y: (d) => viewModel.yAxis.scale(d.statistics.max) - (settings.dataPoints.strokeWidth)
                                 });
 
                     /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
-                        barcodeContainer.append('line')
+                        comboPlotContainer.append('line')
                         .classed('barcodeToolipDataPoint', true)
                         .attr({
                             'stroke-width': 5,
                             'stroke-opacity': 1,
                             stroke: settings.dataPoints.barColour,
-                            x1: viewModel.barcodePlot.featureXLeft,
-                            x2: viewModel.barcodePlot.featureXRight,
+                            x1: viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
+                            x2: viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight,
                             y1: 0,
                             y2: 0
                         })
@@ -208,7 +208,7 @@ module powerbi.extensibility.visual {
                         });
 
                     /** Plot data points */
-                        barcodeContainer.selectAll('.barcodeDataPoint')
+                        comboPlotContainer.selectAll('.barcodeDataPoint')
                             .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
                                 ({
                                     value: dp,
@@ -219,8 +219,8 @@ module powerbi.extensibility.visual {
                             .append('line')
                                 .classed('barcodeDataPoint', true)
                                 .attr({
-                                    'x1': viewModel.barcodePlot.xLeft,
-                                    'x2': viewModel.barcodePlot.xRight,
+                                    'x1': viewModel[`${EComboPlotType[comboPlotType]}`].xLeft,
+                                    'x2': viewModel[`${EComboPlotType[comboPlotType]}`].xRight,
                                     'y1': (d) => viewModel.yAxis.scale(d.value),
                                     'y2': (d) => viewModel.yAxis.scale(d.value),
                                     'stroke': `${settings.dataPoints.barColour}`,
@@ -230,11 +230,11 @@ module powerbi.extensibility.visual {
 
                     /** Add quartile, mean and median features as appropriate */
                         if (settings.dataPoints.showMedian) {
-                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.barcodePlot);
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.median, comboPlotType);
                         }
                         if (settings.dataPoints.showQuartiles) {
-                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.quartile1, EComboPlotType.barcodePlot);
-                            renderFeatureLine(barcodeContainer, viewModel, settings, EFeatureLineType.quartile3, EComboPlotType.barcodePlot);
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile1, comboPlotType);
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile3, comboPlotType);
                         }
                 }
 
