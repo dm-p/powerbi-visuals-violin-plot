@@ -927,6 +927,7 @@ module powerbi.extensibility.visual {
                                     }
 
                                     case 'barcodePlot':
+                                    case 'stickPlot': {
 
                                         /** Remove non-barcode plot properties */
                                             delete instances[0].properties['transparency'];    

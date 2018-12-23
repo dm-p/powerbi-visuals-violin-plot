@@ -240,13 +240,15 @@
                         "enumeration": [
                             {
                                 "displayName": "Barcode",
-                                "value": "barcode"
                                 "value": "barcodePlot"
                             },
                             {
                                 "displayName": "Box",
-                                "value": "box"
                                 "value": "boxPlot"
+                            },
+                            {
+                                "displayName": "Stick",
+                                "value": "stickPlot"
                             }
                         ]
                     }

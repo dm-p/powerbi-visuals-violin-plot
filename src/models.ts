@@ -352,6 +352,7 @@ module powerbi.extensibility.visual {
             export enum EComboPlotType {
                 boxPlot,
                 barcodePlot,
+                stickPlot
             }
 
         /** Used to specify the type of feature line we're going to render in our combo plot */
