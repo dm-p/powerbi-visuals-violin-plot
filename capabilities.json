@@ -346,9 +346,16 @@
                 },
                 "showMean": {
                     "displayName": "Show Mean (Circle)",
-                    "description": "Show the mean, as a cirlce in the box",
+                    "description": "Show the mean, as a circle in the box",
                     "type": {
                         "bool": true
+                    }
+                },
+                "meanStrokeWidth": {
+                    "displayName": "Mean Stroke Width",
+                    "description": "Width of the lines used in the mean circle",
+                    "type": {
+                        "integer": true
                     }
                 },
                 "meanFillColour": {

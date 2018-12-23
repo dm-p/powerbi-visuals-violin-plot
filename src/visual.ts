@@ -876,9 +876,9 @@ module powerbi.extensibility.visual {
                         case 'dataPoints': {
                             /** Range validation on stroke width */
                                 instances[0].validValues = instances[0].validValues || {};
-                                instances[0].validValues.strokeWidth = {
                                 instances[0].validValues.strokeWidth 
                                     = instances[0].validValues.medianStrokeWidth
+                                    = instances[0].validValues.meanStrokeWidth
                                 = {
                                     numberRange: {
                                         min: 1,
@@ -931,10 +931,9 @@ module powerbi.extensibility.visual {
                                             delete instances[0].properties['transparency'];    
                                             delete instances[0].properties['boxFillColour'];
                                             delete instances[0].properties['showWhiskers'];
-                                            delete instances[0].properties['showMedian'];
-                                            delete instances[0].properties['medianFillColour'];
                                             delete instances[0].properties['showMean'];
                                             delete instances[0].properties['meanFillColour'];
+                                            delete instances[0].properties['meanStrokeWidth'];
                                             delete instances[0].properties['meanFillColourInner'];
 
                                         break;

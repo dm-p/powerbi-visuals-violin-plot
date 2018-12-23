@@ -305,7 +305,7 @@ module powerbi.extensibility.visual {
                                 .style({
                                     'fill': settings.dataPoints.meanFillColourInner,
                                     'stroke': settings.dataPoints.meanFillColour,
-                                    'stroke-width': `${settings.dataPoints.strokeWidth}px`
+                                    'stroke-width': `${settings.dataPoints.meanStrokeWidth}px`
                                 });
                         }
 

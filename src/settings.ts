@@ -35,7 +35,9 @@ module powerbi.extensibility.visual {
         defaultAxisFontColor: string = '#777777',
         defaultAxisGridlineColor: string = '#EAEAEA',
         defaultBoxFillColour: string = '#000000',
-        defaultBoxDataColour: string = '#FFFFFF';
+        defaultBoxDataColour: string = '#FFFFFF',
+        defaultLineStyle: string = 'solid',
+        defaultStrokeWidth: number = 2;
     
 
     export class VisualSettings extends DataViewObjectsParser {
@@ -117,7 +119,7 @@ module powerbi.extensibility.visual {
         /** Violin type - currently `line` only */
         public type: string = 'line';
         /** Violin line stroke width */
-        public strokeWidth: number = 2;
+        public strokeWidth: number = defaultStrokeWidth;
         /** Clamp values to min/max or converge */
         public clamp: boolean = false;
         /** Line interpolation */
@@ -151,7 +153,7 @@ module powerbi.extensibility.visual {
         /** Width (as % of violin) */
         public innerPadding: number = 75;
         /** Box plot line stroke width */
-        public strokeWidth: number = 2;
+        public strokeWidth: number = defaultStrokeWidth;
         /** Box fill colour */
         public boxFillColour: string = defaultBoxFillColour;
         /** Bar stroke colour */
@@ -170,6 +172,8 @@ module powerbi.extensibility.visual {
         public medianStrokeLineStyle: string = defaultLineStyle;
         /** Mean toggle */
         public showMean: boolean = true;
+        /** Mean stroke width */
+        public meanStrokeWidth: number = defaultStrokeWidth;
         /** Mean circle colour */
         public meanFillColour: string = defaultBoxDataColour;
         /** Mean circle inner colour */
