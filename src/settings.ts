@@ -164,6 +164,8 @@ module powerbi.extensibility.visual {
         public showMedian: boolean = true;
         /** Median line colour */
         public medianFillColour: string = defaultBoxDataColour;
+        /** Median line style */
+        public medianStrokeLineStyle: string = defaultLineStyle;
         /** Mean toggle */
         public showMean: boolean = true;
         /** Mean circle colour */

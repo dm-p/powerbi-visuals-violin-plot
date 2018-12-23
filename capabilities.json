@@ -314,6 +314,29 @@
                         }
                     }
                 },
+                "medianStrokeLineStyle": {
+                    "displayName": "Median Line Style",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
+                    }
+                },
                 "showMean": {
                     "displayName": "Show Mean (Circle)",
                     "description": "Show the mean, as a cirlce in the box",
