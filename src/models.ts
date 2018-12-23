@@ -344,6 +344,19 @@ module powerbi.extensibility.visual {
                 bottom
             }
 
+        /** Used to specify the type of plot we're working with */
+            export enum EComboPlotType {
+                boxPlot,
+                barcodePlot
+            }
+
+        /** Used to specify the type of feature line we're going to render in our combo plot */
+            export enum EFeatureLineType {
+                median,
+                quartile1,
+                quartile3
+            }
+
     }
 
 }
