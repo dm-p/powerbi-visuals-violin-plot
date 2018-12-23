@@ -162,6 +162,8 @@ module powerbi.extensibility.visual {
         public showWhiskers: boolean = true;
         /** Median toggle */
         public showMedian: boolean = true;
+        /** Median stroke width */
+        public medianStrokeWidth: number = defaultStrokeWidth;
         /** Median line colour */
         public medianFillColour: string = defaultBoxDataColour;
         /** Median line style */

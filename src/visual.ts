@@ -503,7 +503,7 @@ module powerbi.extensibility.visual {
                                 debug.log('Rendering violins...');
                                 renderViolin(seriesContainer, viewModel, this.settings);
 
-                            /** Box plot */
+                            /** Combo plot */
                                 if (this.settings.dataPoints.show) {
                                     switch (this.settings.dataPoints.plotType) {
 
@@ -877,6 +877,9 @@ module powerbi.extensibility.visual {
                             /** Range validation on stroke width */
                                 instances[0].validValues = instances[0].validValues || {};
                                 instances[0].validValues.strokeWidth = {
+                                instances[0].validValues.strokeWidth 
+                                    = instances[0].validValues.medianStrokeWidth
+                                = {
                                     numberRange: {
                                         min: 1,
                                         max: 5
@@ -890,21 +893,32 @@ module powerbi.extensibility.visual {
                                     },
                                 };
 
-                            /** Data point-plot specific behaviour */
+                            /** Toggle median */
+                                if (!this.settings.dataPoints.showMedian) {
+                                    delete instances[0].properties['medianFillColour'];
+                                    delete instances[0].properties['medianStrokeWidth'];
+                                    delete instances[0].properties['medianStrokeLineStyle'];
+                                }
+
+                            /** Combo plot-specific behaviour */
                                 switch (this.settings.dataPoints.plotType) {
 
                                     case 'box': {
 
                                         /** Remove non-box plot properties */
                                             delete instances[0].properties['barColour'];
+                                            delete instances[0].properties['showQuartiles'];
+                                            delete instances[0].properties['quartile1FillColour'];
+                                            delete instances[0].properties['quartile1StrokeWidth'];
+                                            delete instances[0].properties['quartile1StrokeLineStyle'];
+                                            delete instances[0].properties['quartile3FillColour'];
+                                            delete instances[0].properties['quartile3StrokeWidth'];
+                                            delete instances[0].properties['quartile3StrokeLineStyle'];
 
-                                        /** Toggle median colour */
-                                            if (!this.settings.dataPoints.showMedian) {
-                                                delete instances[0].properties['medianFillColour'];
-                                            }
-                                        /** Toggle mean colours */
+                                        /** Toggle mean */
                                             if (!this.settings.dataPoints.showMean) {
                                                 delete instances[0].properties['meanFillColour'];
+                                                delete instances[0].properties['meanStrokeWidth'];
                                                 delete instances[0].properties['meanFillColourInner'];
                                             }
 

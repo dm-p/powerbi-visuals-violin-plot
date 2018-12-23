@@ -304,6 +304,13 @@
                         "bool": true
                     }
                 },
+                "medianStrokeWidth": {
+                    "displayName": "Median Stroke Width",
+                    "description": "Width of the median line",
+                    "type": {
+                        "integer": true
+                    }
+                },
                 "medianFillColour": {
                     "displayName": "Median Line Color",
                     "type": {
