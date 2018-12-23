@@ -571,7 +571,7 @@ module powerbi.extensibility.visual {
                         dataPoint = true;
                         highlightedValue = getHighlightedDataPoints(d3.select(tte.context), d3.mouse(tte.context), viewModel.yAxis);
                         d3.select(tte.context.parentNode)
-                            .select('.barcodeToolipDataPoint')
+                            .select('.comboPlotToolipDataPoint')
                                 .attr({
                                     y1: viewModel.yAxis.scale(highlightedValue),
                                     y2: viewModel.yAxis.scale(highlightedValue)

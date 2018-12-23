@@ -160,7 +160,7 @@ module powerbi.extensibility.visual {
                     /** Add the container */
                         let comboPlotContainer = seriesContainer
                             .append('g')
-                                .classed('violinPlotBarcodeContainer', true)
+                                .classed('violinPlotComboLinePlotContainer', true)
                                 .attr({
                                     'shape-rendering': 'geometricPrecision'
                                 });
@@ -182,7 +182,7 @@ module powerbi.extensibility.visual {
 
                     /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
                         comboPlotContainer.append('line')
-                        .classed('barcodeToolipDataPoint', true)
+                        .classed('comboPlotToolipDataPoint', true)
                         .attr({
                             'stroke-width': 5,
                             'stroke-opacity': 1,
@@ -196,19 +196,19 @@ module powerbi.extensibility.visual {
 
                     /** Handle dimming of data points on hover and full opacity on exit */
                         overlay.on('mouseover', (d) => {
-                            d3.selectAll('.barcodeDataPoint')
+                            d3.selectAll('.tooltipDataPoint')
                                 .attr('stroke-opacity', 0.25);
                         });
                         overlay.on('mouseout', function(d) {
-                            d3.selectAll('.barcodeDataPoint')
+                            d3.selectAll('.tooltipDataPoint')
                                 .attr('stroke-opacity', 1);
                             d3.select(this.parentNode)
-                                .select('.barcodeToolipDataPoint')
+                                .select('.comboPlotToolipDataPoint')
                                     .style('display', 'none');
                         });
 
                     /** Plot data points */
-                        comboPlotContainer.selectAll('.barcodeDataPoint')
+                        comboPlotContainer.selectAll('.tooltipDataPoint')
                             .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
                                 ({
                                     value: dp,
@@ -217,7 +217,7 @@ module powerbi.extensibility.visual {
                             ))
                             .enter()
                             .append('line')
-                                .classed('barcodeDataPoint', true)
+                                .classed('tooltipDataPoint', true)
                                 .attr({
                                     'x1': viewModel[`${EComboPlotType[comboPlotType]}`].xLeft,
                                     'x2': viewModel[`${EComboPlotType[comboPlotType]}`].xRight,
