@@ -568,7 +568,7 @@ module powerbi.extensibility.visual {
                     if (tooltipEvent.context.classList.contains('violinPlotComboPlotOverlay')) {
                         debug.log('Combo Plot Overlay Highlighted');
                         dataPoint = true;
-                        highlightedValue = getHighlightedDataPoints(d3.select(tte.context), tte.coordinates, viewModel.yAxis);
+                        highlightedValue = getHighlightedDataPoints(d3.select(tte.context), d3.mouse(tte.context), viewModel.yAxis);
                         d3.select(tte.context.parentNode)
                             .select('.barcodeToolipDataPoint')
                                 .attr({
