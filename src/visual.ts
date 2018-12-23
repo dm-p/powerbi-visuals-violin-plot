@@ -506,13 +506,13 @@ module powerbi.extensibility.visual {
                                 if (this.settings.dataPoints.show) {
                                     switch (this.settings.dataPoints.plotType) {
 
-                                        case 'box': {
+                                        case 'boxPlot': {
                                             debug.log('Rendering box plots...');
                                             renderBoxPlot(seriesContainer, viewModel, this.settings);
                                             break;
                                         }
 
-                                        case 'barcode': {
+                                        case 'barcodePlot': {
                                             debug.log('Rendering barcode plots...');
                                             renderBarcodePlot(seriesContainer, viewModel, this.settings);
                                             break;
@@ -904,7 +904,7 @@ module powerbi.extensibility.visual {
                             /** Combo plot-specific behaviour */
                                 switch (this.settings.dataPoints.plotType) {
 
-                                    case 'box': {
+                                    case 'boxPlot   ': {
 
                                         /** Remove non-box plot properties */
                                             delete instances[0].properties['barColour'];
@@ -926,7 +926,7 @@ module powerbi.extensibility.visual {
                                         break;
                                     }
 
-                                    case 'barcode': {
+                                    case 'barcodePlot':
 
                                         /** Remove non-barcode plot properties */
                                             delete instances[0].properties['transparency'];    

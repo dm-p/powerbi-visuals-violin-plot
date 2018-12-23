@@ -149,7 +149,7 @@ module powerbi.extensibility.visual {
         /** Show data points */
         public show: boolean = true;
         /** Plot type */
-        public plotType: string = 'box';
+        public plotType: string = 'boxPlot';
         /** Width (as % of violin) */
         public innerPadding: number = 75;
         /** Box plot line stroke width */

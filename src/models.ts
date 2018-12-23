@@ -351,7 +351,7 @@ module powerbi.extensibility.visual {
         /** Used to specify the type of plot we're working with */
             export enum EComboPlotType {
                 boxPlot,
-                barcodePlot
+                barcodePlot,
             }
 
         /** Used to specify the type of feature line we're going to render in our combo plot */
