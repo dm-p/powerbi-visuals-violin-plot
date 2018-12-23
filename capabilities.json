@@ -275,7 +275,7 @@
                             }
                         }
                     }
-                },
+                },                
                 "transparency": {
                     "displayName": "Transparency",
                     "description": "Level of transparency to apply to the data plot fill",
@@ -295,6 +295,93 @@
                     "description": "Show the 5% - 95% confidence interval (whiskers) on the box plot",
                     "type": {
                         "bool": true
+                    }
+                },
+                "showQuartiles": {
+                    "displayName": "Show 1st & 3rd Quartiles",
+                    "description": "Show 1st & 3rd quartiles, as lines on the diagram",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "quartile1FillColour": {
+                    "displayName": "1st Quartile Line Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "quartile1StrokeWidth": {
+                    "displayName": "1st Quartile Stroke Width",
+                    "description": "Width of the 1st quartile line",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "quartile1StrokeLineStyle": {
+                    "displayName": "1st Quartile Line Style",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
+                    }
+                },
+                "quartile3FillColour": {
+                    "displayName": "3rd Quartile Line Color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "quartile3StrokeWidth": {
+                    "displayName": "3rd Quartile Stroke Width",
+                    "description": "Width of the 3rd quartile line",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "quartile3StrokeLineStyle": {
+                    "displayName": "3rd Quartile Line Style",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
                     }
                 },
                 "showMedian": {

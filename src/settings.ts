@@ -162,6 +162,20 @@ module powerbi.extensibility.visual {
         public transparency: number = 40;
         /** Whisker toggle */
         public showWhiskers: boolean = true;
+        /** Quartile line toggle */
+        public showQuartiles: boolean = false;
+        /** Quartile 1 line colour */
+        public quartile1FillColour: string = defaultBoxDataColour;
+        /** Quartile 1 stroke width */
+        public quartile1StrokeWidth: number = defaultStrokeWidth;
+        /** Quartile 1 line style */
+        public quartile1StrokeLineStyle: string = 'dashed';
+        /** Quartile 3 line colour */
+        public quartile3FillColour: string = defaultBoxDataColour;
+        /** Quartile 1 stroke width */
+        public quartile3StrokeWidth: number = defaultStrokeWidth;
+        /** Quartile 3 line style */
+        public quartile3StrokeLineStyle: string = 'dashed';
         /** Median toggle */
         public showMedian: boolean = true;
         /** Median stroke width */

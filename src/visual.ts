@@ -56,7 +56,6 @@ module powerbi.extensibility.visual {
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
         import ICategory = ViolinPlotModels.ICategory;
-        import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -879,6 +878,8 @@ module powerbi.extensibility.visual {
                                 instances[0].validValues.strokeWidth 
                                     = instances[0].validValues.medianStrokeWidth
                                     = instances[0].validValues.meanStrokeWidth
+                                    = instances[0].validValues.quartile1StrokeWidth
+                                    = instances[0].validValues.quartile3StrokeWidth
                                 = {
                                     numberRange: {
                                         min: 1,
@@ -935,6 +936,16 @@ module powerbi.extensibility.visual {
                                             delete instances[0].properties['meanFillColour'];
                                             delete instances[0].properties['meanStrokeWidth'];
                                             delete instances[0].properties['meanFillColourInner'];
+
+                                        /** Toggle quartile colour */
+                                            if (!this.settings.dataPoints.showQuartiles) {
+                                                delete instances[0].properties['quartile1FillColour'];
+                                                delete instances[0].properties['quartile1StrokeWidth'];
+                                                delete instances[0].properties['quartile1StrokeLineStyle'];
+                                                delete instances[0].properties['quartile3FillColour'];
+                                                delete instances[0].properties['quartile3StrokeWidth'];
+                                                delete instances[0].properties['quartile3StrokeLineStyle'];
+                                            }
 
                                         break;
                                     }
