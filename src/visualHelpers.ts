@@ -155,7 +155,29 @@ module powerbi.extensibility.visual {
          */
             export function renderLinePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, comboPlotType: EComboPlotType) {
 
-                if (viewModel[`${EComboPlotType[comboPlotType]}`].width > settings.dataPoints.strokeWidth) {
+                /** Whether we can render the chart is going to depend on how it looks, so we'll manage this with a flag before we get into it. We'll also set other
+                 *  things we'll need later on here.
+                 */
+                    let canRender: boolean,
+                        xLeft: number,
+                        xRight: number,
+                        featureXLeft: number,
+                        featureXRight: number;
+
+                    switch (comboPlotType) {
+
+                        case EComboPlotType.barcodePlot: {
+                            canRender = viewModel.barcodePlot.width > settings.dataPoints.strokeWidth,
+                            xLeft = viewModel.barcodePlot.xLeft,
+                            xRight = viewModel.barcodePlot.xRight,
+                            featureXLeft = viewModel.barcodePlot.featureXLeft,
+                            featureXRight = viewModel.barcodePlot.featureXRight;
+                            break;
+                        }
+
+                    }
+
+                if (canRender) {
 
                     /** Add the container */
                         let comboPlotContainer = seriesContainer
@@ -165,7 +187,7 @@ module powerbi.extensibility.visual {
                                     'shape-rendering': 'geometricPrecision'
                                 });
 
-                    /** Add overlay for interactivity */
+                    /** Add overlay for interactivity - the shape of thisis going to depend on the plot */
                         let overlay = seriesContainer
                             .append('rect')
                                 .classed('violinPlotComboPlotOverlay', true)
@@ -181,18 +203,31 @@ module powerbi.extensibility.visual {
                                 });
 
                     /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
-                        comboPlotContainer.append('line')
-                        .classed('comboPlotToolipDataPoint', true)
-                        .attr({
-                            'stroke-width': 5,
-                            'stroke-opacity': 1,
-                            stroke: settings.dataPoints.barColour,
-                            x1: viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
-                            x2: viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight,
-                            y1: 0,
-                            y2: 0
-                        })
-                        .style('display', 'none');
+                        comboPlotContainer
+                            .append('line')
+                                .classed('comboPlotToolipDataPoint', true)
+                                .attr({
+                                    'stroke-width': 5,
+                                    'stroke-opacity': 1,
+                                    stroke: settings.dataPoints.barColour,
+                                    x1: (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return featureXLeft;
+                                                }
+                                            }
+                                        },
+                                    x2: (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return featureXRight;
+                                                }
+                                            }
+                                        },
+                                    y1: 0,
+                                    y2: 0
+                                })
+                                .style('display', 'none');
 
                     /** Handle dimming of data points on hover and full opacity on exit */
                         overlay.on('mouseover', (d) => {
@@ -219,8 +254,20 @@ module powerbi.extensibility.visual {
                             .append('line')
                                 .classed('tooltipDataPoint', true)
                                 .attr({
-                                    'x1': viewModel[`${EComboPlotType[comboPlotType]}`].xLeft,
-                                    'x2': viewModel[`${EComboPlotType[comboPlotType]}`].xRight,
+                                    'x1': (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return xLeft;
+                                                }
+                                            }
+                                        },
+                                    'x2': (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return xRight;
+                                                }
+                                            }
+                                        },
                                     'y1': (d) => viewModel.yAxis.scale(d.value),
                                     'y2': (d) => viewModel.yAxis.scale(d.value),
                                     'stroke': `${settings.dataPoints.barColour}`,
