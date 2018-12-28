@@ -174,10 +174,10 @@ module powerbi.extensibility.visual {
                                     /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
                                      *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly) 
                                      */
-                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.max) - viewModel.yAxis.scale(d.statistics.min))
+                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.interpolateMax) - viewModel.yAxis.scale(d.statistics.interpolateMin))
                                         +   (settings.dataPoints.strokeWidth * 2),
-                                    x: viewModel[`${EComboPlotType[comboPlotType]}`].xLeft,
-                                    y: (d) => viewModel.yAxis.scale(d.statistics.max) - (settings.dataPoints.strokeWidth)
+                                    x: xLeft,
+                                    y: (d) => viewModel.yAxis.scale(d.statistics.interpolateMax) - (settings.dataPoints.strokeWidth)
                                 });
 
                     /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */

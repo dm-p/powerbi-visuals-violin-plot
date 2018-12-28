@@ -769,6 +769,10 @@ module powerbi.extensibility.visual {
                                             .y0(v.yVScale(0))
                                             .y1(d => v.yVScale(d.y));
 
+                                    /** Store the min/max interpolation points for use later on */
+                                        v.statistics.interpolateMin = interpolateMin;
+                                        v.statistics.interpolateMax = interpolateMax;
+
                             });
 
                         /** This adjusts the domain of each axis to match any adjustments we made earlier on.

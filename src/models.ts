@@ -304,6 +304,8 @@ module powerbi.extensibility.visual {
          * @property {number} span                              - Difference between max and min values
          * @property {number} bandwidthSilverman                - Silverman's rule-of-thumb bandwidth for data points
          * @property {number} bandwidthActual                   - Actual bandwidth applied to data points (may be manual)
+         * @property {number} interpolateMin                    - Minimum y-value for KDE interpolation point of the violin
+         * @property {number} interpolateMax                    - Minimum y-value for KDE interpolation point of the violin
          */
             export interface IStatistics {
                 min: number;
@@ -319,6 +321,8 @@ module powerbi.extensibility.visual {
                 span: number;
                 bandwidthSilverman: number;
                 bandwidthActual: number;
+                interpolateMin: number;
+                interpolateMax: number;
             }
 
         /**
