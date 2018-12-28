@@ -245,10 +245,6 @@
                             {
                                 "displayName": "Box",
                                 "value": "boxPlot"
-                            },
-                            {
-                                "displayName": "Stick",
-                                "value": "stickPlot"
                             }
                         ]
                     }
