@@ -42,6 +42,7 @@ module powerbi.extensibility.visual {
          * @property {IAxisLinear} xVaxis                       - 'X'-axis used for rendering violin KDE plot
          * @property {IViolinPlot} violinPlot                   - Specifics for rendering a violin, outside other properties
          * @property {IBoxPlot} boxPlot                         - Specifics for rendering a box plot, outside other properties
+         * @property {IBarcodePlot} barcodePlot                 - Specifics for rendering a barcode plot, outside other properties
          */
             export interface IViewModel {
                 categories: ICategory[];
@@ -355,8 +356,7 @@ module powerbi.extensibility.visual {
         /** Used to specify the type of plot we're working with */
             export enum EComboPlotType {
                 boxPlot,
-                barcodePlot,
-                stickPlot
+                barcodePlot
             }
 
         /** Used to specify the type of feature line we're going to render in our combo plot */
