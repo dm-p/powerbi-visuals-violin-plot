@@ -132,6 +132,8 @@ module powerbi.extensibility.visual {
         public specifyBandwidth: boolean = false;
         /** Manual bandwidth */
         public bandwidth: number = 10;
+        /** Derive bandwidth by category */
+        public bandwidthByCategory: boolean = false;
     }
 
     /** Used to manage violin colour configuration */
