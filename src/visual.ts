@@ -783,6 +783,7 @@ module powerbi.extensibility.visual {
             public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
                 const instances: VisualObjectInstance[] = (VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options) as VisualObjectInstanceEnumerationObject).instances;
                 let objectName = options.objectName;
+                let categories: boolean = (this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) ? true: false;
 
                 /** Initial debugging for properties update */
                     let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugProperties);
@@ -867,10 +868,36 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['kernel'];
                                     delete instances[0].properties['specifyBandwidth'];
                                 }
+
+                            /** If there are no categories, don't offer the option to calculate bandwidth for them */
+                                if (!categories) {
+                                    delete instances[0].properties['bandwidthByCategory'];
+                                    this.settings.violin.bandwidthByCategory = false;
+                                }
+
                             /** Manual bandwidth toggle */
                                 if (!this.settings.violin.specifyBandwidth) {
                                     delete instances[0].properties['bandwidth'];
                                 };
+
+                            /** Add categories if we want to specify individual bandwidth */
+                                if (this.settings.violin.bandwidthByCategory && categories && this.settings.violin.specifyBandwidth && !this.errorState) {
+                                    delete instances[0].properties['bandwidth'];
+                                    for (let category of this.viewModelHandler.viewModel.categories) {
+                                        if (!category) {
+                                            continue;
+                                        }
+                                        instances.push({
+                                            objectName: objectName,
+                                            displayName: category.displayName.formattedName,
+                                            properties: {
+                                                categoryBandwidth: category.statistics.bandwidthActual
+                                            },
+                                            selector: category.selectionId.getSelector()
+                                        });
+                                    }
+                                }
+
                             break;
                         }
                         case 'dataPoints': {
