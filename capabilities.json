@@ -116,7 +116,7 @@
                 },
                 "specifyBandwidth": {
                     "displayName": "Specify Bandwidth",
-                    "description": "TBD",
+                    "description": "If disabled, this will automatically estimate the \"rule-of-thumb\" KDE bandwidth. Enable this to manually specify your own value(s).",
                     "placeHolderText": "Specify Number",
                     "type": {
                         "bool": true
@@ -124,7 +124,21 @@
                 },
                 "bandwidth": {
                     "displayName": "Bandwidth",
-                    "description": "TBD",
+                    "description": "Manually provided KDE bandwidth value to apply to all data.",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "bandwidthByCategory": {
+                    "displayName": "Bandwidth By Category",
+                    "description": "If disabled, the same KDE bandwidth value will be applied across all categories. If enabled, the bandwidth will be estimated or can be specified for each category, as applicable.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "categoryBandwidth": {
+                    "displayName": "Bandwidth",
+                    "description": "Specified bandwidth value for this category",
                     "type": {
                         "numeric": true
                     }
