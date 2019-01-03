@@ -584,13 +584,19 @@ module powerbi.extensibility.visual {
             /**
              * Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin.
              */
-                doKde() {
+                doKde(options: VisualUpdateOptions) {
 
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting doKde');
                         debug.log('Performing KDE on visual data...'); 
                         debug.profileStart();
+
+                    let dataViews = options.dataViews,
+                        metadata = dataViews[0].metadata,
+                        category = metadata.columns.filter(c => c.roles['category'])[0]
+                            ?   dataViews[0].categorical.categories[0]
+                            :   null;
 
                     if (this.settings.violin.type == 'line' && !this.viewModel.yAxis.collapsed) {
 
@@ -607,6 +613,35 @@ module powerbi.extensibility.visual {
                                 /** Makes logging a bit less complex when discerning between series */
                                     let series = v.name ? v.name : 'ALL';
 
+                                /** Derive category bandwidths based on settings:
+                                 *   - If calculating bandwidth by category, calculate this based on data points
+                                 *   - If using same bandwidth, just sub this in for KDE
+                                 */
+                                    if (this.viewModel.categoryNames && this.settings.violin.bandwidthByCategory) {
+                                        let bwSigma = Math.min(v.statistics.deviation, v.statistics.iqr / 1.349),
+                                            defaultBandwidth = 10;
+                                        v.statistics.bandwidthSilverman = 
+                                                this.kernel.factor
+                                            *   bwSigma
+                                            *   Math.pow(v.dataPoints.length, -1/5);
+                                        if (this.settings.violin.specifyBandwidth) {
+                                            v.statistics.bandwidthActual = this.settings.dataColours.colourByCategory
+                                            ?   getCategoricalObjectValue(
+                                                    category,
+                                                    v.objectIndex,
+                                                    'violin',
+                                                    'categoryBandwidth',
+                                                    defaultBandwidth
+                                                )
+                                            :   defaultBandwidth
+                                        } else {
+                                            v.statistics.bandwidthActual = v.statistics.bandwidthSilverman;
+                                        }
+                                    } else {
+                                        v.statistics.bandwidthActual = this.viewModel.statistics.bandwidthActual;
+                                        v.statistics.bandwidthSilverman = this.viewModel.statistics.bandwidthSilverman
+                                    }
+
                                 /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
                                  *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
                                  *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
@@ -615,7 +650,7 @@ module powerbi.extensibility.visual {
                                  */
                                     let kde = KDE.kernelDensityEstimator(
                                             this.kernel.window,
-                                            this.viewModel.statistics.bandwidthActual,
+                                            v.statistics.bandwidthActual,
                                             this.viewModel.xVaxis.scale.ticks(parseInt(this.settings.violin.resolution))
                                         );
 

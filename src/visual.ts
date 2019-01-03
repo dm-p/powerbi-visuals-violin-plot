@@ -300,7 +300,7 @@ module powerbi.extensibility.visual {
                     
                 /** Map the rest of the view model */
                     this.viewModelHandler.processAxisText(); 
-                    this.viewModelHandler.doKde();  
+                    this.viewModelHandler.doKde(options);
                     let viewModel = this.viewModelHandler.viewModel;
                     debug.log('View model', viewModel);
 
@@ -683,13 +683,13 @@ module powerbi.extensibility.visual {
                     if (settings.violin.specifyBandwidth) {
                         tooltips.push({
                             displayName: 'Bandwidth (Specified)',
-                            value: f.format(viewModel.statistics.bandwidthActual)
+                            value: f.format(v.statistics.bandwidthActual)
                         });
                         debug.log('Pushed specified bandwidth');
                     }
                     tooltips.push({
                         displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
-                        value: f.format(viewModel.statistics.bandwidthSilverman)
+                        value: f.format(v.statistics.bandwidthSilverman)
                     });
                     debug.log('Pushed estimated bandwidth');
                 }
