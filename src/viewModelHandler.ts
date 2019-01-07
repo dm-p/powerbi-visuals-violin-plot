@@ -190,14 +190,27 @@ module powerbi.extensibility.visual {
 
                                             distinctCategoriesFound ++;
 
-                                            let defaultColour: Fill = {
-                                                solid: {
-                                                    color: colourPalette.getColor(categoryName).value
+                                            /** We need the colour palette default for this category, if it has not been explicitly set by the user */
+                                                let defaultColour: Fill = {
+                                                    solid: {
+                                                        color: colourPalette.getColor(categoryName).value
+                                                    }
                                                 }
-                                            }
+
+                                            /** Create the initial display name here, so that we can use it in legends and later on when we do the tailoring */
+                                                let formattedName = categoryName;
+                                                if (this.categoryMetadata.type.dateTime) {
+                                                    formattedName = valueFormatter.format(new Date(categoryName), this.categoryMetadata.format);
+                                                }
+                                                if (this.categoryMetadata.type.numeric) {
+                                                    formattedName = valueFormatter.format(Number(categoryName), this.categoryMetadata.format);
+                                                }
 
                                             distinctCategories.push({
                                                 name: categoryName,
+                                                displayName: {
+                                                    formattedName: formattedName
+                                                },
                                                 sortOrder: distinctCategoriesFound,
                                                 selectionId: host.createSelectionIdBuilder()
                                                     .withCategory(category, i)
@@ -505,25 +518,26 @@ module powerbi.extensibility.visual {
                                     collapsedCount = 0;
 
                                     this.viewModel.categories.map(c => {
-                                    c.displayName = this.getTailoredDisplayName(
-                                        valueFormatter.format(c.name, this.categoryMetadata.format),
-                                        {
-                                            fontFamily: this.categoryTextProperties.fontFamily,
-                                            fontSize: this.categoryTextProperties.fontSize,
-                                            text: valueFormatter.format(c.name, this.categoryMetadata.format)
-                                        },
-                                        this.viewModel.xAxis.scale
-                                            ?   this.viewModel.xAxis.scale.rangeBand()
-                                            :   this.viewport.width / this.viewModel.categories.length
-                                    );
-                                    
-                                    collapsedCount += c.displayName.collapsed
-                                        ?   1
-                                        :   0;
-                                    
-                                    xTickMapper[`${c.name}`] = c.displayName.tailoredName;
 
-                                });
+                                        c.displayName = this.getTailoredDisplayName(
+                                            c.displayName.formattedName,
+                                            {
+                                                fontFamily: this.categoryTextProperties.fontFamily,
+                                                fontSize: this.categoryTextProperties.fontSize,
+                                                text: c.displayName.formattedName
+                                            },
+                                            this.viewModel.xAxis.scale
+                                                ?   this.viewModel.xAxis.scale.rangeBand()
+                                                :   this.viewport.width / this.viewModel.categories.length
+                                        );
+                                        
+                                        collapsedCount += c.displayName.collapsed
+                                            ?   1
+                                            :   0;
+                                        
+                                        xTickMapper[`${c.name}`] = c.displayName.tailoredName;
+
+                                    });
 
                                 this.viewModel.categoriesAllCollapsed = collapsedCount == this.viewModel.categories.length;
 

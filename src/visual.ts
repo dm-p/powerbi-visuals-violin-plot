@@ -273,7 +273,7 @@ module powerbi.extensibility.visual {
                                         labelColor: this.settings.legend.fontColor,
                                         dataPoints: this.viewModelHandler.viewModel.categories.map(c => (
                                             {
-                                                label: c.name,
+                                                label: c.displayName.formattedName,
                                                 color: c.colour,
                                                 icon: LegendIcon.Circle,
                                                 selected: false,
