@@ -639,7 +639,7 @@ module powerbi.extensibility.visual {
                                             *   bwSigma
                                             *   Math.pow(v.dataPoints.length, -1/5);
                                         if (this.settings.violin.specifyBandwidth) {
-                                            v.statistics.bandwidthActual = this.settings.dataColours.colourByCategory
+                                            v.statistics.bandwidthActual = this.settings.violin.bandwidthByCategory
                                             ?   getCategoricalObjectValue(
                                                     category,
                                                     v.objectIndex,
