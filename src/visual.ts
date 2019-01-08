@@ -833,7 +833,6 @@ module powerbi.extensibility.visual {
                                 }
                             /** Reset the individual flags if debug mode switched off */
                                 if(!this.settings.about.debugMode) {
-                                    instances[0].properties['debugMode'] = false;
                                     this.settings.about.debugVisualUpdate = false;
                                     this.settings.about.debugTooltipEvents = false;
                                     this.settings.about.debugProperties = false;
