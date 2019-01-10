@@ -881,7 +881,6 @@ module powerbi.extensibility.visual {
 
                             /** Add categories if we want to specify individual bandwidth */
                                 if (this.settings.violin.bandwidthByCategory && categories && this.settings.violin.specifyBandwidth && !this.errorState) {
-                                    delete instances[0].properties['bandwidth'];
                                     for (let category of this.viewModelHandler.viewModel.categories) {
                                         if (!category) {
                                             continue;
@@ -931,7 +930,7 @@ module powerbi.extensibility.visual {
                             /** Combo plot-specific behaviour */
                                 switch (this.settings.dataPoints.plotType) {
 
-                                    case 'boxPlot   ': {
+                                    case 'boxPlot': {
 
                                         /** Remove non-box plot properties */
                                             delete instances[0].properties['barColour'];
@@ -953,8 +952,7 @@ module powerbi.extensibility.visual {
                                         break;
                                     }
 
-                                    case 'barcodePlot':
-                                    case 'stickPlot': {
+                                    case 'barcodePlot': {
 
                                         /** Remove non-barcode plot properties */
                                             delete instances[0].properties['transparency'];    
