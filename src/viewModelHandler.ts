@@ -633,7 +633,9 @@ module powerbi.extensibility.visual {
                                  */
                                     if (this.viewModel.categoryNames && this.settings.violin.bandwidthByCategory) {
                                         let bwSigma = Math.min(v.statistics.deviation, v.statistics.iqr / 1.349),
-                                            defaultBandwidth = 10;
+                                            defaultBandwidth = this.settings.violin.bandwidth
+                                                ?   this.settings.violin.bandwidth
+                                                :   10;
                                         v.statistics.bandwidthSilverman = 
                                                 this.kernel.factor
                                             *   bwSigma

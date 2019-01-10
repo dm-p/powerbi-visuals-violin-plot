@@ -124,7 +124,7 @@
                 },
                 "bandwidth": {
                     "displayName": "Bandwidth",
-                    "description": "Manually provided KDE bandwidth value to apply to all data.",
+                    "description": "Manually provided KDE bandwidth value to apply to all data.\n\nIf using Bandwidth By Category, then this will serve as the default for all categories that don't have a bandwidth explicitly set.",
                     "type": {
                         "numeric": true
                     }
@@ -138,7 +138,7 @@
                 },
                 "categoryBandwidth": {
                     "displayName": "Bandwidth",
-                    "description": "Specified bandwidth value for this category.",
+                    "description": "Specified bandwidth value for this category.\n\nIf this has not been explicitly set, then this will inherit from the Bandwidth value above.\n\nTo revert to the default value (if you have already specified it), then clear the field value and it will be replaced with the Bandwidth value.",
                     "type": {
                         "numeric": true
                     }
