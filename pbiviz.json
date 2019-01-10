@@ -2,7 +2,7 @@
   "visual": {
     "name": "violinPlot",
     "displayName": "Violin Plot (1.1.0)",
-    "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D972",
+    "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D971",
     "visualClassName": "ViolinPlot",
     "version": "1.1.0.2",
     "description": "Use to visualise the distribution of your data.",
