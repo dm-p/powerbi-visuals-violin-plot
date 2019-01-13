@@ -48,12 +48,15 @@ module powerbi.extensibility.visual {
         import VisualDebugger = ViolinPlotHelpers.VisualDebugger;
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
+        import renderBarcodePlot = ViolinPlotHelpers.renderLinePlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
+        import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
         import ICategory = ViolinPlotModels.ICategory;
+        import EComboPlotType = ViolinPlotModels.EComboPlotType;
     
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
@@ -270,7 +273,7 @@ module powerbi.extensibility.visual {
                                         labelColor: this.settings.legend.fontColor,
                                         dataPoints: this.viewModelHandler.viewModel.categories.map(c => (
                                             {
-                                                label: c.name,
+                                                label: c.displayName.formattedName,
                                                 color: c.colour,
                                                 icon: LegendIcon.Circle,
                                                 selected: false,
@@ -297,7 +300,7 @@ module powerbi.extensibility.visual {
                     
                 /** Map the rest of the view model */
                     this.viewModelHandler.processAxisText(); 
-                    this.viewModelHandler.doKde();  
+                    this.viewModelHandler.doKde(options);
                     let viewModel = this.viewModelHandler.viewModel;
                     debug.log('View model', viewModel);
 
@@ -481,8 +484,13 @@ module powerbi.extensibility.visual {
                                     debug.log('Adding tooltip events...');
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(tooltipEvent.data, this.settings, viewModel),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null
+                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(
+                                            tooltipEvent, 
+                                            this.settings, 
+                                            viewModel
+                                        ),
+                                        (tooltipEvent: TooltipEventArgs<number>) => null,
+                                        true
                                     )
                                     this.tooltipServiceWrapper.addTooltip(
                                         violinPlotCanvas.selectAll('.condensedWarning'),
@@ -495,10 +503,23 @@ module powerbi.extensibility.visual {
                                 debug.log('Rendering violins...');
                                 renderViolin(seriesContainer, viewModel, this.settings);
 
-                            /** Box plot */
-                                if (this.settings.boxPlot.show) {
-                                    debug.log('Rendering box plots...');
-                                    renderBoxPlot(seriesContainer, viewModel, this.settings);
+                            /** Combo plot */
+                                if (this.settings.dataPoints.show) {
+                                    switch (this.settings.dataPoints.plotType) {
+
+                                        case 'boxPlot': {
+                                            debug.log('Rendering box plots...');
+                                            renderBoxPlot(seriesContainer, viewModel, this.settings);
+                                            break;
+                                        }
+
+                                        case 'barcodePlot': {
+                                            debug.log('Rendering barcode plots...');
+                                            renderBarcodePlot(seriesContainer, viewModel, this.settings, EComboPlotType.barcodePlot);
+                                            break;
+                                        }
+
+                                    }
                                 }
 
                     }
@@ -530,13 +551,36 @@ module powerbi.extensibility.visual {
          * @param settings 
          * @param viewModel 
          */
-            private static getTooltipData(value: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
-                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
+            private static getTooltipData(tooltipEvent: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
+                let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
                 debug.log('Instantiating tooltip...');
-                let v = value as ICategory,
+
+                let tte = <TooltipEventArgs<Number>>tooltipEvent,
+                    v: ICategory = tooltipEvent.data,
                     s = settings.tooltip,
                     f = viewModel.yAxis.labelFormatter,
+                    dataPoint: boolean,
+                    highlightedValue: number,
                     tooltips: VisualTooltipDataItem[] = [];
+
+                /** Depending on the element we have in context, we will possibly need to display a highlighted data value in the tooltip, and
+                 *  an assistive element to indicate which one is highlighted. We handle this here.
+                 */
+                    if (tooltipEvent.context.classList.contains('violinPlotComboPlotOverlay')) {
+                        debug.log('Combo Plot Overlay Highlighted');
+                        dataPoint = true;
+                        highlightedValue = getHighlightedDataPoints(d3.select(tte.context), d3.mouse(tte.context), viewModel.yAxis);
+                        d3.select(tte.context.parentNode)
+                            .select('.comboPlotToolipDataPoint')
+                                .attr({
+                                    y1: viewModel.yAxis.scale(highlightedValue),
+                                    y2: viewModel.yAxis.scale(highlightedValue)
+                                })
+                                .style('display', null);
+                        debug.log(`Highlighted Value: ${highlightedValue}`);
+                    } else {
+                        debug.log('Category Highlighted');
+                    }
 
                 tooltips.push(
                     {
@@ -639,80 +683,90 @@ module powerbi.extensibility.visual {
                     if (settings.violin.specifyBandwidth) {
                         tooltips.push({
                             displayName: 'Bandwidth (Specified)',
-                            value: f.format(viewModel.statistics.bandwidthActual)
+                            value: f.format(v.statistics.bandwidthActual)
                         });
                         debug.log('Pushed specified bandwidth');
                     }
                     tooltips.push({
                         displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
-                        value: f.format(viewModel.statistics.bandwidthSilverman)
+                        value: f.format(v.statistics.bandwidthSilverman)
                     });
                     debug.log('Pushed estimated bandwidth');
                 }
+
+                if (dataPoint) {
+                    tooltips.push({
+                        displayName: viewModel.measure,
+                        value: f.format(highlightedValue)
+                    });
+                    debug.log('Pushed data point value');
+                }
+
                 debug.log('Tooltip Data', tooltips);
                 return tooltips;
             }
 
-    /** Renders the legend, based on the properties supplied in the update method */
-        private renderLegend(): void {
+        /** Renders the legend, based on the properties supplied in the update method */
+            private renderLegend(): void {
 
-            let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
-            debug.footer();
-            debug.log('Rendering legend...');
-            debug.profileStart();
-            
-            /** Only show if legend is enabled and we colour by category */
-                let position: LegendPosition = this.settings.legend.show 
-                    && !this.errorState 
-                    && this.settings.dataColours.colourByCategory
-                        ?   LegendPosition[this.settings.legend.position]
-                        :   LegendPosition.None;
-                debug.log(`Position: ${LegendPosition[position]}`);
-
-            /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
-                this.legend.changeOrientation(position);
-                debug.log('Legend orientation set.');
-                this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                debug.log('Legend drawn.');
-
-            /** If this exceeds our limits, then we will hide and re-draw prior to render */
-                let legendBreaksViewport = false;
-                switch (this.legend.getOrientation()) {
-                    case LegendPosition.Left:
-                    case LegendPosition.LeftCenter:
-                    case LegendPosition.Right:
-                    case LegendPosition.RightCenter:
-                        legendBreaksViewport = 
-                                (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
-                            ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
-                        break;
-                    case LegendPosition.Top:
-                    case LegendPosition.TopCenter:
-                    case LegendPosition.Bottom:
-                    case LegendPosition.BottomCenter:
-                    legendBreaksViewport =         
-                                (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
-                            ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
-                        break;
-                }
-
-            /** Adjust viewport (and hide legend) as appropriate */
-                debug.log('Legend dimensions', this.legend.getMargins());
-                if (legendBreaksViewport) {
-                    debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
-                    this.legend.changeOrientation(LegendPosition.None);
-                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                } else {
-                    debug.log('Legend dimensions are good to go!');
-                    this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
-                    this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
-                }
-                Legend.positionChartArea(this.container, this.legend);
-                debug.log('Legend fully positioned.');
-                this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
+                let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
                 debug.footer();
+                debug.log('Rendering legend...');
+                debug.profileStart();
+                
+                /** Only show if legend is enabled and we colour by category */
+                    let position: LegendPosition = this.settings.legend.show 
+                        && !this.errorState 
+                        && this.settings.dataColours.colourByCategory
+                        && this.viewModelHandler.viewModel.categoryNames
+                            ?   LegendPosition[this.settings.legend.position]
+                            :   LegendPosition.None;
+                    debug.log(`Position: ${LegendPosition[position]}`);
 
-        }
+                /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
+                    this.legend.changeOrientation(position);
+                    debug.log('Legend orientation set.');
+                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
+                    debug.log('Legend drawn.');
+
+                /** If this exceeds our limits, then we will hide and re-draw prior to render */
+                    let legendBreaksViewport = false;
+                    switch (this.legend.getOrientation()) {
+                        case LegendPosition.Left:
+                        case LegendPosition.LeftCenter:
+                        case LegendPosition.Right:
+                        case LegendPosition.RightCenter:
+                            legendBreaksViewport = 
+                                    (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
+                                ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
+                            break;
+                        case LegendPosition.Top:
+                        case LegendPosition.TopCenter:
+                        case LegendPosition.Bottom:
+                        case LegendPosition.BottomCenter:
+                        legendBreaksViewport =         
+                                    (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
+                                ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
+                            break;
+                    }
+
+                /** Adjust viewport (and hide legend) as appropriate */
+                    debug.log('Legend dimensions', this.legend.getMargins());
+                    if (legendBreaksViewport) {
+                        debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
+                        this.legend.changeOrientation(LegendPosition.None);
+                        this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
+                    } else {
+                        debug.log('Legend dimensions are good to go!');
+                        this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
+                        this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
+                    }
+                    Legend.positionChartArea(this.container, this.legend);
+                    debug.log('Legend fully positioned.');
+                    this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
+                    debug.footer();
+
+            }
 
         /**
          * Parses and gets the visual settings
@@ -729,6 +783,7 @@ module powerbi.extensibility.visual {
             public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
                 const instances: VisualObjectInstance[] = (VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options) as VisualObjectInstanceEnumerationObject).instances;
                 let objectName = options.objectName;
+                let categories: boolean = (this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) ? true: false;
 
                 /** Initial debugging for properties update */
                     let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugProperties);
@@ -773,14 +828,16 @@ module powerbi.extensibility.visual {
                                 if(!this.settings.about.development) {
                                     delete instances[0].properties['debugMode'];
                                     delete instances[0].properties['debugVisualUpdate'];
+                                    delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
                                 }
                             /** Reset the individual flags if debug mode switched off */
                                 if(!this.settings.about.debugMode) {
-                                    instances[0].properties['debugMode'] = false;
                                     this.settings.about.debugVisualUpdate = false;
+                                    this.settings.about.debugTooltipEvents = false;
                                     this.settings.about.debugProperties = false;
                                     delete instances[0].properties['debugVisualUpdate'];
+                                    delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
                                     
                                 }
@@ -810,16 +867,46 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['kernel'];
                                     delete instances[0].properties['specifyBandwidth'];
                                 }
+
+                            /** If there are no categories, don't offer the option to calculate bandwidth for them */
+                                if (!categories) {
+                                    delete instances[0].properties['bandwidthByCategory'];
+                                    this.settings.violin.bandwidthByCategory = false;
+                                }
+
                             /** Manual bandwidth toggle */
                                 if (!this.settings.violin.specifyBandwidth) {
                                     delete instances[0].properties['bandwidth'];
                                 };
+
+                            /** Add categories if we want to specify individual bandwidth */
+                                if (this.settings.violin.bandwidthByCategory && categories && this.settings.violin.specifyBandwidth && !this.errorState) {
+                                    for (let category of this.viewModelHandler.viewModel.categories) {
+                                        if (!category) {
+                                            continue;
+                                        }
+                                        instances.push({
+                                            objectName: objectName,
+                                            displayName: category.displayName.formattedName,
+                                            properties: {
+                                                categoryBandwidth: category.statistics.bandwidthActual
+                                            },
+                                            selector: category.selectionId.getSelector()
+                                        });
+                                    }
+                                }
+
                             break;
                         }
-                        case 'boxPlot': {
+                        case 'dataPoints': {
                             /** Range validation on stroke width */
                                 instances[0].validValues = instances[0].validValues || {};
-                                instances[0].validValues.strokeWidth = {
+                                instances[0].validValues.strokeWidth 
+                                    = instances[0].validValues.medianStrokeWidth
+                                    = instances[0].validValues.meanStrokeWidth
+                                    = instances[0].validValues.quartile1StrokeWidth
+                                    = instances[0].validValues.quartile3StrokeWidth
+                                = {
                                     numberRange: {
                                         min: 1,
                                         max: 5
@@ -832,15 +919,66 @@ module powerbi.extensibility.visual {
                                         max: 90
                                     },
                                 };
-                            /** Toggle median colour */
-                                if (!this.settings.boxPlot.showMedian) {
+
+                            /** Toggle median */
+                                if (!this.settings.dataPoints.showMedian) {
                                     delete instances[0].properties['medianFillColour'];
+                                    delete instances[0].properties['medianStrokeWidth'];
+                                    delete instances[0].properties['medianStrokeLineStyle'];
                                 }
-                            /** Toggle mean colours */
-                                if (!this.settings.boxPlot.showMean) {
-                                    delete instances[0].properties['meanFillColour'];
-                                    delete instances[0].properties['meanFillColourInner'];
+
+                            /** Combo plot-specific behaviour */
+                                switch (this.settings.dataPoints.plotType) {
+
+                                    case 'boxPlot': {
+
+                                        /** Remove non-box plot properties */
+                                            delete instances[0].properties['barColour'];
+                                            delete instances[0].properties['showQuartiles'];
+                                            delete instances[0].properties['quartile1FillColour'];
+                                            delete instances[0].properties['quartile1StrokeWidth'];
+                                            delete instances[0].properties['quartile1StrokeLineStyle'];
+                                            delete instances[0].properties['quartile3FillColour'];
+                                            delete instances[0].properties['quartile3StrokeWidth'];
+                                            delete instances[0].properties['quartile3StrokeLineStyle'];
+
+                                        /** Toggle mean */
+                                            if (!this.settings.dataPoints.showMean) {
+                                                delete instances[0].properties['meanFillColour'];
+                                                delete instances[0].properties['meanStrokeWidth'];
+                                                delete instances[0].properties['meanFillColourInner'];
+                                            }
+
+                                        break;
+                                    }
+
+                                    case 'barcodePlot': {
+
+                                        /** Remove non-barcode plot properties */
+                                            delete instances[0].properties['transparency'];    
+                                            delete instances[0].properties['boxFillColour'];
+                                            delete instances[0].properties['showWhiskers'];
+                                            delete instances[0].properties['showMean'];
+                                            delete instances[0].properties['meanFillColour'];
+                                            delete instances[0].properties['meanStrokeWidth'];
+                                            delete instances[0].properties['meanFillColourInner'];
+
+                                        /** Toggle quartile colour */
+                                            if (!this.settings.dataPoints.showQuartiles) {
+                                                delete instances[0].properties['quartile1FillColour'];
+                                                delete instances[0].properties['quartile1StrokeWidth'];
+                                                delete instances[0].properties['quartile1StrokeLineStyle'];
+                                                delete instances[0].properties['quartile3FillColour'];
+                                                delete instances[0].properties['quartile3StrokeWidth'];
+                                                delete instances[0].properties['quartile3StrokeLineStyle'];
+                                            }
+
+                                        break;
+                                    }
+
                                 }
+
+                            
                             break;
                         }
                         case 'sorting': {

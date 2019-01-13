@@ -4,8 +4,13 @@ module powerbi.extensibility.visual {
 
         /** Internal view models */
             import IViewModel = ViolinPlotModels.IViewModel;
+            import ICategory = ViolinPlotModels.ICategory;
+            import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
+            import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
+            import EComboPlotType = ViolinPlotModels.EComboPlotType;
+            import EFeatureLineType = ViolinPlotModels.EFeatureLineType;
 
         /**
          * Gets property value for a particular object in a category.
@@ -50,6 +55,7 @@ module powerbi.extensibility.visual {
                         .classed({
                             'violinPlotViolin': true
                         })
+                        .datum(d => d)
                         .classed(`${EViolinSide[side]}`, true)
                         .attr({
                             'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`,
@@ -59,7 +65,8 @@ module powerbi.extensibility.visual {
                 /** Area - no point bothering if we're fully transparent */
                     if (settings.dataColours.transparency != 100) {
                         violinContainer.append('path')
-                            .classed('violinPlotViolinArea', true)
+                            .classed('violinPlotViolinPlot', true)
+                            .classed('area', true)
                             .attr('d', d => d.areaGen(d.dataKde))
                             .style({
                                 'fill': d => d.colour,
@@ -70,7 +77,8 @@ module powerbi.extensibility.visual {
 
                 /** Line  */
                     violinContainer.append('path')
-                        .classed('violinPlotViolinLine', true)
+                        .classed('violinPlotViolinPlot', true)
+                        .classed('line', true)
                         .attr('d', d => d.lineGen(d.dataKde))
                         .style({
                             'fill': 'none',
@@ -132,9 +140,150 @@ module powerbi.extensibility.visual {
                                 ?   d.statistics.quartile1
                                 :   d.statistics.quartile3
                         ),
-                        'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                        'stroke': `${settings.boxPlot.boxFillColour}`
+                        'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                        'stroke': `${settings.dataPoints.boxFillColour}`
                     });
+
+            }
+
+        /**
+         * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
+         * 
+         * @param seriesContainer                               - Container to apply the box plot to
+         * @param viewModel                                     - View model to use when calculating
+         * @param settings                                      - Visual settings
+         */
+            export function renderLinePlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, comboPlotType: EComboPlotType) {
+
+                /** Whether we can render the chart is going to depend on how it looks, so we'll manage this with a flag before we get into it. We'll also set other
+                 *  things we'll need later on here.
+                 */
+                    let canRender: boolean,
+                        xLeft: number,
+                        xRight: number,
+                        featureXLeft: number,
+                        featureXRight: number;
+
+                    switch (comboPlotType) {
+
+                        case EComboPlotType.barcodePlot: {
+                            canRender = viewModel.barcodePlot.width > settings.dataPoints.strokeWidth,
+                            xLeft = viewModel.barcodePlot.xLeft,
+                            xRight = viewModel.barcodePlot.xRight,
+                            featureXLeft = viewModel.barcodePlot.featureXLeft,
+                            featureXRight = viewModel.barcodePlot.featureXRight;
+                            break;
+                        }
+
+                    }
+
+                if (canRender) {
+
+                    /** Add the container */
+                        let comboPlotContainer = seriesContainer
+                            .append('g')
+                                .classed('violinPlotComboLinePlotContainer', true)
+                                .attr({
+                                    'shape-rendering': 'geometricPrecision'
+                                });
+
+                    /** Add overlay for interactivity - the shape of thisis going to depend on the plot */
+                        let overlay = seriesContainer
+                            .append('rect')
+                                .classed('violinPlotComboPlotOverlay', true)
+                                .attr({
+                                    width: viewModel[`${EComboPlotType[comboPlotType]}`].width,
+                                    /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
+                                     *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly) 
+                                     */
+                                    height: (d) => -(viewModel.yAxis.scale(d.statistics.interpolateMax) - viewModel.yAxis.scale(d.statistics.interpolateMin))
+                                        +   (settings.dataPoints.strokeWidth * 2),
+                                    x: xLeft,
+                                    y: (d) => viewModel.yAxis.scale(d.statistics.interpolateMax) - (settings.dataPoints.strokeWidth)
+                                });
+
+                    /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
+                        comboPlotContainer
+                            .append('line')
+                                .classed('comboPlotToolipDataPoint', true)
+                                .attr({
+                                    'stroke-width': 5,
+                                    'stroke-opacity': 1,
+                                    stroke: settings.dataPoints.barColour,
+                                    x1: (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return featureXLeft;
+                                                }
+                                            }
+                                        },
+                                    x2: (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return featureXRight;
+                                                }
+                                            }
+                                        },
+                                    y1: 0,
+                                    y2: 0
+                                })
+                                .style('display', 'none');
+
+                    /** Handle dimming of data points on hover and full opacity on exit */
+                        overlay.on('mouseover', (d) => {
+                            d3.selectAll('.tooltipDataPoint')
+                                .attr('stroke-opacity', 0.25);
+                        });
+                        overlay.on('mouseout', function(d) {
+                            d3.selectAll('.tooltipDataPoint')
+                                .attr('stroke-opacity', 1);
+                            d3.select(this.parentNode)
+                                .select('.comboPlotToolipDataPoint')
+                                    .style('display', 'none');
+                        });
+
+                    /** Plot data points */
+                        comboPlotContainer.selectAll('.tooltipDataPoint')
+                            .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
+                                ({
+                                    value: dp,
+                                    categoryIndex: i
+                                })
+                            ))
+                            .enter()
+                            .append('line')
+                                .classed('tooltipDataPoint', true)
+                                .attr({
+                                    'x1': (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return xLeft;
+                                                }
+                                            }
+                                        },
+                                    'x2': (d) => {
+                                            switch (comboPlotType) {
+                                                case (EComboPlotType.barcodePlot): {
+                                                    return xRight;
+                                                }
+                                            }
+                                        },
+                                    'y1': (d) => viewModel.yAxis.scale(d.value),
+                                    'y2': (d) => viewModel.yAxis.scale(d.value),
+                                    'stroke': `${settings.dataPoints.barColour}`,
+                                    'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                                    'stroke-linecap': 'butt'
+                                });
+
+                    /** Add quartile, mean and median features as appropriate */
+                        if (settings.dataPoints.showMedian) {
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.median, comboPlotType);
+                        }
+                        if (settings.dataPoints.showQuartiles) {
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile1, comboPlotType);
+                            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile3, comboPlotType);
+                        }
+                }
 
             }
 
@@ -147,7 +296,7 @@ module powerbi.extensibility.visual {
          */
             export function renderBoxPlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
-                if (viewModel.boxPlot.width > settings.boxPlot.strokeWidth) {
+                if (viewModel.boxPlot.width > settings.dataPoints.strokeWidth) {
 
                     /** Add the box */
                         let boxContainer = seriesContainer
@@ -166,36 +315,24 @@ module powerbi.extensibility.visual {
                                 'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
                                 'width': viewModel.boxPlot.width,
                                 'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
-                                'stroke': `${settings.boxPlot.boxFillColour}`,
-                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                                'fill': `${settings.boxPlot.boxFillColour}`,
-                                'fill-opacity': 1 - (settings.boxPlot.transparency / 100)
+                                'stroke': `${settings.dataPoints.boxFillColour}`,
+                                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                                'fill': `${settings.dataPoints.boxFillColour}`,
+                                'fill-opacity': 1 - (settings.dataPoints.transparency / 100)
                             });
 
                     /** Do the whiskers, if we need them */
-                        if (settings.boxPlot.showWhiskers) {
+                        if (settings.dataPoints.showWhiskers) {
                             renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
                             renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
                         }
 
                     /** Mean and median */
-                        if (settings.boxPlot.showMedian){
-                            boxContainer.append('line')
-                            .classed({
-                                'violinPlotBoxPlot': true,
-                                'median': true
-                            })
-                            .attr({
-                                'x1': viewModel.boxPlot.xLeft + (settings.boxPlot.strokeWidth / 2),
-                                'x2': viewModel.boxPlot.xRight - (settings.boxPlot.strokeWidth / 2),
-                                'y1': (d) => viewModel.yAxis.scale(d.statistics.median),
-                                'y2': (d) => viewModel.yAxis.scale(d.statistics.median),
-                                'stroke': `${settings.boxPlot.medianFillColour}`,
-                                'stroke-width': `${settings.boxPlot.strokeWidth}px`,
-                            });
+                        if (settings.dataPoints.showMedian){
+                            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
 
-                        if (settings.boxPlot.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
+                        if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
                             boxContainer.append('circle')
                                 .classed({
                                     'violinPlotBoxPlot': true,
@@ -211,13 +348,41 @@ module powerbi.extensibility.visual {
                                             :   viewModel.boxPlot.actualMeanRadius
                                 })
                                 .style({
-                                    'fill': settings.boxPlot.meanFillColourInner,
-                                    'stroke': settings.boxPlot.meanFillColour,
-                                    'stroke-width': `${settings.boxPlot.strokeWidth}px`
+                                    'fill': settings.dataPoints.meanFillColourInner,
+                                    'stroke': settings.dataPoints.meanFillColour,
+                                    'stroke-width': `${settings.dataPoints.meanStrokeWidth}px`
                                 });
                         }
 
                 }
+
+            }
+
+        /**
+         * Render a 'feature' line, i.e. a non-standard data point. Currently supports median and 1st/3rd quartiles based on the `EFeatureLineType` enum
+         * 
+         * @param containingElement                             - The element to attach the message to
+         * @param viewModel                                     - View model containing data and other required properties
+         * @param settings                                      - Visual settings
+         * @param lineType                                      - The line type to render
+         * @param comboPlotType                                 - Combination plot type to render line against (used to retrieve specific settings and view model properties)
+         */
+            export function renderFeatureLine(containingElement: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings, lineType: EFeatureLineType, comboPlotType: EComboPlotType) {
+                let featureXLeft: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
+                    featureXRight: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight;                
+                
+                containingElement.append('line')
+                    .classed('violinPlotComboPlotFeatureLine', true)
+                    .classed(`${EFeatureLineType[lineType]}`, true)
+                    .classed(`${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeLineStyle`]}`, true)
+                    .attr({
+                        'x1': featureXLeft,
+                        'x2': featureXRight,
+                        'y1': (d) => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+                        'y2': (d) => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+                        'stroke': `${settings.dataPoints[`${EFeatureLineType[lineType]}FillColour`]}`,
+                        'stroke-width': `${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeWidth`]}px`,
+                    });
 
             }
 
@@ -270,6 +435,28 @@ module powerbi.extensibility.visual {
                     .append('div')
                         .classed('container', true)
                         .html('&nbsp;');
+            }
+
+        /**
+         * Use the mouse position to determine the nearest data point on the y-axis
+         * 
+         * @param overlay                                       - The overlay element to track
+         * @param mouse                                         - Number array of corodinate data
+         * @param yAxis                                         - Axis object to use for scaling
+         */
+            export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): number {
+                let yData = yAxis.scale.invert(mouse[1]),
+                    bisectValue = d3.bisector((d:number) => d).left,
+                    ttv: number;
+                
+                overlay.each((d) => {
+                    let data = d.dataPoints,
+                        idx = bisectValue(data, yData, 1),
+                        d0 = data[idx - 1],
+                        d1 = data[idx] ? data[idx] : d0;
+                    ttv = yData - d0 > d1 - yData ? d1: d0;
+                });              
+                return ttv;
             }
 
     }

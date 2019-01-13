@@ -35,7 +35,9 @@ module powerbi.extensibility.visual {
         defaultAxisFontColor: string = '#777777',
         defaultAxisGridlineColor: string = '#EAEAEA',
         defaultBoxFillColour: string = '#000000',
-        defaultBoxDataColour: string = '#FFFFFF';
+        defaultBoxDataColour: string = '#FFFFFF',
+        defaultLineStyle: string = 'solid',
+        defaultStrokeWidth: number = 2;
     
 
     export class VisualSettings extends DataViewObjectsParser {
@@ -45,7 +47,7 @@ module powerbi.extensibility.visual {
         public dataLimit: dataLimitSettings = new dataLimitSettings();
         public violin: violinSettings = new violinSettings();
         public dataColours: dataColourSettings = new dataColourSettings();
-        public boxPlot: boxPlotSettings = new boxPlotSettings();
+        public dataPoints: dataPointSettings = new dataPointSettings();
         public tooltip: tooltipSettings = new tooltipSettings();
         public legend: legendSettings = new legendSettings();
         public about: aboutSettings = new aboutSettings();
@@ -117,7 +119,7 @@ module powerbi.extensibility.visual {
         /** Violin type - currently `line` only */
         public type: string = 'line';
         /** Violin line stroke width */
-        public strokeWidth: number = 2;
+        public strokeWidth: number = defaultStrokeWidth;
         /** Clamp values to min/max or converge */
         public clamp: boolean = false;
         /** Line interpolation */
@@ -130,6 +132,8 @@ module powerbi.extensibility.visual {
         public specifyBandwidth: boolean = false;
         /** Manual bandwidth */
         public bandwidth: number = 10;
+        /** Derive bandwidth by category */
+        public bandwidthByCategory: boolean = false;
     }
 
     /** Used to manage violin colour configuration */
@@ -143,28 +147,52 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold box plot settings */
-    export class boxPlotSettings{
-        /** Show box plot */
+    export class dataPointSettings{
+        /** Show data points */
         public show: boolean = true;
-        /** Box plot line stroke width */
-        public strokeWidth: number = 2;
-        /** Box fill colour */
-        public boxFillColour: string = defaultBoxFillColour;
-        /** How transparent the box plot fill should be */
-        public transparency: number = 40;
+        /** Plot type */
+        public plotType: string = 'boxPlot';
         /** Width (as % of violin) */
         public innerPadding: number = 75;
+        /** Box plot line stroke width */
+        public strokeWidth: number = defaultStrokeWidth;
+        /** Box fill colour */
+        public boxFillColour: string = defaultBoxFillColour;
+        /** Bar stroke colour */
+        public barColour: string = defaultBoxFillColour;
+        /** How transparent the box plot fill should be */
+        public transparency: number = 40;
         /** Whisker toggle */
         public showWhiskers: boolean = true;
+        /** Quartile line toggle */
+        public showQuartiles: boolean = false;
+        /** Quartile 1 line colour */
+        public quartile1FillColour: string = defaultBoxDataColour;
+        /** Quartile 1 stroke width */
+        public quartile1StrokeWidth: number = defaultStrokeWidth;
+        /** Quartile 1 line style */
+        public quartile1StrokeLineStyle: string = 'dashed';
+        /** Quartile 3 line colour */
+        public quartile3FillColour: string = defaultBoxDataColour;
+        /** Quartile 1 stroke width */
+        public quartile3StrokeWidth: number = defaultStrokeWidth;
+        /** Quartile 3 line style */
+        public quartile3StrokeLineStyle: string = 'dashed';
         /** Median toggle */
         public showMedian: boolean = true;
+        /** Median stroke width */
+        public medianStrokeWidth: number = defaultStrokeWidth;
         /** Median line colour */
         public medianFillColour: string = defaultBoxDataColour;
+        /** Median line style */
+        public medianStrokeLineStyle: string = defaultLineStyle;
         /** Mean toggle */
         public showMean: boolean = true;
-        /** Median circle colour */
+        /** Mean stroke width */
+        public meanStrokeWidth: number = defaultStrokeWidth;
+        /** Mean circle colour */
         public meanFillColour: string = defaultBoxDataColour;
-        /** Median circle inner colour */
+        /** Mean circle inner colour */
         public meanFillColourInner: string = defaultBoxFillColour;
     }
 
@@ -227,9 +255,10 @@ module powerbi.extensibility.visual {
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.0.0.1';
+        public version: string = '1.1.0.2';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
+        public debugTooltipEvents: boolean = false;
         public debugProperties: boolean = false;
         public development: boolean = false; /** SET TO `false` FOR RELEASE */
         public usageUrl: string = 'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';

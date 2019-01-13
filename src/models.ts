@@ -17,6 +17,17 @@ module powerbi.extensibility.visual {
             }
 
         /**
+         *  Used to bind individual data points (for non-box data plots)
+         *  
+         *  @property {number} value                            - Data point value
+         *  @property {number} categoryIndex                    - Index of category that the value belongs to (used for looking up ICategory)
+         */
+            export interface IVisualDataPoint {
+                value: number,
+                categoryIndex: number
+            }
+
+        /**
          * View model for entire violin plot visual
          * 
          * @property {ICategory[]} categories                   - Category data and all necessary supporting objects and values
@@ -24,24 +35,28 @@ module powerbi.extensibility.visual {
          * @property {boolean} categoriesAllCollapsed           - Flag indicating if all categories have been collapsed (for responsiveness handling)
          * @property {boolean} categoriesReduced                - Flag that we reduced our categories to the limit in our settings, preventing the visual
          *                                                          from attempting to do KDE and plot on way too many (which is a massive performance hit)
+         * @property {string} measure                           - Display name for measure
          * @property {IStatistics} statistics                   - Statistics across entire data set, irrespective of category
          * @property {IAxisCategorical} xAxis                   - X-axis (categorical) rendering
          * @property {IAxisLinear} yAxis                        - Y-axis (linear) rendering
          * @property {IAxisLinear} xVaxis                       - 'X'-axis used for rendering violin KDE plot
          * @property {IViolinPlot} violinPlot                   - Specifics for rendering a violin, outside other properties
          * @property {IBoxPlot} boxPlot                         - Specifics for rendering a box plot, outside other properties
+         * @property {IBarcodePlot} barcodePlot                 - Specifics for rendering a barcode plot, outside other properties
          */
             export interface IViewModel {
                 categories: ICategory[];
                 categoryNames: boolean;
                 categoriesAllCollapsed: boolean;
                 categoriesReduced: boolean;
+                measure: string;
                 statistics: IStatistics;
                 xAxis: IAxisCategorical;
                 yAxis: IAxisLinear;
                 xVaxis: IAxisLinear;
                 violinPlot: IViolinPlot;
                 boxPlot: IBoxPlot;
+                barcodePlot: IBarcodePlot;
                 profiling: IVisualProfiler;
             }
 
@@ -73,6 +88,8 @@ module powerbi.extensibility.visual {
          * @property {number} actualMeanDiameter                - Essentially `actualMeanRadius * 2`; used for managing width of circle vs. the box plot
          * @property {number} xLeft                             - Calculated left x-coordinate of the box plot based on width calculations
          * @property {number} xRight                            - Calculated right x-coordinate of the box plot based on width calculations
+         * @property {number} featureXLeft                      - Offset of `xLeft` to compensate for feature (median) widths
+         * @property {number} featureXRight                     - Offset of `xRight` to compensate for feature (median) widths
          */
             export interface IBoxPlot {
                 width: number;
@@ -84,6 +101,27 @@ module powerbi.extensibility.visual {
                 actualMeanDiameter: number;
                 xLeft: number;
                 xRight: number;
+                featureXLeft: number;
+                featureXRight: number;
+            }
+
+        /**
+         * Specifics for plotting a barcode combo plot within the violin
+         * 
+         * @property {number} width                             - Derived width of barcode plot, relative to `IViolinPlot` width and combo plot inner padding setting
+         * @property {number} xLeft                             - Calculated left x-coordinate of the box plot based on width calculations
+         * @property {number} xRight                            - Calculated right x-coordinate of the box plot based on width calculations
+         * @property {number} featureXLeft                      - Offset of `xLeft` to compensate for feature (tooltip, quartile) widths
+         * @property {number} featureXRight                     - Offset of `xRight` to compensate for feature (tooltip, quartile) widths
+         * @property {number} tooltipWidth                      - Proportionally larger width than the `width` property. Used to make a data point stand out when displaying tooltip
+         */
+            export interface IBarcodePlot {
+                width: number;
+                xLeft: number;
+                xRight: number;
+                featureXLeft: number;
+                featureXRight: number;
+                tooltipWidth: number;
             }
 
         /**
@@ -267,6 +305,8 @@ module powerbi.extensibility.visual {
          * @property {number} span                              - Difference between max and min values
          * @property {number} bandwidthSilverman                - Silverman's rule-of-thumb bandwidth for data points
          * @property {number} bandwidthActual                   - Actual bandwidth applied to data points (may be manual)
+         * @property {number} interpolateMin                    - Minimum y-value for KDE interpolation point of the violin
+         * @property {number} interpolateMax                    - Minimum y-value for KDE interpolation point of the violin
          */
             export interface IStatistics {
                 min: number;
@@ -282,6 +322,8 @@ module powerbi.extensibility.visual {
                 span: number;
                 bandwidthSilverman: number;
                 bandwidthActual: number;
+                interpolateMin: number;
+                interpolateMax: number;
             }
 
         /**
@@ -309,6 +351,19 @@ module powerbi.extensibility.visual {
             export enum EBoxPlotWhisker {
                 top,
                 bottom
+            }
+
+        /** Used to specify the type of plot we're working with */
+            export enum EComboPlotType {
+                boxPlot,
+                barcodePlot
+            }
+
+        /** Used to specify the type of feature line we're going to render in our combo plot */
+            export enum EFeatureLineType {
+                median,
+                quartile1,
+                quartile3
             }
 
     }

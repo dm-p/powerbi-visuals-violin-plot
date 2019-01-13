@@ -1,10 +1,10 @@
 {
   "visual": {
     "name": "violinPlot",
-    "displayName": "Violin Plot (1.0.0.1)",
+    "displayName": "Violin Plot (1.1.0)",
     "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D971",
     "visualClassName": "ViolinPlot",
-    "version": "1.0.0.1",
+    "version": "1.1.0.2",
     "description": "Use to visualise the distribution of your data.",
     "supportUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot",
     "gitHubUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot"

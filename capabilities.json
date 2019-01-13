@@ -54,25 +54,25 @@
         },
         "violin": {
             "displayName": "Violin Options",
-            "description": "Configure how the violin is displayed in your chart",
+            "description": "Configure how the violin is displayed in your chart.",
             "properties": {
                 "innerPadding": {
                     "displayName": "Inner Padding (%)",
-                    "description": "Amount of padding to apply from the edge of the series",
+                    "description": "Amount of padding to apply from the edge of the series.",
                     "type": {
                         "integer": true
                     }
                 },
                 "strokeWidth": {
                     "displayName": "Stroke Width",
-                    "description": "Width of the lines bordering the violin plot",
+                    "description": "Width of the lines bordering the violin plot.",
                     "type": {
                         "integer": true
                     }
                 },
                 "resolution": {
                     "displayName": "Sampling Resolution",
-                    "description": "TBD",
+                    "description": "Specify how densely the data should be sampled when calculating its distribution.",
                     "type": {
                         "enumeration": [
                             {
@@ -92,7 +92,7 @@
                 },
                 "kernel": {
                     "displayName": "Kernel",
-                    "description": "TBD",
+                    "description": "The kernel function to use when calculating density estimation.",
                     "type": {
                         "enumeration": [
                             {
@@ -116,7 +116,7 @@
                 },
                 "specifyBandwidth": {
                     "displayName": "Specify Bandwidth",
-                    "description": "TBD",
+                    "description": "If disabled, this will automatically estimate the \"rule-of-thumb\" KDE bandwidth.\n\nEnable this to manually specify your own value(s).",
                     "placeHolderText": "Specify Number",
                     "type": {
                         "bool": true
@@ -124,7 +124,21 @@
                 },
                 "bandwidth": {
                     "displayName": "Bandwidth",
-                    "description": "TBD",
+                    "description": "Manually provided KDE bandwidth value to apply to all data.\n\nIf using Bandwidth By Category, then this will serve as the default for all categories that don't have a bandwidth explicitly set.",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "bandwidthByCategory": {
+                    "displayName": "Bandwidth By Category",
+                    "description": "If disabled, the same KDE bandwidth value will be applied across all categories.\n\nIf enabled, the bandwidth will be estimated or can be specified for each category, as applicable.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "categoryBandwidth": {
+                    "displayName": "Bandwidth",
+                    "description": "Specified bandwidth value for this category.\n\nIf this has not been explicitly set, then this will inherit from the Bandwidth value above.\n\nTo revert to the default value (if you have already specified it), then clear the field value and it will be replaced with the Bandwidth value.",
                     "type": {
                         "numeric": true
                     }
@@ -133,11 +147,11 @@
         },
         "sorting": {
             "displayName": "Sorting",
-            "description": "Sorting options for the violin plot",
+            "description": "Sorting options for the violin plot.",
             "properties": {
                 "by": {
                     "displayName": "Sort By",
-                    "description": "How to sort the categories in the visual",
+                    "description": "Specify how to sort the categories in the visual.",
                     "type": {
                         "enumeration": [
                             {
@@ -169,6 +183,7 @@
                 },
                 "order": {
                     "displayName": "Sort Order",
+                    "description": "The order to sort by.",
                     "type": {
                         "enumeration": [
                             {
@@ -186,10 +201,11 @@
         },
         "dataColours": {
             "displayName": "Data Colors",
-            "description": "Color settings for the violin",
+            "description": "Color settings for the violin.",
             "properties": {
                 "defaultFillColour": {
                     "displayName": "All Categories",
+                    "description": "Color to apply to all categories in the chart.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -200,13 +216,14 @@
                 },
                 "transparency": {
                     "displayName": "Transparency",
-                    "description": "Level of transparency to apply to the violin fill",
+                    "description": "Level of transparency to apply to the violin fill.",
                     "type": {
                         "integer": true
                     }
                 },
                 "categoryFillColour": {
                     "displayName": "Category Color",
+                    "description": "Fill color for this particular category.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -217,31 +234,48 @@
                 },
                 "colourByCategory": {
                     "displayName": "By Category",
-                    "description": "Apply colour to invididual categories",
+                    "description": "Apply specific fill color to invididual categories.",
                     "type": {
                         "bool": true
                     }
                 }
             }
         },
-        "boxPlot": {
-            "displayName": "Box Plot",
+        "dataPoints": {
+            "displayName": "Combo Plot",
+            "description": "Provides an accompanying plot to the violin.",
             "properties": {
                 "show": {
-                    "displayName": "Enable/Disable Y-Axis",
                     "type": {
                         "bool": true
                     }
                 },
+                "plotType": {
+                    "displayName": "Plot Type",
+                    "description": "The type of combo plot to display:\n\n - Box shows distribution of data using a box and whisker plot.\n - Barcode shows a plot of individal data points, using a consistant width.",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Barcode",
+                                "value": "barcodePlot"
+                            },
+                            {
+                                "displayName": "Box",
+                                "value": "boxPlot"
+                            }
+                        ]
+                    }
+                },
                 "strokeWidth": {
                     "displayName": "Stroke Width",
-                    "description": "Width of the lines bordering the box plot",
+                    "description": "Width of the lines used in the selected combo plot.",
                     "type": {
                         "integer": true
                     }
                 },
                 "boxFillColour": {
                     "displayName": "Box Color",
+                    "description": "Fill color to apply to the box plot.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -250,36 +284,48 @@
                         }
                     }
                 },
+                "barColour": {
+                    "displayName": "Bar Color",
+                    "description": "Color to apply to the data bars in the combo plot.",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },                
                 "transparency": {
                     "displayName": "Transparency",
-                    "description": "Level of transparency to apply to the box plot fill",
+                    "description": "Level of transparency to apply to the combo plot fill.",
                     "type": {
                         "integer": true
                     }
                 },
                 "innerPadding": {
                     "displayName": "Inner Padding (%)",
-                    "description": "Amount of padding to apply from the edge of the violin",
+                    "description": "Amount of padding to apply from the edge of the violin.",
                     "type": {
                         "integer": true
                     }
                 },
                 "showWhiskers": {
                     "displayName": "Show Whiskers",
-                    "description": "Show the 5% - 95% confidence interval (whiskers) on the box plot",
+                    "description": "Show the 5% - 95% confidence interval (whiskers) on the box plot.",
                     "type": {
                         "bool": true
                     }
                 },
-                "showMedian": {
-                    "displayName": "Show Median (Line)",
-                    "description": "Show the median, as a line across the box plot",
+                "showQuartiles": {
+                    "displayName": "Show 1st & 3rd Quartiles",
+                    "description": "Show 1st & 3rd quartiles, as lines on the diagram.",
                     "type": {
                         "bool": true
                     }
                 },
-                "medianFillColour": {
-                    "displayName": "Median Line Color",
+                "quartile1FillColour": {
+                    "displayName": "1st Quartile Line Color",
+                    "description": "Color to apply to the 1st quartile line in the combo plot.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -288,16 +334,145 @@
                         }
                     }
                 },
-                "showMean": {
-                    "displayName": "Show Mean (Circle)",
-                    "description": "Show the mean, as a cirlce in the box",
+                "quartile1StrokeWidth": {
+                    "displayName": "1st Quartile Stroke Width",
+                    "description": "Width of the 1st quartile line in the combo plot.",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "quartile1StrokeLineStyle": {
+                    "displayName": "1st Quartile Line Style",
+                    "description": "The style to apply to the 1st quartile line in the combo plot.",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
+                    }
+                },
+                "quartile3FillColour": {
+                    "displayName": "3rd Quartile Line Color",
+                    "description": "Color to apply to the 3rd quartile line in the combo plot.",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "quartile3StrokeWidth": {
+                    "displayName": "3rd Quartile Stroke Width",
+                    "description": "Width of the 3rd quartile line in the combo plot.",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "quartile3StrokeLineStyle": {
+                    "displayName": "3rd Quartile Line Style",
+                    "description": "The style to apply to the 3rd quartile line in the combo plot.",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
+                    }
+                },
+                "showMedian": {
+                    "displayName": "Show Median (Line)",
+                    "description": "Show the median, as a line across the box plot.",
                     "type": {
                         "bool": true
                     }
                 },
+                "medianStrokeWidth": {
+                    "displayName": "Median Stroke Width",
+                    "description": "Width of the median line.",
+                    "type": {
+                        "integer": true
+                    }
+                },
+                "medianFillColour": {
+                    "displayName": "Median Line Color",
+                    "description": "Color to apply to the median line.",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "medianStrokeLineStyle": {
+                    "displayName": "Median Line Style",
+                    "description": "Style to apply to the median line.",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Dashed",
+                                "value": "dashed"
+                            },
+                            {
+                                "displayName": "Solid",
+                                "value": "solid"
+                            },
+                            {
+                                "displayName": "Dotted",
+                                "value": "dotted"
+                            },
+                            {
+                                "displayName": "Dot-Dash",
+                                "value": "dotdash"
+                            }
+                        ]
+                    }
+                },
+                "showMean": {
+                    "displayName": "Show Mean (Circle)",
+                    "description": "Show the mean, as a circle in the box.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "meanStrokeWidth": {
+                    "displayName": "Mean Stroke Width",
+                    "description": "Width of the lines used when displaying the mean.",
+                    "type": {
+                        "integer": true
+                    }
+                },
                 "meanFillColour": {
-                    "displayName": "Median Circle Color",
-                    "description": "The color to apply to the mean indicator",
+                    "displayName": "Mean Circle Color",
+                    "description": "The color to apply to the mean indicator.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -307,8 +482,8 @@
                     }
                 },
                 "meanFillColourInner": {
-                    "displayName": "Median Circle Color (Inner)",
-                    "description": "The inner color to apply to the mean indicator",
+                    "displayName": "Mean Circle Color (Inner)",
+                    "description": "The inner color to apply to the mean indicator.",
                     "type": {
                         "fill": {
                             "solid": {
@@ -1003,63 +1178,63 @@
                 },
                 "showMaxMin": {
                     "displayName": "Maximum & Minimum",
-                    "description": "Show the series maximum and minimum values on the tooltip",
+                    "description": "Show the series maximum and minimum values on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showSpan": {
                     "displayName": "Span (Min to Max)",
-                    "description": "Show the series span value (range) from minimum to maximum on the tooltip",
+                    "description": "Show the series span value (range) from minimum to maximum on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showMedian": {
                     "displayName": "Median",
-                    "description": "Show the series median value on the tooltip",
+                    "description": "Show the series median value on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showMean": {
                     "displayName": "Mean",
-                    "description": "Show the series mean value on the tooltip",
+                    "description": "Show the series mean value on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showDeviation": {
                     "displayName": "Standard Deviation",
-                    "description": "Show the series standard deviation value on the tooltip",
+                    "description": "Show the series standard deviation value on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showQuartiles": {
                     "displayName": "Upper & Lower Quartiles",
-                    "description": "Show the series upper and lower quartile values on the tooltip",
+                    "description": "Show the series upper and lower quartile values on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showIqr": {
                     "displayName": "Inter Quartile Range",
-                    "description": "Show the series inter quartile range value on the tooltip",
+                    "description": "Show the series inter quartile range value on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showConfidence": {
                     "displayName": "Whisker (Confidence) Values",
-                    "description": "Show the series confindence values (or whisker values) on the tooltip",
+                    "description": "Show the series confindence values (or whisker values) on the tooltip.",
                     "type": {
                         "bool": true
                     }
                 },
                 "showBandwidth": {
                     "displayName": "KDE Bandwidth",
-                    "description": "Show the bandwidth value applied to the series - used to calculate the violin line",
+                    "description": "Show the bandwidth value applied to the series - used to calculate the violin line.",
                     "type": {
                         "bool": true
                     }
@@ -1071,7 +1246,6 @@
             "description": "Legend options",
             "properties": {
                 "show": {
-                    "displayName": "Enable/disable legend for categories",
                     "type": {
                         "bool": true
                     }
@@ -1079,7 +1253,7 @@
                 "position": {
                     "displayName": "Position",
                     "displayNameKey": "Visual_Position",
-                    "description": "Select the location for the legend",
+                    "description": "Select the location for the legend.",
                     "descriptionKey": "Visual_Description_Position",
                     "type": {
                         "enumeration": [
@@ -1184,6 +1358,12 @@
                 },
                 "debugVisualUpdate": {
                     "displayName": "Visual Update",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "debugTooltipEvents": {
+                    "displayName": "Tooltip Events",
                     "type": {
                         "bool": true
                     }
