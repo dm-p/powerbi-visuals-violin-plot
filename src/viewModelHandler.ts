@@ -99,6 +99,7 @@ module powerbi.extensibility.visual {
                             fontSize: PixelConverter.toString(this.settings.xAxis.fontSize)
                         };
                         viewModel.measure = this.measureMetadata.displayName;
+                        viewModel.locale = host.locale;
                         viewModel.categories = [];
 
                         /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
@@ -424,7 +425,8 @@ module powerbi.extensibility.visual {
                                     :   this.settings.yAxis.labelDisplayUnits,
                                 precision: this.settings.yAxis.precision != null
                                     ?   this.settings.yAxis.precision
-                                    :   null
+                                    :   null,
+                                cultureSelector: this.viewModel.locale
                             })
                         } as IAxisLinear;
 

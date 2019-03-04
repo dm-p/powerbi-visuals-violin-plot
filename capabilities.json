@@ -1176,6 +1176,40 @@
                         "bool": true
                     }
                 },
+                "numberSamplesDisplayUnits": {
+                    "displayName": "# Samples Display Units",
+                    "description": "Display unit formatting to apply to the # Samples tooltip data point.",
+                    "type": {
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
+                    }
+                },
+                "numberSamplesPrecision": {
+                    "displayName": "# Samples Decimal Places",
+                    "description": "If using display units for the # Samples data point, you can use to modify the number of decimal places.",
+                    "type": {
+                        "integer": true
+                    },
+                    "placeHolderText": "Auto"   
+                },
+                "measureDisplayUnits": {
+                    "displayName": "Measure Display Units",
+                    "description": "Display units to apply to data points utilising the Measure Data.",
+                    "type": {
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
+                    }
+                },
+                "measurePrecision": {
+                    "displayName": "Measure Decimal Places",
+                    "description": "If using display units for the Measure Data, you can use to modify the number of decimal places.",
+                    "type": {
+                        "integer": true
+                    },
+                    "placeHolderText": "Auto"   
+                },
                 "showMaxMin": {
                     "displayName": "Maximum & Minimum",
                     "description": "Show the series maximum and minimum values on the tooltip.",
