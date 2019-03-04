@@ -37,9 +37,7 @@ module powerbi.extensibility.visual {
         defaultBoxFillColour: string = '#000000',
         defaultBoxDataColour: string = '#FFFFFF',
         defaultLineStyle: string = 'solid',
-        defaultStrokeWidth: number = 2,
-        defaultWholeNumberFormat: string = "#,##0",
-        defaultDecimalNumberFormat: string = "#,##0.00";
+        defaultStrokeWidth: number = 2;
     
 
     export class VisualSettings extends DataViewObjectsParser {
@@ -264,7 +262,7 @@ module powerbi.extensibility.visual {
         public debugVisualUpdate: boolean = false;
         public debugTooltipEvents: boolean = false;
         public debugProperties: boolean = false;
-        public development: boolean = true; /** SET TO `false` FOR RELEASE */
+        public development: boolean = false; /** SET TO `false` FOR RELEASE */
         public usageUrl: string = 'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
     }
 
