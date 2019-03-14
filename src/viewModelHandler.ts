@@ -157,7 +157,9 @@ module powerbi.extensibility.visual {
                                         formattedWidth: 0
                                     },
                                     colour: this.settings.dataColours.defaultFillColour,
-                                    selectionId: null,
+                                    selectionId: host.createSelectionIdBuilder()
+                                        .withMeasure(this.measureMetadata.queryName)
+                                        .createSelectionId(),
                                     dataPoints: this.allDataPoints
                                 } as ICategory);
 

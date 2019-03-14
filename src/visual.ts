@@ -598,6 +598,7 @@ module powerbi.extensibility.visual {
                     dataPoint: boolean,
                     highlightedValue: number,
                     tooltips: VisualTooltipDataItem[] = [];
+                debug.log('Selection ID', v.selectionId);
 
                 /** Depending on the element we have in context, we will possibly need to display a highlighted data value in the tooltip, and
                  *  an assistive element to indicate which one is highlighted. We handle this here.
