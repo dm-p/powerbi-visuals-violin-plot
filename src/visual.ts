@@ -325,6 +325,39 @@ module powerbi.extensibility.visual {
                                         height: `${options.viewport.height}`
                                     });
 
+                        /** Watermark for non-production use, if the dev flag is set */
+                            if (this.settings.about.development || this.settings.about.version.indexOf("DEV") != -1) {
+                                violinPlotCanvas
+                                    .append('text')
+                                        .attr({
+                                            'transform': `translate(${this.viewModelHandler.viewport.width / 2},\
+                                                ${this.viewModelHandler.viewport.height / 2})\
+                                                rotate(-45)`,
+                                            'text-anchor': 'middle',
+                                            'opacity': 0.5
+                                        })
+                                        .style({
+                                            'font-weight': 'bold',
+                                            'fill': 'red',
+                                            'font-size': Math.min(
+                                                this.viewModelHandler.viewport.width,
+                                                this.viewModelHandler.viewport.height
+                                            ) / 15
+                                        })
+                                        .append('tspan')
+                                            .text(`${this.settings.about.visualName.toUpperCase()} ${this.settings.about.version}`)
+                                            .attr({
+                                                'x': 0,
+                                                'dy': '-1em'
+                                            })
+                                        .append('tspan')
+                                            .text('NOT FOR PRODUCTION USE')
+                                            .attr({
+                                                'x': 0,
+                                                'dy': '1em'
+                                            });
+                            }
+
                         /** Handle category reduction, if applied */
                             if (viewModel.categoriesReduced) {
                                 debug.log('Plotting warning icon and interactivity...');
@@ -901,6 +934,8 @@ module powerbi.extensibility.visual {
                             break;
                         }
                         case 'about' : {
+                            /** Version should always show the default */
+                                instances[0].properties['version'] = VisualSettings.getDefault()['about'].version;
                             /** Switch off and hide debug mode if development flag is disabled */
                                 if(!this.settings.about.development) {
                                     delete instances[0].properties['debugMode'];
