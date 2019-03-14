@@ -516,24 +516,22 @@ module powerbi.extensibility.visual {
                                         });
 
                             /** Tooltips */
-                                if (this.settings.tooltip.show) {
-                                    debug.log('Adding tooltip events...');
-                                    this.tooltipServiceWrapper.addTooltip(
-                                        violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(
-                                            tooltipEvent, 
-                                            this.settings, 
-                                            viewModel
-                                        ),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null,
-                                        true
-                                    )
-                                    this.tooltipServiceWrapper.addTooltip(
-                                        violinPlotCanvas.selectAll('.condensedWarning'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(this.settings),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null
-                                    )
-                                }
+                                debug.log('Adding tooltip events...');
+                                this.tooltipServiceWrapper.addTooltip(
+                                    violinPlotCanvas.selectAll('.violinPlotSeries'),
+                                    (tooltipEvent: TooltipEventArgs<ICategory>) => ViolinPlot.getTooltipData(
+                                        tooltipEvent, 
+                                        this.settings, 
+                                        viewModel
+                                    ),
+                                    (tooltipEvent: TooltipEventArgs<ICategory>) => tooltipEvent.data.selectionId,
+                                    true
+                                );
+                                this.tooltipServiceWrapper.addTooltip(
+                                    violinPlotCanvas.selectAll('.condensedWarning'),
+                                    (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(this.settings),
+                                    (tooltipEvent: TooltipEventArgs<number>) => null
+                                );
 
                             /** Violin plot */
                                 debug.log('Rendering violins...');
@@ -1091,7 +1089,6 @@ module powerbi.extensibility.visual {
 
                                 }
 
-                            
                             break;
                         }
                         case 'sorting': {

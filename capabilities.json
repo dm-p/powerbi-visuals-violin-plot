@@ -1167,15 +1167,9 @@
             }
         },
         "tooltip": {
-            "displayName": "Tooltip",
-            "description": "Tooltip options",
+            "displayName": "Tooltip Info",
+            "description": "If using the standard tooltip, you can customise the display of data points in this menu.",
             "properties": {
-                "show": {
-                    "displayName": "Enable/disable tooltips for categories",
-                    "type": {
-                        "bool": true
-                    }
-                },
                 "numberSamplesDisplayUnits": {
                     "displayName": "# Samples Display Units",
                     "description": "Display unit formatting to apply to the # Samples tooltip data point.",
@@ -1462,6 +1456,12 @@
                     "direction": 1
                 }
             ]
+        }
+    },
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
         }
     }
 }
