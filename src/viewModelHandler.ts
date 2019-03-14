@@ -179,9 +179,7 @@ module powerbi.extensibility.visual {
                                     for (let i = 0; i < category.values.length; i++) {
 
                                         let categoryName = category.values[i].toString(),
-                                            value = parseFloat(<string>values[0].values[i]) 
-                                                        ?   Number(values[0].values[i]) 
-                                                        :   null;
+                                            value = <number>values[0].values[i];
 
                                         if (!distinctCategories.filter(c => c.name == `${categoryName}`)[0]) {
 
