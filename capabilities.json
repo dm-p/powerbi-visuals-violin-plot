@@ -1167,8 +1167,8 @@
             }
         },
         "tooltip": {
-            "displayName": "Tooltip Info",
-            "description": "If using the standard tooltip, you can customise the display of data points in this menu.",
+            "displayName": "Default Tooltip Details",
+            "description": "If using the default (traditional) tooltip, you can customise the display of data points using this menu.",
             "properties": {
                 "numberSamplesDisplayUnits": {
                     "displayName": "# Samples Display Units",
