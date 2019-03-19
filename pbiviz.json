@@ -1,10 +1,10 @@
 {
   "visual": {
     "name": "violinPlot",
-    "displayName": "Violin Plot (1.1.0)",
+    "displayName": "Violin Plot (1.2.0)",
     "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D971",
     "visualClassName": "ViolinPlot",
-    "version": "1.1.0.2",
+    "version": "1.2.0.3",
     "description": "Use to visualise the distribution of your data.",
     "supportUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot",
     "gitHubUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot"
@@ -20,7 +20,7 @@
   "externalJS": [
     "node_modules/powerbi-visuals-utils-dataviewutils/lib/index.js",
     "node_modules/globalize/lib/globalize.js",
-    "node_modules/globalize/lib/cultures/globalize.culture.en-US.js",
+    "node_modules/globalize/lib/cultures/globalize.cultures.js",
     "node_modules/powerbi-visuals-utils-typeutils/lib/index.js",
     "node_modules/powerbi-visuals-utils-svgutils/lib/index.js",
     "node_modules/powerbi-visuals-utils-formattingutils/lib/index.js",

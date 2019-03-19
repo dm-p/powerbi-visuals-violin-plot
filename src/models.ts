@@ -43,6 +43,7 @@ module powerbi.extensibility.visual {
          * @property {IViolinPlot} violinPlot                   - Specifics for rendering a violin, outside other properties
          * @property {IBoxPlot} boxPlot                         - Specifics for rendering a box plot, outside other properties
          * @property {IBarcodePlot} barcodePlot                 - Specifics for rendering a barcode plot, outside other properties
+         * @property {string} locale                            - User's locale
          */
             export interface IViewModel {
                 categories: ICategory[];
@@ -58,6 +59,7 @@ module powerbi.extensibility.visual {
                 boxPlot: IBoxPlot;
                 barcodePlot: IBarcodePlot;
                 profiling: IVisualProfiler;
+                locale: string;
             }
 
         /**

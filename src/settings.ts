@@ -200,8 +200,10 @@ module powerbi.extensibility.visual {
     export class tooltipSettings {
         /** Show tooltips */
         public show: boolean = true;
-        /** Precision */
-        public precision: number = null;
+        public numberSamplesDisplayUnits: number = 0;
+        public numberSamplesPrecision: number = 0;
+        public measureDisplayUnits: number = 0;
+        public measurePrecision: number = 2;
         /** Individual statistics */
         public showMaxMin: boolean = true;
         public showSpan: boolean = false;
@@ -255,7 +257,7 @@ module powerbi.extensibility.visual {
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.1.0.2';
+        public version: string = '1.2.0.3';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugTooltipEvents: boolean = false;

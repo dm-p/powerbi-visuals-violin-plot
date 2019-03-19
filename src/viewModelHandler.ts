@@ -99,6 +99,7 @@ module powerbi.extensibility.visual {
                             fontSize: PixelConverter.toString(this.settings.xAxis.fontSize)
                         };
                         viewModel.measure = this.measureMetadata.displayName;
+                        viewModel.locale = host.locale;
                         viewModel.categories = [];
 
                         /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
@@ -156,7 +157,9 @@ module powerbi.extensibility.visual {
                                         formattedWidth: 0
                                     },
                                     colour: this.settings.dataColours.defaultFillColour,
-                                    selectionId: null,
+                                    selectionId: host.createSelectionIdBuilder()
+                                        .withMeasure(this.measureMetadata.queryName)
+                                        .createSelectionId(),
                                     dataPoints: this.allDataPoints
                                 } as ICategory);
 
@@ -176,9 +179,7 @@ module powerbi.extensibility.visual {
                                     for (let i = 0; i < category.values.length; i++) {
 
                                         let categoryName = category.values[i].toString(),
-                                            value = parseFloat(<string>values[0].values[i]) 
-                                                        ?   Number(values[0].values[i]) 
-                                                        :   null;
+                                            value = <number>values[0].values[i];
 
                                         if (!distinctCategories.filter(c => c.name == `${categoryName}`)[0]) {
 
@@ -424,7 +425,8 @@ module powerbi.extensibility.visual {
                                     :   this.settings.yAxis.labelDisplayUnits,
                                 precision: this.settings.yAxis.precision != null
                                     ?   this.settings.yAxis.precision
-                                    :   null
+                                    :   null,
+                                cultureSelector: this.viewModel.locale
                             })
                         } as IAxisLinear;
 

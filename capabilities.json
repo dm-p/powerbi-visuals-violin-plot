@@ -1167,14 +1167,42 @@
             }
         },
         "tooltip": {
-            "displayName": "Tooltip",
-            "description": "Tooltip options",
+            "displayName": "Default Tooltip Details",
+            "description": "If using the default (traditional) tooltip, you can customise the display of data points using this menu.",
             "properties": {
-                "show": {
-                    "displayName": "Enable/disable tooltips for categories",
+                "numberSamplesDisplayUnits": {
+                    "displayName": "# Samples Display Units",
+                    "description": "Display unit formatting to apply to the # Samples tooltip data point.",
                     "type": {
-                        "bool": true
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
                     }
+                },
+                "numberSamplesPrecision": {
+                    "displayName": "# Samples Decimal Places",
+                    "description": "If using display units for the # Samples data point, you can use to modify the number of decimal places.",
+                    "type": {
+                        "integer": true
+                    },
+                    "placeHolderText": "Auto"   
+                },
+                "measureDisplayUnits": {
+                    "displayName": "Measure Display Units",
+                    "description": "Display units to apply to data points utilising the Measure Data.",
+                    "type": {
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
+                    }
+                },
+                "measurePrecision": {
+                    "displayName": "Measure Decimal Places",
+                    "description": "If using display units for the Measure Data, you can use to modify the number of decimal places.",
+                    "type": {
+                        "integer": true
+                    },
+                    "placeHolderText": "Auto"   
                 },
                 "showMaxMin": {
                     "displayName": "Maximum & Minimum",
@@ -1428,6 +1456,12 @@
                     "direction": 1
                 }
             ]
+        }
+    },
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
         }
     }
 }

@@ -52,6 +52,7 @@ module powerbi.extensibility.visual {
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
         import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
+        import formatTooltipValue = ViolinPlotHelpers.formatTooltipValue;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
@@ -73,6 +74,7 @@ module powerbi.extensibility.visual {
         private legendData: LegendData;
         private canFetchMore: boolean;
         private windowsLoaded: number;
+        private locale: string;
 
         /**
          * Instantiation of the visual
@@ -128,6 +130,7 @@ module powerbi.extensibility.visual {
                     debug.profileStart();
                     debug.log('Settings', this.settings);
                     debug.log('Viewport (Pre-legend)', options.viewport);
+                    debug.log('Locale', this.locale);
 
                 /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
                  *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
@@ -322,6 +325,39 @@ module powerbi.extensibility.visual {
                                         height: `${options.viewport.height}`
                                     });
 
+                        /** Watermark for non-production use, if the dev flag is set */
+                            if (this.settings.about.development || this.settings.about.version.indexOf("DEV") != -1) {
+                                violinPlotCanvas
+                                    .append('text')
+                                        .attr({
+                                            'transform': `translate(${this.viewModelHandler.viewport.width / 2},\
+                                                ${this.viewModelHandler.viewport.height / 2})\
+                                                rotate(-45)`,
+                                            'text-anchor': 'middle',
+                                            'opacity': 0.5
+                                        })
+                                        .style({
+                                            'font-weight': 'bold',
+                                            'fill': 'red',
+                                            'font-size': Math.min(
+                                                this.viewModelHandler.viewport.width,
+                                                this.viewModelHandler.viewport.height
+                                            ) / 15
+                                        })
+                                        .append('tspan')
+                                            .text(`${this.settings.about.visualName.toUpperCase()} ${this.settings.about.version}`)
+                                            .attr({
+                                                'x': 0,
+                                                'dy': '-1em'
+                                            })
+                                        .append('tspan')
+                                            .text('NOT FOR PRODUCTION USE')
+                                            .attr({
+                                                'x': 0,
+                                                'dy': '1em'
+                                            });
+                            }
+
                         /** Handle category reduction, if applied */
                             if (viewModel.categoriesReduced) {
                                 debug.log('Plotting warning icon and interactivity...');
@@ -480,24 +516,22 @@ module powerbi.extensibility.visual {
                                         });
 
                             /** Tooltips */
-                                if (this.settings.tooltip.show) {
-                                    debug.log('Adding tooltip events...');
-                                    this.tooltipServiceWrapper.addTooltip(
-                                        violinPlotCanvas.selectAll('.violinPlotSeries'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTooltipData(
-                                            tooltipEvent, 
-                                            this.settings, 
-                                            viewModel
-                                        ),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null,
-                                        true
-                                    )
-                                    this.tooltipServiceWrapper.addTooltip(
-                                        violinPlotCanvas.selectAll('.condensedWarning'),
-                                        (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(this.settings),
-                                        (tooltipEvent: TooltipEventArgs<number>) => null
-                                    )
-                                }
+                                debug.log('Adding tooltip events...');
+                                this.tooltipServiceWrapper.addTooltip(
+                                    violinPlotCanvas.selectAll('.violinPlotSeries'),
+                                    (tooltipEvent: TooltipEventArgs<ICategory>) => ViolinPlot.getTooltipData(
+                                        tooltipEvent, 
+                                        this.settings, 
+                                        viewModel
+                                    ),
+                                    (tooltipEvent: TooltipEventArgs<ICategory>) => tooltipEvent.data.selectionId,
+                                    true
+                                );
+                                this.tooltipServiceWrapper.addTooltip(
+                                    violinPlotCanvas.selectAll('.condensedWarning'),
+                                    (tooltipEvent: TooltipEventArgs<number>) => ViolinPlot.getTruncationTooltipData(this.settings),
+                                    (tooltipEvent: TooltipEventArgs<number>) => null
+                                );
 
                             /** Violin plot */
                                 debug.log('Rendering violins...');
@@ -558,10 +592,11 @@ module powerbi.extensibility.visual {
                 let tte = <TooltipEventArgs<Number>>tooltipEvent,
                     v: ICategory = tooltipEvent.data,
                     s = settings.tooltip,
-                    f = viewModel.yAxis.labelFormatter,
+                    measureFormat = viewModel.yAxis.labelFormatter.options.format,
                     dataPoint: boolean,
                     highlightedValue: number,
                     tooltips: VisualTooltipDataItem[] = [];
+                debug.log('Selection ID', v.selectionId);
 
                 /** Depending on the element we have in context, we will possibly need to display a highlighted data value in the tooltip, and
                  *  an assistive element to indicate which one is highlighted. We handle this here.
@@ -588,117 +623,191 @@ module powerbi.extensibility.visual {
                         value: v.displayName.formattedName ? v.displayName.formattedName : 'All Data',
                         color: v.colour
                     },
-                    {
-                        displayName: '# Samples',
-                        value: valueFormatter.create({
-                            format: "#,##0"
-                        }).format(v.dataPoints.length)
-                    }
+                    formatTooltipValue(
+                        '# Samples',
+                        measureFormat,
+                        v.dataPoints.length,
+                        s.numberSamplesDisplayUnits,
+                        s.numberSamplesPrecision,
+                        viewModel.locale
+                    )
                 );
                 debug.log('Pushed category and samples');
 
                 if (s.showMaxMin) {
                     tooltips.push(
-                        {
-                            displayName: 'Maximum',
-                            value: f.format(v.statistics.max)
-                        },
-                        {
-                            displayName: 'Minimum',
-                            value: f.format(v.statistics.min)
-                        }
+                        formatTooltipValue(
+                            'Maximum',
+                            measureFormat,
+                            v.statistics.max,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        ),
+                        formatTooltipValue(
+                            'Minimum',
+                            measureFormat,
+                            v.statistics.min,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
                     );
                     debug.log('Pushed max/min');
                 }
 
                 if (s.showSpan) {
-                    tooltips.push({
-                        displayName: 'Span (Min to Max)',
-                        value: f.format(v.statistics.span)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            'Span (Min to Max)',
+                            measureFormat,
+                            v.statistics.span,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed span');
                 }
 
                 if (s.showMedian) {
-                    tooltips.push({
-                        displayName: 'Median',
-                        value: f.format(v.statistics.median)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            'Median',
+                            measureFormat,
+                            v.statistics.median,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed median');
                 }
 
                 if (s.showMean) {
-                    tooltips.push({
-                        displayName: 'Mean',
-                        value: f.format(v.statistics.mean)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            'Mean',
+                            measureFormat,
+                            v.statistics.mean,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed mean');
                 }
 
                 if (s.showDeviation) {
-                    tooltips.push({
-                        displayName: 'Standard Deviation',
-                        value: f.format(v.statistics.deviation)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            'Standard Deviation',
+                            measureFormat,
+                            v.statistics.deviation,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed standard deviation');
                 }
 
                 if (s.showQuartiles) {
                     tooltips.push(
-                        {
-                            displayName: 'Upper Quartile',
-                            value: f.format(v.statistics.quartile3)
-                        },
-                        {
-                            displayName: 'Lower Quartile',
-                            value: f.format(v.statistics.quartile1)
-                        }
+                        formatTooltipValue(
+                            'Upper Quartile',
+                            measureFormat,
+                            v.statistics.quartile3,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        ),
+                        formatTooltipValue(
+                            'Lower Quartile',
+                            measureFormat,
+                            v.statistics.quartile1,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
                     );
                     debug.log('Pushed upper/lower quartile');
                 }
 
                 if (s.showIqr) {
-                    tooltips.push({
-                        displayName: 'Inter Quartile Range',
-                        value: f.format(v.statistics.iqr)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            'Inter Quartile Range',
+                            measureFormat,
+                            v.statistics.iqr,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed IQR');
                 }
 
                 if (s.showConfidence) {
                     tooltips.push(
-                        {
-                            displayName: 'Upper Whisker (95%)',
-                            value: f.format(v.statistics.confidenceUpper)
-                        },
-                        {
-                            displayName: 'Lower Whisker (5%)',
-                            value: f.format(v.statistics.confidenceLower)
-                        }
+                        formatTooltipValue(
+                            'Upper whisker (95%)',
+                            measureFormat,
+                            v.statistics.confidenceUpper,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        ),
+                        formatTooltipValue(
+                            'Lower whisker (5%)',
+                            measureFormat,
+                            v.statistics.confidenceLower,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
                     );
                     debug.log('Pushed confidence');
                 }
 
                 if (s.showBandwidth) {
                     if (settings.violin.specifyBandwidth) {
-                        tooltips.push({
-                            displayName: 'Bandwidth (Specified)',
-                            value: f.format(v.statistics.bandwidthActual)
-                        });
+                        tooltips.push(
+                            formatTooltipValue(
+                                'Bandwidth (Specified)',
+                                measureFormat,
+                                v.statistics.bandwidthActual,
+                                s.measureDisplayUnits,
+                                s.measurePrecision,
+                                viewModel.locale
+                            )
+                        );
                         debug.log('Pushed specified bandwidth');
                     }
-                    tooltips.push({
-                        displayName: `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
-                        value: f.format(v.statistics.bandwidthSilverman)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            `Bandwidth (Estimated${settings.violin.specifyBandwidth ? ', N/A' : ''})`,
+                            measureFormat,
+                            v.statistics.bandwidthSilverman,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed estimated bandwidth');
                 }
 
                 if (dataPoint) {
-                    tooltips.push({
-                        displayName: viewModel.measure,
-                        value: f.format(highlightedValue)
-                    });
+                    tooltips.push(
+                        formatTooltipValue(
+                            viewModel.measure,
+                            measureFormat,
+                            highlightedValue,
+                            s.measureDisplayUnits,
+                            s.measurePrecision,
+                            viewModel.locale
+                        )
+                    );
                     debug.log('Pushed data point value');
                 }
 
@@ -824,6 +933,8 @@ module powerbi.extensibility.visual {
                             break;
                         }
                         case 'about' : {
+                            /** Version should always show the default */
+                                instances[0].properties['version'] = VisualSettings.getDefault()['about'].version;
                             /** Switch off and hide debug mode if development flag is disabled */
                                 if(!this.settings.about.development) {
                                     delete instances[0].properties['debugMode'];
@@ -978,7 +1089,6 @@ module powerbi.extensibility.visual {
 
                                 }
 
-                            
                             break;
                         }
                         case 'sorting': {
@@ -989,9 +1099,10 @@ module powerbi.extensibility.visual {
                             break;
                         }
                         case 'tooltip': {
-                            /** Range validation on grid line stroke width and precision */
+                            /** Range validation on precision fields */
                                 instances[0].validValues = instances[0].validValues || {};
-                                instances[0].validValues.precision = {
+                                instances[0].validValues.numberSamplesPrecision =
+                                instances[0].validValues.measurePrecision = {
                                     numberRange: {
                                         min: 0,
                                         max: 10
