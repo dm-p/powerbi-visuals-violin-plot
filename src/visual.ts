@@ -1225,6 +1225,25 @@ module powerbi.extensibility.visual {
                                         max: 5
                                     },
                                 };
+                            /** Range validation on start and end values. note that in ES5 we don't have Number.MAX/MIN_SAFE_INTEGER, so we define our own */
+                                let safeMin = -9007199254740991,
+                                    safeMax = 9007199254740991;
+                                instances[0].validValues.start = {
+                                    numberRange: {
+                                        min: safeMin,
+                                        max: this.settings.yAxis.end === 0 
+                                            ?   0
+                                            :   this.settings.yAxis.end || safeMax
+                                    }
+                                };
+                                instances[0].validValues.end = {
+                                    numberRange: {
+                                        min: this.settings.yAxis.start === 0 
+                                        ?   0
+                                        :   this.settings.yAxis.start || safeMin,
+                                        max: safeMax
+                                    }
+                                };
                             break;
                         }
                     }

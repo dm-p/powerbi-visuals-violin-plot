@@ -503,6 +503,26 @@
                         "bool": true
                     }
                 },
+                "start": {
+                    "displayName": "Start",
+                    "description": "Enter a starting value (optional).",
+                    "displayNameKey": "Visual_YAxis_Start",
+                    "type": {
+                        "numeric": true
+                    },
+                    "placeHolderText": "Auto",
+                    "suppressFormatPainterCopy": true
+                },
+                "end": {
+                    "displayName": "End",
+                    "description": "Enter an ending value (optional).",
+                    "displayNameKey": "Visual_YAxis_End",
+                    "type": {
+                        "numeric": true
+                    },
+                    "placeHolderText": "Auto",
+                    "suppressFormatPainterCopy": true
+                },
                 "showLabels": {
                     "displayName": "Show Labels",
                     "type": {

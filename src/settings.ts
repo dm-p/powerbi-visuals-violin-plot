@@ -96,6 +96,11 @@ module powerbi.extensibility.visual {
 
     /** Y-axis specific settings */
         export class yAxisSettings extends axisSettings {
+            /** Axis range start */
+                public start: number = null;
+            /** Axis range end */
+                public end: number = null;
+
             constructor() {
                 super();
                 this.gridlines = true;
@@ -257,12 +262,12 @@ module powerbi.extensibility.visual {
     /** Used to hold about info and manage debugging */
     export class aboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.2.0.3';
+        public version: string = '1.3.0.4-DEV';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugTooltipEvents: boolean = false;
         public debugProperties: boolean = false;
-        public development: boolean = false; /** SET TO `false` FOR RELEASE */
+        public development: boolean = true; /** SET TO `false` FOR RELEASE */
         public usageUrl: string = 'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
     }
 

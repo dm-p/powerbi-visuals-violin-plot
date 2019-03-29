@@ -429,7 +429,7 @@ module powerbi.extensibility.visual {
                                 cultureSelector: this.viewModel.locale
                             })
                         } as IAxisLinear;
-
+                        
                         /** Initial domain based on view model statistics */
                             this.updateYDomain([
                                 this.viewModel.statistics.min,
@@ -1132,12 +1132,23 @@ module powerbi.extensibility.visual {
 
             /**
              * The y-axis can grow if the KDE calculations require it. This manages the update of both dependent axes (the main chart and the violin) in that particular
-             * event.
+             * event. Also ensure that any user override of the start/end y-axis values is catered for.
              * 
              * @param domain                                    - [number, number] aray of min and max value
              * @param debug                                     - debugger to attach
              */
                 updateYDomain(domain: [number, number], debug: VisualDebugger) {
+                    
+                    /** If the user has supplied their own start/end values, use those */
+                        domain = [
+                            this.settings.yAxis.start === 0 
+                                ?   0 
+                                :   this.settings.yAxis.start || domain[0],
+                            this.settings.yAxis.end === 0 
+                                ?   0 
+                                :   this.settings.yAxis.end || domain[1]
+                        ];
+
                     debug.log(`Updating y-axis domain to [${domain}]`);
                     if (this.viewModel.yAxis) {
                         this.viewModel.yAxis.domain = domain;
