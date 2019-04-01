@@ -796,10 +796,44 @@ module powerbi.extensibility.visual {
                                                     );
 
                                         } else {
-                                            /** Just filter out anything outside the ranges, as we're not converging */
+
+                                            /** For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders */
+                                                const minBisect = d3.bisector(function(d: IDataPointKde) {return d.x}).left;
+                                                const maxBisect = d3.bisector(function(d: IDataPointKde) {return d.x}).right;
+                                                let min = minBisect(kdeData, interpolateMin),
+                                                    max = maxBisect(kdeData, interpolateMax);
+                                                
+                                                    debug.log(`Clamp splicing: min index = ${min}, max index = ${max}`);
+
+                                            /** Add 2 max elements: the KDE plot value, and a 0 to converge */
+                                                kdeData.splice(max, 0, {
+                                                    x: interpolateMax,
+                                                    y: kdeData[max].y,
+                                                    remove: false
+                                                });
+                                                kdeData.splice(max + 1, 0, {
+                                                    x: interpolateMax,
+                                                    y: 0,
+                                                    remove: false
+                                                });
+
+                                            /** Add 2 min elements; similar to above */
+                                                kdeData.splice(min, 0, {
+                                                    x: interpolateMin,
+                                                    y: kdeData[min < 0 ? 0 : min - 1].y,
+                                                    remove: false
+                                                });
+                                                kdeData.splice(min, 0, {
+                                                    x: interpolateMin,
+                                                    y: 0,
+                                                    remove: false
+                                                });
+
+
+                                            /** Filter out anything outside our interpolation values */
                                                 v.dataKde = kdeData
-                                                    .filter(d => !interpolateMin || (d.x >= interpolateMin && d.y != 0))    
-                                                    .filter(d => !interpolateMax || (d.x <= interpolateMax && d.y != 0));
+                                                    .filter(d => d.x >= interpolateMin)    
+                                                    .filter(d => d.x <= interpolateMax);
                                         }
                                         
                                     /** Adjust violin scale to account for inner padding preferences */

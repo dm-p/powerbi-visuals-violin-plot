@@ -54,7 +54,7 @@
         },
         "violin": {
             "displayName": "Violin Options",
-            "description": "Configure how the violin is displayed in your chart.",
+            "description": "Configure how the violin (Kernel Density Estimation/KDE) plot is displayed in your report.",
             "properties": {
                 "innerPadding": {
                     "displayName": "Inner Padding (%)",
@@ -68,6 +68,14 @@
                     "description": "Width of the lines bordering the violin plot.",
                     "type": {
                         "integer": true
+                    }
+                },
+                "clamp": {
+                    "displayName": "Clamp to Min/Max",
+                    "description": "If enabled, this will stop the KDE plot at the min and max values of the data set for each category.",
+                    "placeHolderText": "Specify Number",
+                    "type": {
+                        "bool": true
                     }
                 },
                 "resolution": {
