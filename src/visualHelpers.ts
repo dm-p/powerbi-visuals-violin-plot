@@ -393,6 +393,8 @@ module powerbi.extensibility.visual {
          * Display usage information within the viewport
          * 
          * @param containingElement                             - The element to attach the message to
+         * @param host                                          - The visual host
+         * @param settings                                      - Current visual instance settings
          */
             export function visualUsage(containingElement: d3.Selection<{}>, host: IVisualHost, settings: VisualSettings) {
                 let container = containingElement
@@ -425,7 +427,46 @@ module powerbi.extensibility.visual {
                         .html('Detailed Help (External Site)');
                 usageLink.on('click', () => {
                     host.launchUrl(settings.about.usageUrl);
-                })
+                });
+            }
+
+        /**
+         * Display additional information to the end-user when loading more data from the data model.
+         * 
+         * @param rowCount                                      - Total number of rows currently loaded
+         * @param containingElement                             - The element to attach the message to
+         * @param settings                                      - Current visual instance settings
+         */
+            export function dataLimitLoadingStatus(rowCount: number, containingElement: d3.Selection<{}>, settings: VisualSettings) {
+                let rowCountFormatter = valueFormatter.create({
+                    format: '#,##0'
+                });
+                let progressIndicator = containingElement
+                    .append('div');
+                progressIndicator
+                    .append('span')
+                        .classed('spinner-grow', true)
+                        .classed('float-right', true);
+                progressIndicator
+                    .append('span')
+                        .html(`Loading more data: <strong>${rowCountFormatter.format(rowCount)}</strong> rows loaded so far...`)
+                        .classed('align-middle', true);
+
+                if (settings.dataLimit.showCustomVisualNotes) {
+                    containingElement
+                        .append('hr');
+                    containingElement
+                        .append('h5')
+                            .text('About Loading More Data');
+                    containingElement
+                        .append('p')
+                            .html('Custom visuals have a limit of 30,000 rows. Recent changes allow us to exceed this by loading  more data from the data model \
+                                    until until Power BI\'s memory allocation limit for the visual is reached.<br/><br/>\
+                                   This can be costly and will run for every update to your visual.<br/><br/>\
+                                   If you are making changes to your visual layout then it is recommended that you turn off <strong>Override Row Limit</strong> \
+                                    in in the <strong>Data Limit Options</strong> pane while doing so, and then enabling it when finished.<br/><br/>\
+                                   You can turn off the <strong>Show Data Loading Notes</strong> property to hide these notes for end-users.');
+                }
             }
 
         /**
