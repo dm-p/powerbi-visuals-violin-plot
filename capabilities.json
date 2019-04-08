@@ -27,11 +27,11 @@
     "objects": {
         "dataLimit": {
             "displayName": "Data Limit Options",
-            "description": "Custom visuals have a typical limit of 30,000 rows. If you have more than this available to your data set, then this allows you to override the default limit at the cost of performance.\n\nNOTE: reloads are costly and will trigger after any change. If you are making changes to your visual, then it's recommended that you turn these options off while doing that and then back on when you're finished.",
+            "description": "By default, custom visuals can display a maximum of 30,000 rows. If you have more than this in the data you want to visualise, then these options allow you to override the default limit 𝗮𝘁 𝘁𝗵𝗲 𝗰𝗼𝘀𝘁 𝗼𝗳 𝗽𝗲𝗿𝗳𝗼𝗿𝗺𝗮𝗻𝗰𝗲.\n\n𝗡𝗢𝗧𝗘: anything that updates the visual (data, properties) can be costly. If you are making interim changes to your visual, it is recommended that you turn these options off while doing that, and re-enable them when you're finished.",
             "properties": {
                 "override": {
                     "displayName": "Override Row Limit",
-                    "description": "Allow loading of additional data from the model to the visual, if it is available.\n\nNote that Power BI still may not be able to supply all data, depending on memory constraints.",
+                    "description": "Allow loading of additional data from the model to the visual, if it is available.\n\nNote that Power BI still may not be able to supply all data to your visual, depending on memory constraints.",
                     "type": {
                         "bool": true
                     }
@@ -44,7 +44,7 @@
                     }
                 },
                 "showCustomVisualNotes": {
-                    "displayName": "Show Custom Visual Notes",
+                    "displayName": "Show Data Loading Notes",
                     "description": "Display information about the custom visual limitations and recommendations for end users.\n\nThis option allows you to turn this info off for end-users if you feel it is not relevant to them.",
                     "type": {
                         "bool": true
