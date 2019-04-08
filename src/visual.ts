@@ -50,6 +50,7 @@ module powerbi.extensibility.visual {
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
         import renderBarcodePlot = ViolinPlotHelpers.renderLinePlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
+        import dataLimitLoadingStatus = ViolinPlotHelpers.dataLimitLoadingStatus;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
         import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
         import formatTooltipValue = ViolinPlotHelpers.formatTooltipValue;
@@ -172,15 +173,6 @@ module powerbi.extensibility.visual {
 
                     /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
                      *  while we're fetching more data.
-                     *  
-                     *  For people viewing the source code, this option is hard-switched off in the settings, as I have observed some issues when
-                     *  using categories and individual data colours (the property pane breaks), as well as resizing the visual (sometimes it just
-                     *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The 1.x API has
-                     *  memory leak issues, which don't help with diagnosis. The fecthMoreData() function is also broken in v2.1 and v2.2 of the custom
-                     *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just 
-                     *  switch it on once I find a suitable API version.
-                     *  
-                     *  TODO: Convert to bootstrap layout
                      */
                         if (this.settings.dataLimit.enabled) {
                             if (options.operationKind == VisualDataChangeOperationKind.Create) {
@@ -190,10 +182,7 @@ module powerbi.extensibility.visual {
                                 this.windowsLoaded++;
                             }
 
-                            let rowCount = options.dataViews[0].categorical.values[0].values.length,
-                                rowCountFormatter = valueFormatter.create({
-                                    format: '#,##0'
-                                });
+                            let rowCount = options.dataViews[0].categorical.values[0].values.length;
 
                             if (        options.dataViews[0].metadata.segment 
                                     &&  this.settings.dataLimit.override
@@ -204,32 +193,15 @@ module powerbi.extensibility.visual {
 
                                 /** Handle rendering of 'help text', if enabled */
                                 if (this.settings.dataLimit.showInfo) {
-                                    let infoContainer = this.container
-                                        .append('div')
-                                            .classed('violinPlotError', true);
-                                    infoContainer                        
-                                        .append('div')
-                                            .html(`&#128712;&nbsp;&nbsp;Loading more values (${rowCountFormatter.format(rowCount)} currently loaded)...`
-                                                +   (this.settings.dataLimit.showCustomVisualNotes
-                                                        ?   `<br/><br/><hr/>\
-                                                            <h3>Info for Report Authors</h3>
-                                                            Custom visuals have a cap of 30,000 rows. Recent changes allow us to exceed this by loading  more data from the data model \
-                                                                until until Power BI's memory allocation limit for the visual is reached.<br/><br/>\
-                                                            This can be costly and will run for every update to your visual.<br/><br/>
-                                                            If you are making changes to your visual layout then it is recommended that you turn off <strong>Override Row Limit</strong> \
-                                                                in in the <strong>Data Limit Options</strong> pane while doing so, and then enabling it when finished.<br/><br/>\
-                                                            You can turn off <strong>Show custom Visual Notes</strong> to hide these notes for end-users.\
-                                                            `
-                                                        :   '')
-                                                    );
+                                    dataLimitLoadingStatus(rowCount, this.container, this.settings);
+                                }
+                                this.canFetchMore = this.host.fetchMoreData();
+                                /** Clear down existing info and render if we have no more allocated memory */
+                                    if (!this.canFetchMore) {
+                                        debug.log(`Memory limit hit after ${this.windowsLoaded} fetch(es). We managed to get ${rowCount} rows.`);
+                                        this.container.selectAll('*').remove();
+                                        this.renderVisual(options, debug);
                                     }
-                                    this.canFetchMore = this.host.fetchMoreData();
-                                    /** Clear down existing info and render if we have no more allocated memory */
-                                        if (!this.canFetchMore) {
-                                            debug.log(`Memory limit hit after ${this.windowsLoaded} fetch(es). We managed to get ${rowCount} rows.`);
-                                            this.container.selectAll('*').remove();
-                                            this.renderVisual(options, debug);
-                                        }
                             } else {
                                 debug.log('We have all the data we can get!');
                                 this.renderVisual(options, debug);
@@ -900,12 +872,7 @@ module powerbi.extensibility.visual {
 
                 /** Apply instance-specific transformations */
                     switch (objectName) {
-                        /** The data limit options were intended to be enabled in conditions where we could fetch more data from the model, but there have been
-                         *  some issues in getting this to work reliably, so for now they are turned off. Refer to notes above in `update()` for more details as
-                         *  to why. As the code represents a fair bit of work to get the implementation going, we'll enable it based on the `enabled` property
-                         *  in the `dataLimitSettings` class, once we can get this to work reliably. For now this is left for anyone interested in the source code,
-                         *  to see where I got to with it as a feature.
-                         */
+                        
                         case 'dataLimit': {
                             /** If not overriding then we don't need to show the addiitonal info options */
                                 if (!this.settings.dataLimit.override) {
