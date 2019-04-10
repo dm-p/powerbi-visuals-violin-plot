@@ -441,7 +441,10 @@ module powerbi.extensibility.visual {
                 let rowCountFormatter = valueFormatter.create({
                     format: '#,##0'
                 });
-                let progressIndicator = containingElement
+                let container = containingElement
+                    .append('div');
+
+                let progressIndicator = container
                     .append('div');
                 progressIndicator
                     .append('span')
@@ -453,12 +456,12 @@ module powerbi.extensibility.visual {
                         .classed('align-middle', true);
 
                 if (settings.dataLimit.showCustomVisualNotes) {
-                    containingElement
+                    container
                         .append('hr');
-                    containingElement
+                    container
                         .append('h5')
                             .text('About Loading More Data');
-                    containingElement
+                    container
                         .append('p')
                             .html('Custom visuals have a limit of 30,000 rows. Recent changes allow us to exceed this by loading  more data from the data model \
                                     until until Power BI\'s memory allocation limit for the visual is reached.<br/><br/>\
