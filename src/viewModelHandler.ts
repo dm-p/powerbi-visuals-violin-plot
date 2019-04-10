@@ -803,12 +803,16 @@ module powerbi.extensibility.visual {
                                                 let min = minBisect(kdeData, interpolateMin),
                                                     max = maxBisect(kdeData, interpolateMax);
                                                 
-                                                    debug.log(`Clamp splicing: min index = ${min}, max index = ${max}`);
+                                                    debug.log(`Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`);
 
                                             /** Add 2 max elements: the KDE plot value, and a 0 to converge */
+                                                debug.log('Resolving maximum values...');
                                                 kdeData.splice(max, 0, {
                                                     x: interpolateMax,
-                                                    y: kdeData[max].y,
+                                                    y: kdeData[max > kdeData.length - 1 
+                                                            ?   max - 1 
+                                                            :   max
+                                                        ].y,
                                                     remove: false
                                                 });
                                                 kdeData.splice(max + 1, 0, {
@@ -818,9 +822,13 @@ module powerbi.extensibility.visual {
                                                 });
 
                                             /** Add 2 min elements; similar to above */
+                                                debug.log('Resolving minimum values...');
                                                 kdeData.splice(min, 0, {
                                                     x: interpolateMin,
-                                                    y: kdeData[min < 0 ? 0 : min - 1].y,
+                                                    y: kdeData[min === 0 
+                                                            ?   0 
+                                                            :   min - 1
+                                                        ].y,
                                                     remove: false
                                                 });
                                                 kdeData.splice(min, 0, {
@@ -829,8 +837,8 @@ module powerbi.extensibility.visual {
                                                     remove: false
                                                 });
 
-
                                             /** Filter out anything outside our interpolation values */
+                                                debug.log('Filtering extents...');
                                                 v.dataKde = kdeData
                                                     .filter(d => d.x >= interpolateMin)    
                                                     .filter(d => d.x <= interpolateMax);
@@ -986,8 +994,10 @@ module powerbi.extensibility.visual {
                                 yAxis.scale = d3.scale.linear()
                                     .domain(yAxis.domain)
                                     .range(yAxis.range)
-                                    .nice(yAxis.ticks)
                                     .clamp(true);
+                                if (!(this.settings.yAxis.start || this.settings.yAxis.end)) {
+                                    yAxis.scale.nice(yAxis.ticks);
+                                }
                                 yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
                                     this.settings.yAxis.showLabels
                                         ?   yAxis.labelFormatter.format(v)
@@ -1172,7 +1182,7 @@ module powerbi.extensibility.visual {
              * @param debug                                     - debugger to attach
              */
                 updateYDomain(domain: [number, number], debug: VisualDebugger) {
-                    
+
                     /** If the user has supplied their own start/end values, use those */
                         domain = [
                             this.settings.yAxis.start === 0 
