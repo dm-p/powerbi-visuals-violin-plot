@@ -274,6 +274,7 @@ module powerbi.extensibility.visual {
 
                     /** All data points */
                         debug.log('All data points...');
+                        this.viewModel.statistics.count = this.allDataPoints.length;
                         this.viewModel.statistics.max = d3.max(this.allDataPoints);
                         this.viewModel.statistics.min = d3.min(this.allDataPoints);
                         this.viewModel.statistics.deviation = d3.deviation(this.allDataPoints);
@@ -284,7 +285,7 @@ module powerbi.extensibility.visual {
 
                     /** Process the remainder of the view model by category 
                      *  #44: For no categories, we can re-use the min/max/iqr/deviation/span/quartiles withough going back to the d3.js well.
-                     *          For those with categories, we'll caculate all data points once and re-use where we can to avoid unnecessary
+                     *          For those with categories, we'll calculate all data points once and re-use where we can to avoid unnecessary
                      *          array processing operations.
                      */
                         debug.log('Updating categories...');
@@ -292,7 +293,23 @@ module powerbi.extensibility.visual {
                             c.dataPoints
                                 .sort(d3.ascending)
                                 .filter(v => v !== null);
+
+                            /** Aggregate data points so that when we render individual values (like the barcode plot), we don't plot
+                             *  duplicate elements, but only if we're going to need them. Note that keys (the value) are coerced to strings
+                             *  by d3, so we'll need to consider that later on, when we need to display values in tooltips etc.
+                             */
+                                if (this.settings.dataPoints.plotType == 'barcodePlot') {
+                                    c.dataPointsAgg = d3.nest()
+                                        .key(d => d.toString())
+                                        .rollup(v => ({
+                                            count: v.length
+                                        }) as IStatistics) 
+                                        .entries(c.dataPoints)
+                                        .sort((x, y) => d3.ascending(x.key, y.key));
+                                }
+
                             c.statistics = {
+                                count: c.dataPoints.length,
                                 min: d3.min(c.dataPoints),
                                 max: d3.max(c.dataPoints),
                                 deviation: d3.deviation(c.dataPoints),

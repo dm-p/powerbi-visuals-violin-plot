@@ -6,6 +6,7 @@ module powerbi.extensibility.visual {
             import IViewModel = ViolinPlotModels.IViewModel;
             import ICategory = ViolinPlotModels.ICategory;
             import IVisualDataPoint = ViolinPlotModels.IVisualDataPoint;
+            import IDataPointAggregate = ViolinPlotModels.IDataPointAggregate;
             import IAxisLinear = ViolinPlotModels.IAxisLinear;
             import EViolinSide = ViolinPlotModels.EViolinSide;
             import EBoxPlotWhisker = ViolinPlotModels.EBoxPlotWhisker;
@@ -247,9 +248,10 @@ module powerbi.extensibility.visual {
 
                     /** Plot data points */
                         comboPlotContainer.selectAll('.tooltipDataPoint')
-                            .data((d, i) => <IVisualDataPoint[]>d.dataPoints.map(dp => 
+                            .data((d, i) => <IVisualDataPoint[]>d.dataPointsAgg.map(dp => 
                                 ({
-                                    value: dp,
+                                    value: dp.key,
+                                    count: dp.count,
                                     categoryIndex: i
                                 })
                             ))
@@ -491,17 +493,17 @@ module powerbi.extensibility.visual {
          * @param mouse                                         - Number array of corodinate data
          * @param yAxis                                         - Axis object to use for scaling
          */
-            export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): number {
+            export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): IDataPointAggregate {
                 let yData = yAxis.scale.invert(mouse[1]),
-                    bisectValue = d3.bisector((d:number) => d).left,
-                    ttv: number;
-                
-                overlay.each((d) => {
-                    let data = d.dataPoints,
-                        idx = bisectValue(data, yData, 1),
+                    bisectValue = d3.bisector((d:IDataPointAggregate) => d.key).left,
+                    ttv: IDataPointAggregate;
+
+                overlay.each((d, i) => {
+                    let data = d.dataPointsAgg,
+                        idx = bisectValue(data, yData.toString(), 1),
                         d0 = data[idx - 1],
                         d1 = data[idx] ? data[idx] : d0;
-                    ttv = yData - d0 > d1 - yData ? d1: d0;
+                    ttv = yData - Number(d0.key) > Number(d1.key) - yData ? d1: d0;
                 });              
                 return ttv;
             }

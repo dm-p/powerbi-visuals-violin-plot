@@ -58,6 +58,7 @@ module powerbi.extensibility.visual {
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
         import ICategory = ViolinPlotModels.ICategory;
+        import IDataPointAggregate = ViolinPlotModels.IDataPointAggregate;
         import EComboPlotType = ViolinPlotModels.EComboPlotType;
     
     export class ViolinPlot implements IVisual {
@@ -567,7 +568,7 @@ module powerbi.extensibility.visual {
                     s = settings.tooltip,
                     measureFormat = viewModel.yAxis.labelFormatter.options.format,
                     dataPoint: boolean,
-                    highlightedValue: number,
+                    highlightedValue: IDataPointAggregate,
                     tooltips: VisualTooltipDataItem[] = [];
                 debug.log('Selection ID', v.selectionId);
 
@@ -581,11 +582,11 @@ module powerbi.extensibility.visual {
                         d3.select(tte.context.parentNode)
                             .select('.comboPlotToolipDataPoint')
                                 .attr({
-                                    y1: viewModel.yAxis.scale(highlightedValue),
-                                    y2: viewModel.yAxis.scale(highlightedValue)
+                                    y1: viewModel.yAxis.scale(Number(highlightedValue.key)),
+                                    y2: viewModel.yAxis.scale(Number(highlightedValue.key))
                                 })
                                 .style('display', null);
-                        debug.log(`Highlighted Value: ${highlightedValue}`);
+                        debug.log(`Highlighted Value: ${highlightedValue.key}`);
                     } else {
                         debug.log('Category Highlighted');
                     }
@@ -599,7 +600,7 @@ module powerbi.extensibility.visual {
                     formatTooltipValue(
                         '# Samples',
                         measureFormat,
-                        v.dataPoints.length,
+                        v.statistics.count,
                         s.numberSamplesDisplayUnits,
                         s.numberSamplesPrecision,
                         viewModel.locale
@@ -775,7 +776,7 @@ module powerbi.extensibility.visual {
                         formatTooltipValue(
                             viewModel.measure,
                             measureFormat,
-                            highlightedValue,
+                            Number(highlightedValue.key),
                             s.measureDisplayUnits,
                             s.measurePrecision,
                             viewModel.locale

@@ -20,10 +20,12 @@ module powerbi.extensibility.visual {
          *  Used to bind individual data points (for non-box data plots)
          *  
          *  @property {number} value                            - Data point value
+         *  @property {number} count                            - Number of data points with value
          *  @property {number} categoryIndex                    - Index of category that the value belongs to (used for looking up ICategory)
          */
             export interface IVisualDataPoint {
                 value: number,
+                count: number,
                 categoryIndex: number
             }
 
@@ -249,6 +251,7 @@ module powerbi.extensibility.visual {
          *                                                          preserving the properties pane - see notes in `visual.ts`
          * @property {powerbi.visuals.ISelectionId} selectionId - Generated `ISelectionID` for category-specific settings in metadata
          * @property {number[]} dataPoints                      - All data points for the category in question
+         * @property {IDataPointAggregate[]} dataPointsAgg      - All data points aggregated for combo plots that need individual points
          * @property {IDataPointKde[]} dataKde                  - KDE processed data points for the category, according to visual settings
          * 
          * @property {d3.svg.Line<IDataPointKde>} lineGen       - Line generation function for category KDE plot
@@ -265,6 +268,7 @@ module powerbi.extensibility.visual {
                 colour: string;
                 selectionId: powerbi.visuals.ISelectionId;
                 dataPoints: number[];
+                dataPointsAgg: IDataPointAggregate[];
                 dataKde: IDataPointKde[];
                 lineGen: d3.svg.Line<IDataPointKde>;
                 areaGen: d3.svg.Area<IDataPointKde>;
@@ -294,6 +298,7 @@ module powerbi.extensibility.visual {
         /**
          * Used to hold statistical information about a category or the entire dataset
          * 
+         * @property {number} count                             - The number of records in the set
          * @property {number} min                               - Minimum value in data points
          * @property {number} confidenceLower                   - Calculated lower confidence value
          * @property {number} quartile1                         - Calculated first quartile value
@@ -311,6 +316,7 @@ module powerbi.extensibility.visual {
          * @property {number} interpolateMax                    - Minimum y-value for KDE interpolation point of the violin
          */
             export interface IStatistics {
+                count: number;
                 min: number;
                 confidenceLower: number;
                 quartile1: number;
@@ -341,6 +347,19 @@ module powerbi.extensibility.visual {
                 x: number;
                 y: number;
                 remove: boolean;
+            }
+
+        /**
+         *  Represents an aggregation of data points, for combo plots that need to plot individual values. In these cases, it doesn't make sense to
+         *  render the same point multiple times in the DOM as it's a massive performance hit. We can keep details around these such as count if we
+         *  wish to communicate their volume within the combo plot.
+         * 
+         *  @property {string} key                              - The value we're aggregating (d3.js coerces to string)
+         *  @property {IStatistics} values                      - The statistics we want to capture for this data point aggregation
+         */
+            export interface IDataPointAggregate {
+                key: string;
+                values: IStatistics;
             }
 
         /** Used to specify side of the violin we're rendering, in order to reduce repeated code and manage position accordingly */
