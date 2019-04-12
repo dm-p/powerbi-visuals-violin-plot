@@ -773,11 +773,19 @@ module powerbi.extensibility.visual {
                 if (dataPoint) {
                     tooltips.push(
                         formatTooltipValue(
-                            viewModel.measure,
+                            `${viewModel.measure} - Highlighted`,
                             measureFormat,
                             Number(highlightedValue.key),
                             s.measureDisplayUnits,
                             s.measurePrecision,
+                            viewModel.locale
+                        ),
+                        formatTooltipValue(
+                            '# Samples with Highlighted Value',
+                            measureFormat,
+                            highlightedValue.values.count,
+                            s.numberSamplesDisplayUnits,
+                            s.numberSamplesPrecision,
                             viewModel.locale
                         )
                     );
