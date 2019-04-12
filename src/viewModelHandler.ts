@@ -305,7 +305,7 @@ module powerbi.extensibility.visual {
                                             count: v.length
                                         }) as IStatistics) 
                                         .entries(c.dataPoints)
-                                        .sort((x, y) => d3.ascending(x.key, y.key));
+                                        .sort((x, y) => d3.ascending(Number(x.key), Number(y.key)));
                                 }
 
                             c.statistics = {

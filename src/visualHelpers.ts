@@ -495,12 +495,12 @@ module powerbi.extensibility.visual {
          */
             export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): IDataPointAggregate {
                 let yData = yAxis.scale.invert(mouse[1]),
-                    bisectValue = d3.bisector((d:IDataPointAggregate) => d.key).left,
+                    bisectValue = d3.bisector((d:IDataPointAggregate) => Number(d.key)).left,
                     ttv: IDataPointAggregate;
 
                 overlay.each((d, i) => {
                     let data = d.dataPointsAgg,
-                        idx = bisectValue(data, yData.toString(), 1),
+                        idx = bisectValue(data, yData, 1),
                         d0 = data[idx - 1],
                         d1 = data[idx] ? data[idx] : d0;
                     ttv = yData - Number(d0.key) > Number(d1.key) - yData ? d1: d0;
