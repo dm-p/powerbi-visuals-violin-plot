@@ -102,8 +102,7 @@ module powerbi.extensibility.visual {
                 /** Visual container */
                     this.container = d3.select(options.element)
                         .append('div')
-                            .classed('violinPlotContainer', true)
-                            .classed('overflow-auto', true);
+                            .classed('violinPlotContainer', true);
 
             }
 
