@@ -137,7 +137,7 @@ module powerbi.extensibility.visual {
                                 }
 
                             /** Quartiles */
-                                if (this.settings.dataPoints.showQuartiles) {
+                                if (this.settings.dataPoints.showQuartiles && this.settings.dataPoints.plotType != 'boxPlot') {
                                     if (this.viewModel.legend.quartilesMatch) {
                                         legendData.dataPoints.push({
                                             label: this.viewModel.legend.quartileCombinedText,
