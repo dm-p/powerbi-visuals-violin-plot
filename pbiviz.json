@@ -9,7 +9,7 @@
     "supportUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot",
     "gitHubUrl": "https://bitbucket.org/dm-p/power-bi-visuals-violin-plot"
   },
-  "apiVersion": "2.3.0",
+  "apiVersion": "2.5.0",
   "author": {
     "name": "Daniel Marsh-Patrick",
     "email": "d.s.marsh@gmail.com"
