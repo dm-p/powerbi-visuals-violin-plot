@@ -1373,7 +1373,7 @@
                     "type": {
                         "text": true
                     },
-                    "placeHolderText": "Category"
+                    "placeHolderText": "Category/Measure"
                 },
                 "fontColor": {
                     "displayName": "Font color",
@@ -1392,6 +1392,48 @@
                             "fontSize": true
                         }
                     }
+                },
+                "dataPointText": {
+                    "displayName": "Data point text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "Individual Data Point"
+                },
+                "medianText": {
+                    "displayName": "Median text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "Median Value"
+                },
+                "meanText": {
+                    "displayName": "Mean text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "Mean Value"
+                },
+                "quartileCombinedText": {
+                    "displayName": "1st & 3rd Quartiles text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "1st & 3rd Quartiles"
+                },
+                "quartile1Text": {
+                    "displayName": "1st Quartile text",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "1st Quartile"
+                },
+                "quartile3Text": {
+                    "displayName": "3rd Quartile",
+                    "type": {
+                        "text": true
+                    },
+                    "placeHolderText": "3rd Quartile"
                 }
             }
         },

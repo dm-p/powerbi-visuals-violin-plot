@@ -22,6 +22,7 @@
     "src/viewModelHandler.ts",
     "src/kde.ts",
     "src/visualHelpers.ts",
+    "src/legendHelpers.ts",
     "src/settings.ts",
     "src/visual.ts"
   ]

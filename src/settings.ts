@@ -238,6 +238,14 @@ module powerbi.extensibility.visual {
         /** Height and width limit constants */
         public heightLimit: number = 75;
         public widthLimit: number = 75;
+        /** Properties for handling legend override labels */
+        public spacerText: string = '    ';
+        public dataPointText: string = 'Individual Data Point';
+        public medianText: string = 'Median Value';
+        public meanText: string = 'Mean Value';
+        public quartileCombinedText: string = '1st & 3rd Quartiles';
+        public quartile1Text: string = '1st Quartile';
+        public quartile3Text: string = '3rd Quartile';
     }
 
     /** Sorting */

@@ -35,9 +35,7 @@ module powerbi.extensibility.visual {
     /** powerbi.extensibility.utils.chart.legend */
         import createLegend = powerbi.extensibility.utils.chart.legend.createLegend;
         import ILegend = powerbi.extensibility.utils.chart.legend.ILegend;
-        import Legend = powerbi.extensibility.utils.chart.legend;
         import LegendData = powerbi.extensibility.utils.chart.legend.LegendData;
-        import LegendIcon = powerbi.extensibility.utils.chart.legend.LegendIcon;
         import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
 
     /** powerbi.extensibility.utils.formatting */
@@ -55,6 +53,7 @@ module powerbi.extensibility.visual {
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
         import getHighlightedDataPoints = ViolinPlotHelpers.getHighlightedDataPoints;
         import formatTooltipValue = ViolinPlotHelpers.formatTooltipValue;
+        import ViolinLegend = ViolinPlotHelpers.ViolinLegend;
 
     /** ViolinPlotModels */
         import IViewModel = ViolinPlotModels.IViewModel;
@@ -74,7 +73,6 @@ module powerbi.extensibility.visual {
         private tooltipServiceWrapper: ITooltipServiceWrapper;
         private errorState: boolean;
         private legend: ILegend;
-        private legendData: LegendData;
         private canFetchMore: boolean;
         private windowsLoaded: number;
         private locale: string;
@@ -118,11 +116,6 @@ module powerbi.extensibility.visual {
                 this.viewModelHandler.clearProfiling();
                 this.viewModelHandler.settings = this.settings;
                 this.viewModelHandler.viewport = options.viewport;
-                if (!this.legendData) {
-                    this.legendData = {
-                        dataPoints: []
-                    };
-                }
 
                 /** Initial debugging for visual update */
                     this.viewModelHandler.debug = this.settings.about.debugMode && this.settings.about.debugVisualUpdate;
@@ -236,34 +229,8 @@ module powerbi.extensibility.visual {
                             this.viewModelHandler.mapDataView(options, this.host, this.colourPalette);
                             this.viewModelHandler.calculateStatistics();
                             this.viewModelHandler.sortAndFilterData();
-
-                            /** Construct legend from measures. We need our legend before we can size the rest of the chart, so we'll do this first. */
-                                if (this.viewModelHandler.viewModel.categoryNames) {
-                                    debug.log('Creating legend data...');
-                                    this.legendData = {
-                                        title: this.settings.legend.showTitle 
-                                                    ? this.settings.legend.titleText 
-                                                        ?   this.settings.legend.titleText
-                                                        :   options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0].displayName
-                                                    : null,
-                                        fontSize: this.settings.legend.fontSize,
-                                        labelColor: this.settings.legend.fontColor,
-                                        dataPoints: this.viewModelHandler.viewModel.categories.map(c => (
-                                            {
-                                                label: c.displayName.formattedName,
-                                                color: c.colour,
-                                                icon: LegendIcon.Circle,
-                                                selected: false,
-                                                identity: c.selectionId
-                                            }
-                                        ))
-                                    }
-                                    debug.log('Legend data instantiated.');
-                                    debug.footer();
-                                }
-                                
+                            this.renderLegend();                                
                             this.viewModelHandler.initialiseAxes(options);
-
                             break;
                         }
                         default: {
@@ -807,61 +774,28 @@ module powerbi.extensibility.visual {
             private renderLegend(): void {
 
                 let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
+                debug.log('Starting renderLegend');
+                debug.log('Checking legend position...');
+                debug.profileStart();               
+
+                let violinLegend = new ViolinLegend(
+                    this.errorState,
+                    this.container,
+                    this.legend,
+                    this.viewModelHandler.viewport,
+                    this.viewModelHandler.viewModel,
+                    this.settings,
+                    this.host
+                );
+                violinLegend.renderLegend();
+                this.legend = violinLegend.legend;
+                this.viewModelHandler.viewport = {
+                    width: violinLegend.newViewport.width,
+                    height: violinLegend.newViewport.height
+                }
+                debug.log('Adjusted viewport:', this.viewModelHandler.viewport);
+                this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
                 debug.footer();
-                debug.log('Rendering legend...');
-                debug.profileStart();
-                
-                /** Only show if legend is enabled and we colour by category */
-                    let position: LegendPosition = this.settings.legend.show 
-                        && !this.errorState 
-                        && this.settings.dataColours.colourByCategory
-                        && this.viewModelHandler.viewModel.categoryNames
-                            ?   LegendPosition[this.settings.legend.position]
-                            :   LegendPosition.None;
-                    debug.log(`Position: ${LegendPosition[position]}`);
-
-                /** For us to tell if the legend is going to work, we need to draw it first in order to get its dimensions */
-                    this.legend.changeOrientation(position);
-                    debug.log('Legend orientation set.');
-                    this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                    debug.log('Legend drawn.');
-
-                /** If this exceeds our limits, then we will hide and re-draw prior to render */
-                    let legendBreaksViewport = false;
-                    switch (this.legend.getOrientation()) {
-                        case LegendPosition.Left:
-                        case LegendPosition.LeftCenter:
-                        case LegendPosition.Right:
-                        case LegendPosition.RightCenter:
-                            legendBreaksViewport = 
-                                    (this.viewModelHandler.viewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
-                                ||  (this.viewModelHandler.viewport.height < this.settings.legend.heightLimit);
-                            break;
-                        case LegendPosition.Top:
-                        case LegendPosition.TopCenter:
-                        case LegendPosition.Bottom:
-                        case LegendPosition.BottomCenter:
-                        legendBreaksViewport =         
-                                    (this.viewModelHandler.viewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
-                                ||  (this.viewModelHandler.viewport.width < this.settings.legend.widthLimit);
-                            break;
-                    }
-
-                /** Adjust viewport (and hide legend) as appropriate */
-                    debug.log('Legend dimensions', this.legend.getMargins());
-                    if (legendBreaksViewport) {
-                        debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
-                        this.legend.changeOrientation(LegendPosition.None);
-                        this.legend.drawLegend(this.legendData, this.viewModelHandler.viewport);
-                    } else {
-                        debug.log('Legend dimensions are good to go!');
-                        this.viewModelHandler.viewport.width -= this.legend.getMargins().width;
-                        this.viewModelHandler.viewport.height -= this.legend.getMargins().height;
-                    }
-                    Legend.positionChartArea(this.container, this.legend);
-                    debug.log('Legend fully positioned.');
-                    this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
-                    debug.footer();
 
             }
 
@@ -1152,13 +1086,28 @@ module powerbi.extensibility.visual {
                             break;
                         }
                         case 'legend': {
-                            /** Disable/hide if not using Data Colours by Category */
-                                if (!this.settings.dataColours.colourByCategory) {
-                                    instances[0] = null;
-                                }
                             /** Legend title toggle */
                                 if (!this.settings.legend.show && !this.settings.legend.showTitle) {
                                     delete instances[0].properties['titleText'];
+                                }
+                            /** Reset legend measure value items to default if blanked out */
+                                if (!this.settings.legend.medianText) {
+                                    instances[0].properties['medianText'] = VisualSettings.getDefault()['legend'].medianText;
+                                }
+                                if (!this.settings.legend.meanText) {
+                                    instances[0].properties['meanText'] = VisualSettings.getDefault()['legend'].meanText;
+                                }
+                                if (!this.settings.legend.dataPointText) {
+                                    instances[0].properties['dataPointText'] = VisualSettings.getDefault()['legend'].dataPointText;
+                                }
+                                if (!this.settings.legend.quartileCombinedText) {
+                                    instances[0].properties['quartileCombinedText'] = VisualSettings.getDefault()['legend'].quartileCombinedText;
+                                }
+                                if (!this.settings.legend.quartile1Text) {
+                                    instances[0].properties['quartile1Text'] = VisualSettings.getDefault()['legend'].quartile1Text;
+                                }
+                                if (!this.settings.legend.quartile3Text) {
+                                    instances[0].properties['quartile3Text'] = VisualSettings.getDefault()['legend'].quartile3Text;
                                 }
                             break;
                         }

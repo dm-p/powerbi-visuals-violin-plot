@@ -101,6 +101,14 @@ module powerbi.extensibility.visual {
                         viewModel.measure = this.measureMetadata.displayName;
                         viewModel.locale = host.locale;
                         viewModel.categories = [];
+                        viewModel.dataViewMetadata = {
+                            categoryDisplayName: this.categoryMetadata
+                                ?   this.categoryMetadata.displayName
+                                :   null,
+                            measureDisplayName: this.measureMetadata.displayName
+                                ?   this.measureMetadata.displayName
+                                :   null
+                        };
 
                         /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
                          *
@@ -243,6 +251,37 @@ module powerbi.extensibility.visual {
                                     debug.log('Mapping distinct categories into view model...');
                                     viewModel.categories = distinctCategories;
                             }
+
+                    /** Add in the legend override properties now that we have the categories mapped */
+                        viewModel.legend = {
+                            boxColour: this.settings.dataPoints.plotType == 'barcodePlot'
+                                ?   this.viewModel.categories[0].colour
+                                :   this.settings.dataPoints.boxFillColour,
+                            boxOpacity: this.settings.dataPoints.plotType == 'barcodePlot'
+                                ?   1 - (this.settings.dataColours.transparency / 100)
+                                :   1 - (this.settings.dataPoints.transparency / 100),
+                            quartilesMatch: this.settings.dataPoints.showQuartiles
+                                &&  this.settings.dataPoints.quartile1StrokeLineStyle == this.settings.dataPoints.quartile3StrokeLineStyle
+                                &&  this.settings.dataPoints.quartile1FillColour == this.settings.dataPoints.quartile3FillColour,
+                            quartileCombinedText: this.settings.legend.quartileCombinedText == ''
+                                ?   VisualSettings.getDefault()['legend'].quartileCombinedText
+                                :   this.settings.legend.quartileCombinedText,
+                            quartile1Text: this.settings.legend.quartile1Text == ''
+                                ?   VisualSettings.getDefault()['legend'].quartile1Text
+                                :   this.settings.legend.quartile1Text,
+                            quartile3Text: this.settings.legend.quartile3Text == ''
+                                ?   VisualSettings.getDefault()['legend'].quartile3Text
+                                :   this.settings.legend.quartile3Text,
+                            dataPointText: this.settings.legend.dataPointText == ''
+                                ?   VisualSettings.getDefault()['legend'].dataPointText
+                                :   this.settings.legend.dataPointText,
+                            meanText: this.settings.legend.meanText == ''
+                                ?   VisualSettings.getDefault()['legend'].meanText
+                                :   this.settings.legend.meanText,
+                            medianText: this.settings.legend.medianText == ''
+                                ?   VisualSettings.getDefault()['legend'].medianText
+                                :   this.settings.legend.medianText
+                        };
 
                     /** We're done! */
                         this.viewModel = viewModel;

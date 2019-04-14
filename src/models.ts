@@ -64,6 +64,8 @@ module powerbi.extensibility.visual {
                 columnPlot: IBoxPlot;
                 profiling: IVisualProfiler;
                 locale: string;
+                dataViewMetadata: IDataViewMetadata;
+                legend: ILegend;
             }
 
         /**
@@ -75,6 +77,36 @@ module powerbi.extensibility.visual {
             export interface IViolinPlot {
                 categoryWidth: number;
                 width: number;
+            }
+
+        /**
+         * Specifics for plotting legend data
+         * 
+         * @property {string} boxColour                         - Correct colour to apply to legend annotation boxes (based on plot type)
+         * @property {number} boxOpacity                        - Level of opacity to apply to legend annotation boxes (based on series transparency and plot type)
+         * @property {boolean} quartilesMatch                   - Indicates that quartile configuration is identical for 1st/3rd and means we can consolidate
+         */
+            export interface ILegend {
+                boxColour: string;
+                boxOpacity: number;
+                quartilesMatch: boolean;
+                medianText: string;
+                meanText: string;
+                quartile1Text: string;
+                quartile3Text: string;
+                quartileCombinedText: string;
+                dataPointText: string;
+            }
+
+        /**
+         *  Details about the data view that we will repeatadly need, rather than ampping the data view all the time
+         * 
+         *  @property {string} categoryDisplayName              - Display name of category field
+         *  @property {string} measureDisplayName               - Display name of measure field
+         */
+            export interface IDataViewMetadata {
+                categoryDisplayName: string;
+                measureDisplayName: string;
             }
         
         /**
