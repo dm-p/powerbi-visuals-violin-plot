@@ -385,15 +385,15 @@ module powerbi.extensibility.visual {
                         renderComboPlotRectangle(boxContainer, viewModel, settings)
 
                     /** Mean, median & quartiles */
-                        if (settings.dataPoints.showMean && viewModel.columnPlot.width > viewModel.columnPlot.actualMeanDiameter) {
-                            renderComboPlotMean(boxContainer, viewModel, settings);
-                        }
                         if (settings.dataPoints.showMedian){
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
                         if (settings.dataPoints.showQuartiles) {
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile1, EComboPlotType.boxPlot);
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile3, EComboPlotType.boxPlot);
+                        }
+                        if (settings.dataPoints.showMean && viewModel.columnPlot.width > viewModel.columnPlot.actualMeanDiameter) {
+                            renderComboPlotMean(boxContainer, viewModel, settings);
                         }
 
                 }
