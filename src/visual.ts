@@ -35,11 +35,7 @@ module powerbi.extensibility.visual {
     /** powerbi.extensibility.utils.chart.legend */
         import createLegend = powerbi.extensibility.utils.chart.legend.createLegend;
         import ILegend = powerbi.extensibility.utils.chart.legend.ILegend;
-        import LegendData = powerbi.extensibility.utils.chart.legend.LegendData;
         import LegendPosition = powerbi.extensibility.utils.chart.legend.LegendPosition;
-
-    /** powerbi.extensibility.utils.formatting */
-        import valueFormatter = powerbi.extensibility.utils.formatting.valueFormatter;
 
     /** ViolinPlotHelpers */
         import ViewModelHandler = ViolinPlotHelpers.ViewModelHandler;
