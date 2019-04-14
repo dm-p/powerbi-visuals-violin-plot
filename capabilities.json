@@ -270,6 +270,10 @@
                             {
                                 "displayName": "Box",
                                 "value": "boxPlot"
+                            },
+                            {
+                                "displayName": "Column",
+                                "value": "columnPlot"
                             }
                         ]
                     }
@@ -282,8 +286,8 @@
                     }
                 },
                 "boxFillColour": {
-                    "displayName": "Box Color",
-                    "description": "Fill color to apply to the box plot.",
+                    "displayName": "Fill Color",
+                    "description": "Fill color to apply to the combo plot.",
                     "type": {
                         "fill": {
                             "solid": {

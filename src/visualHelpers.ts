@@ -151,6 +151,79 @@ module powerbi.extensibility.visual {
             }
 
         /**
+         * Handles rendering of a mean within the appropariate combo plot.
+         * 
+         * @param container                                     - Container to apply the mean circle to
+         * @param viewModel                                     - View model to use when calculating
+         * @param settings                                      - Visual settings
+         */
+            function renderComboPlotMean(container: d3.Selection<ICategory>, viewModel: IViewModel , settings: VisualSettings) {
+                if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
+                    container.append('circle')
+                        .classed({
+                            'violinPlotBoxPlot': true,
+                            'mean': true,
+                            'outer': true
+                        })
+                        .attr({
+                            'cx': (viewModel.xAxis.scale.rangeBand() / 2),
+                            'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
+                            'r': /** Don't render if larger than the box height */
+                                (d)=> -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) < viewModel.boxPlot.actualMeanDiameter
+                                    ?   0
+                                    :   viewModel.boxPlot.actualMeanRadius
+                        })
+                        .style({
+                            'fill': settings.dataPoints.meanFillColourInner,
+                            'stroke': settings.dataPoints.meanFillColour,
+                            'stroke-width': `${settings.dataPoints.meanStrokeWidth}px`
+                        });
+                }
+            }
+
+        /**
+         * Handles the rendering of a box/column plot rectangle for the combo plot
+         * 
+         * @param container                                     - Container to apply the rectangle to
+         * @param viewModel                                     - View model to use when calculating
+         * @param settings                                      - Visual settings
+         */
+            function renderComboPlotRectangle(container: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+
+                container
+                    .append('rect')
+                        .classed({
+                            'violinPlotBoxPlot': true,
+                            'box': true
+                        })
+                        .attr({
+                            'x': viewModel.boxPlot.xLeft,
+                            'y': (d) => {
+                                switch (settings.dataPoints.plotType) {
+                                    case 'boxPlot':
+                                        return viewModel.yAxis.scale(d.statistics.quartile3);
+                                    case 'columnPlot':
+                                        return viewModel.yAxis.scale(d.statistics.max);
+                                }
+                            },
+                            'width': viewModel.boxPlot.width,
+                            'height': (d) => {
+                                switch (settings.dataPoints.plotType) {
+                                    case 'boxPlot':
+                                        return -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1);
+                                    case 'columnPlot':
+                                        return -viewModel.yAxis.scale(d.statistics.max) + viewModel.yAxis.scale(d.statistics.min)
+                                }
+                            },
+                            'stroke': `${settings.dataPoints.boxFillColour}`,
+                            'stroke-width': `${settings.dataPoints.strokeWidth}px`,
+                            'fill': `${settings.dataPoints.boxFillColour}`,
+                            'fill-opacity': 1 - (settings.dataPoints.transparency / 100)
+                        });
+
+            }
+
+        /**
          * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
          * 
          * @param seriesContainer                               - Container to apply the box plot to
@@ -191,7 +264,7 @@ module powerbi.extensibility.visual {
                                     'shape-rendering': 'geometricPrecision'
                                 });
 
-                    /** Add overlay for interactivity - the shape of thisis going to depend on the plot */
+                    /** Add overlay for interactivity - the shape of this is going to depend on the plot */
                         let overlay = seriesContainer
                             .append('rect')
                                 .classed('violinPlotComboPlotOverlay', true)
@@ -293,6 +366,41 @@ module powerbi.extensibility.visual {
             }
 
         /**
+         * Handle rendering of ranged column combo plot
+         * 
+         * @param seriesContainer                               - Container to apply the column plot to
+         * @param viewModel                                     - View model to use when calculating
+         * @param settings                                      - Visual settings
+         */
+            export function renderColumnPlot(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+
+                if (viewModel.columnPlot.width > settings.dataPoints.strokeWidth) {
+
+                    /** Add the box */
+                        let boxContainer = seriesContainer
+                            .append('g')
+                                .attr({
+                                    'shape-rendering': 'geometricPrecision'
+                                });
+                        renderComboPlotRectangle(boxContainer, viewModel, settings)
+
+                    /** Mean, median & quartiles */
+                        if (settings.dataPoints.showMean && viewModel.columnPlot.width > viewModel.columnPlot.actualMeanDiameter) {
+                            renderComboPlotMean(boxContainer, viewModel, settings);
+                        }
+                        if (settings.dataPoints.showMedian){
+                            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
+                        }
+                        if (settings.dataPoints.showQuartiles) {
+                            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile1, EComboPlotType.boxPlot);
+                            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile3, EComboPlotType.boxPlot);
+                        }
+
+                }
+
+            }
+
+        /**
          * Handle rendering of box plot
          * 
          * @param seriesContainer                               - Container to apply the box plot to
@@ -306,25 +414,10 @@ module powerbi.extensibility.visual {
                     /** Add the box */
                         let boxContainer = seriesContainer
                             .append('g')
-                            .attr({
-                                'shape-rendering': 'geometricPrecision'
-                            });
-
-                        boxContainer.append('rect')
-                            .classed({
-                                'violinPlotBoxPlot': true,
-                                'box': true
-                            })
-                            .attr({
-                                'x': viewModel.boxPlot.xLeft,
-                                'y': (d) => viewModel.yAxis.scale(d.statistics.quartile3),
-                                'width': viewModel.boxPlot.width,
-                                'height': (d) => -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1),
-                                'stroke': `${settings.dataPoints.boxFillColour}`,
-                                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
-                                'fill': `${settings.dataPoints.boxFillColour}`,
-                                'fill-opacity': 1 - (settings.dataPoints.transparency / 100)
-                            });
+                                .attr({
+                                    'shape-rendering': 'geometricPrecision'
+                                });
+                        renderComboPlotRectangle(boxContainer, viewModel, settings)
 
                     /** Do the whiskers, if we need them */
                         if (settings.dataPoints.showWhiskers) {
@@ -336,27 +429,8 @@ module powerbi.extensibility.visual {
                         if (settings.dataPoints.showMedian){
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
-
                         if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
-                            boxContainer.append('circle')
-                                .classed({
-                                    'violinPlotBoxPlot': true,
-                                    'mean': true,
-                                    'outer': true
-                                })
-                                .attr({
-                                    'cx': (viewModel.xAxis.scale.rangeBand() / 2),
-                                    'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
-                                    'r': /** Don't render if larger than the box height */
-                                        (d)=> -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) < viewModel.boxPlot.actualMeanDiameter
-                                            ?   0
-                                            :   viewModel.boxPlot.actualMeanRadius
-                                })
-                                .style({
-                                    'fill': settings.dataPoints.meanFillColourInner,
-                                    'stroke': settings.dataPoints.meanFillColour,
-                                    'stroke-width': `${settings.dataPoints.meanStrokeWidth}px`
-                                });
+                            renderComboPlotMean(boxContainer, viewModel, settings);
                         }
 
                 }

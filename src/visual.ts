@@ -49,6 +49,7 @@ module powerbi.extensibility.visual {
         import renderViolin = ViolinPlotHelpers.renderViolin;
         import renderBoxPlot = ViolinPlotHelpers.renderBoxPlot;
         import renderBarcodePlot = ViolinPlotHelpers.renderLinePlot;
+        import renderColumnPlot = ViolinPlotHelpers.renderColumnPlot;
         import visualUsage = ViolinPlotHelpers.visualUsage;
         import dataLimitLoadingStatus = ViolinPlotHelpers.dataLimitLoadingStatus;
         import visualCollapsed = ViolinPlotHelpers.visualCollapsed;
@@ -526,6 +527,12 @@ module powerbi.extensibility.visual {
                                             break;
                                         }
 
+                                        case 'columnPlot': {
+                                            debug.log('Rendering column plots...');
+                                            renderColumnPlot(seriesContainer, viewModel, this.settings);
+                                            break;
+                                        }
+
                                     }
                                 }
 
@@ -935,7 +942,7 @@ module powerbi.extensibility.visual {
                                 instances[0].validValues = instances[0].validValues || {};
                                 instances[0].validValues.strokeWidth = {
                                     numberRange: {
-                                        min: 1,
+                                        min: 0,
                                         max: 5
                                     },
                                 };
@@ -1050,7 +1057,7 @@ module powerbi.extensibility.visual {
                                             delete instances[0].properties['meanStrokeWidth'];
                                             delete instances[0].properties['meanFillColourInner'];
 
-                                        /** Toggle quartile colour */
+                                        /** Toggle quartile properties */
                                             if (!this.settings.dataPoints.showQuartiles) {
                                                 delete instances[0].properties['quartile1FillColour'];
                                                 delete instances[0].properties['quartile1StrokeWidth'];
@@ -1061,6 +1068,31 @@ module powerbi.extensibility.visual {
                                             }
 
                                         break;
+                                    }
+
+                                    case 'columnPlot': {
+
+                                        /** Remove non-column plot properties */
+                                            delete instances[0].properties['showWhiskers'];
+                                            delete instances[0].properties['barColour'];
+
+                                        /** Toggle quartile properties */
+                                            if (!this.settings.dataPoints.showQuartiles) {
+                                                delete instances[0].properties['quartile1FillColour'];
+                                                delete instances[0].properties['quartile1StrokeWidth'];
+                                                delete instances[0].properties['quartile1StrokeLineStyle'];
+                                                delete instances[0].properties['quartile3FillColour'];
+                                                delete instances[0].properties['quartile3StrokeWidth'];
+                                                delete instances[0].properties['quartile3StrokeLineStyle'];
+                                            }
+
+                                        /** Toggle mean */
+                                            if (!this.settings.dataPoints.showMean) {
+                                                delete instances[0].properties['meanFillColour'];
+                                                delete instances[0].properties['meanStrokeWidth'];
+                                                delete instances[0].properties['meanFillColourInner'];
+                                            }
+
                                     }
 
                                 }

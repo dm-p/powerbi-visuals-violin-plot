@@ -1157,6 +1157,10 @@ module powerbi.extensibility.visual {
                                         this.viewModel.boxPlot.featureXLeft = this.viewModel.boxPlot.xLeft + (this.settings.dataPoints.strokeWidth / 2);
                                         this.viewModel.boxPlot.featureXRight = this.viewModel.boxPlot.xRight - (this.settings.dataPoints.strokeWidth / 2);
 
+                                    /** Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to use min/max rather than quartiles */
+                                        debug.log('Ranged column plot dimensions...');
+                                        this.viewModel.columnPlot = this.viewModel.boxPlot;
+
                                     /** Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes */
                                         debug.log('Barcode plot dimensions...');
                                         this.viewModel.barcodePlot = {
