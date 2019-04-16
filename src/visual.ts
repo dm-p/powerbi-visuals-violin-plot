@@ -264,34 +264,24 @@ module powerbi.extensibility.visual {
 
                         /** Watermark for non-production use, if the dev flag is set */
                             if (this.settings.about.development || this.settings.about.version.indexOf("DEV") != -1) {
+                                let fontSize = 12;
                                 violinPlotCanvas
                                     .append('text')
                                         .attr({
-                                            'transform': `translate(${this.viewModelHandler.viewport.width / 2},\
-                                                ${this.viewModelHandler.viewport.height / 2})\
-                                                rotate(-45)`,
-                                            'text-anchor': 'middle',
+                                            'transform': `translate(0, ${fontSize * 2})`,
+                                            'text-anchor': 'left',
                                             'opacity': 0.5
                                         })
                                         .style({
                                             'font-weight': 'bold',
                                             'fill': 'red',
-                                            'font-size': Math.min(
-                                                this.viewModelHandler.viewport.width,
-                                                this.viewModelHandler.viewport.height
-                                            ) / 15
+                                            'font-size': `${fontSize}px`
                                         })
                                         .append('tspan')
-                                            .text(`${this.settings.about.visualName.toUpperCase()} ${this.settings.about.version}`)
+                                            .text(`${this.settings.about.visualName.toUpperCase()} ${this.settings.about.version} - NOT FOR PRODUCTION USE`)
                                             .attr({
                                                 'x': 0,
                                                 'dy': '-1em'
-                                            })
-                                        .append('tspan')
-                                            .text('NOT FOR PRODUCTION USE')
-                                            .attr({
-                                                'x': 0,
-                                                'dy': '1em'
                                             });
                             }
 
