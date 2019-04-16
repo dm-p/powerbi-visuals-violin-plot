@@ -90,7 +90,7 @@ module powerbi.extensibility.visual {
                         options.element,
                         false,
                         null,
-                        true,
+                        false,
                         LegendPosition.Top
                     );
 
@@ -231,6 +231,7 @@ module powerbi.extensibility.visual {
                         }
                         default: {
                             debug.log('No need to re-map data. Skipping over...');
+                            this.renderLegend();
                         }
                     }
 
