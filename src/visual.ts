@@ -234,7 +234,6 @@ module powerbi.extensibility.visual {
                         }
                     }
 
-                    this.renderLegend();
                     debug.log('Viewport (Post-legend)', this.viewModelHandler.viewport);
                     debug.log('Data View', options.dataViews[0]);
                     
