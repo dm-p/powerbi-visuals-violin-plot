@@ -55,7 +55,7 @@ module powerbi.extensibility.visual {
                 }
 
             /**
-             *  Build the `LegendData` for the visual. We previoulsy used to do this if there were multiple category values, and the user
+             *  Build the `LegendData` for the visual. We previously used to do this if there were multiple category values, and the user
              *  had specified to colour by category. We had some feedback (#65) that showed it would be good to include the additional
              *  annotations to the violin (median, mean, quartiles & data points), so we artifically create these here and then do some
              *  post-processing on these afterwards.
