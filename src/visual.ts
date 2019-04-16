@@ -928,7 +928,7 @@ module powerbi.extensibility.visual {
                             /** Range validation on box plot width */
                                 instances[0].validValues.innerPadding = {
                                     numberRange: {
-                                        min: 50,
+                                        min: 0,
                                         max: 90
                                     },
                                 };
