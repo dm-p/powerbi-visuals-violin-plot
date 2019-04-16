@@ -1393,6 +1393,22 @@
                         }
                     }
                 },
+                "showCategories": {
+                    "displayName": "Show Categories",
+                    "displayNameKey": "Legend_Show_Categories",
+                    "description": "Show or hide the categories on the legend.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showStatisticalPoints": {
+                    "displayName": "Show Statistical Data Indicators",
+                    "displayNameKey": "Legend_Show_Statistical_Data",
+                    "description": "Show or hide the statistical data indicators (mean, median, quartiles).",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "dataPointText": {
                     "displayName": "Data point text",
                     "type": {

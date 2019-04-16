@@ -238,7 +238,10 @@ module powerbi.extensibility.visual {
         /** Height and width limit constants */
         public heightLimit: number = 75;
         public widthLimit: number = 75;
-        /** Properties for handling legend override labels */
+        /** Show/hide categories */
+        public showCategories: boolean = true;
+        /** Manage statistical data points */
+        public showStatisticalPoints: boolean = true;
         public spacerText: string = '    ';
         public dataPointText: string = 'Individual Data Point';
         public medianText: string = 'Median Value';

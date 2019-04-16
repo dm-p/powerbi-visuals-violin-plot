@@ -87,115 +87,123 @@ module powerbi.extensibility.visual {
                     if (!this.errorState && this.settings.dataPoints.show) {
 
                         /** If colouring by category, push in the individual values, or group */
-                            if (measureOnly) {
-                                legendData.dataPoints = [{
-                                    label: `${this.viewModel.dataViewMetadata.measureDisplayName}`,
-                                    color: this.settings.dataColours.defaultFillColour,
-                                    icon: LegendIcon.Circle,
-                                    selected: false,
-                                    identity: this.viewModel.categories[0].selectionId
-                                }];
-                            } else {
-                                legendData.dataPoints = this.viewModel.categories.map(c => (
-                                    {
-                                        label: c.displayName.formattedName,
-                                        color: c.colour,
+                            if (this.settings.legend.showCategories) {
+                                if (measureOnly) {
+                                    legendData.dataPoints = [{
+                                        label: `${this.viewModel.dataViewMetadata.measureDisplayName}`,
+                                        color: this.settings.dataColours.defaultFillColour,
                                         icon: LegendIcon.Circle,
                                         selected: false,
-                                        identity: c.selectionId
-                                    }
-                                ))
+                                        identity: this.viewModel.categories[0].selectionId
+                                    }];
+                                } else {
+                                    legendData.dataPoints = this.viewModel.categories.map(c => (
+                                        {
+                                            label: c.displayName.formattedName,
+                                            color: c.colour,
+                                            icon: LegendIcon.Circle,
+                                            selected: false,
+                                            identity: c.selectionId
+                                        }
+                                    ))
+                                }
                             }
 
                         /** Add specific items for violin annotations (we'll clean up afterwards) */
 
                             /** Spacer (to allow us to provide a small amount of spacing) */
-                                legendData.dataPoints.push({
-                                    label: this.settings.legend.spacerText,
-                                    color: '#000000',
-                                    icon: LegendIcon.Circle,
-                                    selected: false,
-                                    identity: this.host.createSelectionIdBuilder()
-                                        .withMeasure(this.settings.legend.spacerText)
-                                        .createSelectionId()
-                                });
-                        
-                            /** Barcode plot specifics */
-                                if (this.settings.dataPoints.plotType == 'barcodePlot') {
-                                    
-                                    /** Data points */
-                                        legendData.dataPoints.push({
-                                            label: this.viewModel.legend.dataPointText,
-                                            color: '#000000',
-                                            icon: LegendIcon.Circle,
-                                            selected: false,
-                                            identity: this.host.createSelectionIdBuilder()
-                                                .withMeasure(this.viewModel.legend.dataPointText)
-                                                .createSelectionId()
-                                        });
-
+                                if (this.settings.legend.showCategories && this.settings.legend.showStatisticalPoints) {
+                                    legendData.dataPoints.push({
+                                        label: this.settings.legend.spacerText,
+                                        color: '#000000',
+                                        icon: LegendIcon.Circle,
+                                        selected: false,
+                                        identity: this.host.createSelectionIdBuilder()
+                                            .withMeasure(this.settings.legend.spacerText)
+                                            .createSelectionId()
+                                    });
                                 }
+                        
+                            if (this.settings.legend.showStatisticalPoints) {
 
-                            /** Quartiles */
-                                if (this.settings.dataPoints.showQuartiles && this.settings.dataPoints.plotType != 'boxPlot') {
-                                    if (this.viewModel.legend.quartilesMatch) {
+                                /** Barcode plot specifics */
+                                    if (this.settings.dataPoints.plotType == 'barcodePlot') {
+                                        
+                                        /** Data points */
+                                            legendData.dataPoints.push({
+                                                label: this.viewModel.legend.dataPointText,
+                                                color: '#000000',
+                                                icon: LegendIcon.Circle,
+                                                selected: false,
+                                                identity: this.host.createSelectionIdBuilder()
+                                                    .withMeasure(this.viewModel.legend.dataPointText)
+                                                    .createSelectionId()
+                                            });
+
+                                    }
+
+                                /** Quartiles */
+                                    if (this.settings.dataPoints.showQuartiles && this.settings.dataPoints.plotType != 'boxPlot') {
+                                        if (this.viewModel.legend.quartilesMatch) {
+                                            legendData.dataPoints.push({
+                                                label: this.viewModel.legend.quartileCombinedText,
+                                                color: '#000000',
+                                                icon: LegendIcon.Circle,
+                                                selected: false,
+                                                identity: this.host.createSelectionIdBuilder()
+                                                    .withMeasure(this.viewModel.legend.quartileCombinedText)
+                                                    .createSelectionId()
+                                            });     
+                                        } else {
+                                            legendData.dataPoints.push({
+                                                label: this.viewModel.legend.quartile1Text,
+                                                color: '#000000',
+                                                icon: LegendIcon.Circle,
+                                                selected: false,
+                                                identity: this.host.createSelectionIdBuilder()
+                                                    .withMeasure(this.viewModel.legend.quartile1Text)
+                                                    .createSelectionId()
+                                            },
+                                            {
+                                                label: this.viewModel.legend.quartile3Text,
+                                                color: '#000000',
+                                                icon: LegendIcon.Circle,
+                                                selected: false,
+                                                identity: this.host.createSelectionIdBuilder()
+                                                    .withMeasure(this.viewModel.legend.quartile3Text)
+                                                    .createSelectionId()
+                                            });
+                                        }
+
+                                    }
+
+                                /** Median */
+                                    if (this.settings.dataPoints.showMedian) {
                                         legendData.dataPoints.push({
-                                            label: this.viewModel.legend.quartileCombinedText,
+                                            label: this.viewModel.legend.medianText,
                                             color: '#000000',
                                             icon: LegendIcon.Circle,
                                             selected: false,
                                             identity: this.host.createSelectionIdBuilder()
-                                                .withMeasure(this.viewModel.legend.quartileCombinedText)
-                                                .createSelectionId()
-                                        });     
-                                    } else {
-                                        legendData.dataPoints.push({
-                                            label: this.viewModel.legend.quartile1Text,
-                                            color: '#000000',
-                                            icon: LegendIcon.Circle,
-                                            selected: false,
-                                            identity: this.host.createSelectionIdBuilder()
-                                                .withMeasure(this.viewModel.legend.quartile1Text)
-                                                .createSelectionId()
-                                        },
-                                        {
-                                            label: this.viewModel.legend.quartile3Text,
-                                            color: '#000000',
-                                            icon: LegendIcon.Circle,
-                                            selected: false,
-                                            identity: this.host.createSelectionIdBuilder()
-                                                .withMeasure(this.viewModel.legend.quartile3Text)
+                                                .withMeasure(this.viewModel.legend.medianText)
                                                 .createSelectionId()
                                         });
                                     }
 
-                                }
+                                /** Mean */
+                                    if (this.settings.dataPoints.plotType != 'barcodePlot' && this.settings.dataPoints.showMean) {
+                                        legendData.dataPoints.push({
+                                            label: this.viewModel.legend.meanText,
+                                            color: '#000000',
+                                            icon: LegendIcon.Circle,
+                                            selected: false,
+                                            identity: this.host.createSelectionIdBuilder()
+                                                .withMeasure(this.viewModel.legend.meanText)
+                                                .createSelectionId()
+                                        });
+                                    }
 
-                            /** Median */
-                                if (this.settings.dataPoints.showMedian) {
-                                    legendData.dataPoints.push({
-                                        label: this.viewModel.legend.medianText,
-                                        color: '#000000',
-                                        icon: LegendIcon.Circle,
-                                        selected: false,
-                                        identity: this.host.createSelectionIdBuilder()
-                                            .withMeasure(this.viewModel.legend.medianText)
-                                            .createSelectionId()
-                                    });
-                                }
-
-                            /** Mean */
-                                if (this.settings.dataPoints.plotType != 'barcodePlot' && this.settings.dataPoints.showMean) {
-                                    legendData.dataPoints.push({
-                                        label: this.viewModel.legend.meanText,
-                                        color: '#000000',
-                                        icon: LegendIcon.Circle,
-                                        selected: false,
-                                        identity: this.host.createSelectionIdBuilder()
-                                            .withMeasure(this.viewModel.legend.meanText)
-                                            .createSelectionId()
-                                    });
-                                }
+                            }
 
                     }
 

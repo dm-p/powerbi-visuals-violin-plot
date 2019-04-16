@@ -1076,6 +1076,29 @@ module powerbi.extensibility.visual {
                                 if (!this.settings.legend.show && !this.settings.legend.showTitle) {
                                     delete instances[0].properties['titleText'];
                                 }
+                            /** Statistical indicator handling */
+                                if (!this.settings.legend.showStatisticalPoints) {
+                                    delete instances[0].properties['medianText'];
+                                    delete instances[0].properties['dataPointText'];
+                                    delete instances[0].properties['quartileCombinedText'];
+                                    delete instances[0].properties['quartile1Text'];
+                                    delete instances[0].properties['quartile3Text'];
+                                    delete instances[0].properties['meanText'];
+                                }
+
+                            /** Hide combo plot-specific items */
+                                if (this.settings.dataPoints.plotType == 'boxPlot') {
+                                    delete instances[0].properties['dataPointText'];
+                                    delete instances[0].properties['quartileCombinedText'];
+                                    delete instances[0].properties['quartile1Text'];
+                                    delete instances[0].properties['quartile3Text'];
+                                }
+                                if (this.settings.dataPoints.plotType == 'barcodePlot') {
+                                    delete instances[0].properties['meanText'];
+                                }
+                                if (this.settings.dataPoints.plotType == 'columnPlot') {
+                                    delete instances[0].properties['dataPointText'];
+                                }
                             /** Reset legend measure value items to default if blanked out */
                                 if (!this.settings.legend.medianText) {
                                     instances[0].properties['medianText'] = VisualSettings.getDefault()['legend'].medianText;
