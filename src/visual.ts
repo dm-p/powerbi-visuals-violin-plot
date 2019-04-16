@@ -267,8 +267,8 @@ module powerbi.extensibility.visual {
                                 violinPlotCanvas
                                     .append('text')
                                         .attr({
-                                            'transform': `translate(0, ${fontSize * 2})`,
-                                            'text-anchor': 'left',
+                                            'transform': `translate(${this.viewModelHandler.viewport.width / 2}, ${fontSize * 2})`,
+                                            'text-anchor': 'middle',
                                             'opacity': 0.5
                                         })
                                         .style({
