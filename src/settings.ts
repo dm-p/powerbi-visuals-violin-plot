@@ -262,7 +262,7 @@ module powerbi.extensibility.visual {
     /** Data Limit */
     export class dataLimitSettings {
         /** Enable feature - currently off; refer to notes in visual.ts for details */
-        public enabled: boolean = true;
+        public enabled: boolean = false;
         public override: boolean = false;
         public showInfo: boolean = true;
         public showCustomVisualNotes: boolean = true;

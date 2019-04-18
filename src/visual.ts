@@ -162,8 +162,16 @@ module powerbi.extensibility.visual {
                             return;
                         }
 
-                    /** Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
+                    /** 
+                     *  Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
                      *  while we're fetching more data.
+                     *  
+                     *  For people viewing the source code, this option is hard-switched off in the settings, as I have observed some issues when
+                     *  using categories and individual data colours (the property pane breaks), as well as resizing the visual (sometimes it just
+                     *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The 1.x API has
+                     *  memory leak issues, which don't help with diagnosis. The fecthMoreData() function is also broken in v2.1 and v2.2 of the custom
+                     *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just 
+                     *  switch it on once I find a suitable API version.
                      */
                         if (this.settings.dataLimit.enabled) {
                             if (options.operationKind == VisualDataChangeOperationKind.Create) {
@@ -809,6 +817,13 @@ module powerbi.extensibility.visual {
                 /** Apply instance-specific transformations */
                     switch (objectName) {
                         
+                        /** 
+                         *  The data limit options were intended to be enabled in conditions where we could fetch more data from the model, but there have been
+                         *  some issues in getting this to work reliably, so for now they are turned off. Refer to notes above in `update()` for more details as
+                         *  to why. As the code represents a fair bit of work to get the implementation going, we'll enable it based on the `enabled` property
+                         *  in the `dataLimitSettings` class, once we can get this to work reliably. For now this is left for anyone interested in the source code,
+                         *  to see where I got to with it as a feature.
+                         */
                         case 'dataLimit': {
                             /** If not overriding then we don't need to show the addiitonal info options */
                                 if (!this.settings.dataLimit.override) {
