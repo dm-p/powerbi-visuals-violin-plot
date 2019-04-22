@@ -413,12 +413,16 @@ module powerbi.extensibility.visual {
                                 vl.debug.log('Data Point info: re-style');
                                 icon.attr(hiddenIconAttributes);
                                 node
+                                    .append('rect')
+                                        .classed('customLegendIcon', true)
+                                        .attr(boxAttributes);
+                                node
                                     .append('line')
                                         .classed('customLegendIcon', true)
                                         .classed('dataPoint', true)
                                         .attr({
-                                            'x1': d.glyphPosition.x - radius,
-                                            'x2': d.glyphPosition.x + radius,
+                                            'x1': d.glyphPosition.x - radius + boxStrokeWidth,
+                                            'x2': d.glyphPosition.x + radius - boxStrokeWidth,
                                             'y1': d.glyphPosition.y,
                                             'y2': d.glyphPosition.y
                                         })
