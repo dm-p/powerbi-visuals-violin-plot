@@ -72,6 +72,7 @@ module powerbi.extensibility.visual {
         private canFetchMore: boolean;
         private windowsLoaded: number;
         private locale: string;
+        private events: IVisualEventService;
 
         /**
          * Instantiation of the visual
@@ -81,6 +82,7 @@ module powerbi.extensibility.visual {
                 this.element = options.element;
                 this.colourPalette = options.host.colorPalette;
                 this.host = options.host;
+                this.events = options.host.eventService;
                 this.tooltipServiceWrapper = tooltip.createTooltipServiceWrapper(this.host.tooltipService, options.element);
                 this.defaultColour = this.colourPalette['colors'][0].value;
                 this.viewModelHandler = new ViewModelHandler();
@@ -106,6 +108,7 @@ module powerbi.extensibility.visual {
          * @param options
          */
             public update(options: VisualUpdateOptions) {
+                this.events.renderingStarted(options);
                 this.options = options;
                 this.settings = ViolinPlot.parseSettings(options && options.dataViews && options.dataViews[0]);
                 this.errorState = false;
@@ -155,6 +158,7 @@ module powerbi.extensibility.visual {
                             this.errorState = true;
                             this.renderLegend();
                             visualUsage(this.container, this.host, this.settings);
+                            this.events.renderingFinished(options);
                             if (debug) {
                                 debug.log('Update cancelled due to incomplete fields.');
                                 debug.footer();
@@ -503,6 +507,7 @@ module powerbi.extensibility.visual {
                     debug.log('Visual fully rendered!');
                     viewModel.profiling.categories.push(debug.getSummary('Total'));
                     debug.footer();
+                    this.events.renderingFinished(options);
 
             }
 
