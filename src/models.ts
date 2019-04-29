@@ -18,20 +18,20 @@ module powerbi.extensibility.visual {
 
         /**
          *  Used to bind individual data points (for non-box data plots)
-         *  
+         *
          *  @property {number} value                            - Data point value
          *  @property {number} count                            - Number of data points with value
          *  @property {number} categoryIndex                    - Index of category that the value belongs to (used for looking up ICategory)
          */
             export interface IVisualDataPoint {
-                value: number,
-                count: number,
-                categoryIndex: number
+                value: number;
+                count: number;
+                categoryIndex: number;
             }
 
         /**
          * View model for entire violin plot visual
-         * 
+         *
          * @property {ICategory[]} categories                   - Category data and all necessary supporting objects and values
          * @property {boolean} categoryNames                    - Flag indicating whether category names are present (typically if the Category field well is not used)
          * @property {boolean} categoriesAllCollapsed           - Flag indicating if all categories have been collapsed (for responsiveness handling)
@@ -70,7 +70,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Specifics for plotting a violin that don't fit into the other view model properties
-         * 
+         *
          * @property {number} categoryWidth                     - Derived width of each category, from x-axis (needed multiple times and easier to store here)
          * @property {number} width                             - Derived width of violin, based on `categoryWidth` and inner padding setting
          */
@@ -81,7 +81,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Specifics for plotting legend data
-         * 
+         *
          * @property {string} boxColour                         - Correct colour to apply to legend annotation boxes (based on plot type)
          * @property {number} boxOpacity                        - Level of opacity to apply to legend annotation boxes (based on series transparency and plot type)
          * @property {boolean} quartilesMatch                   - Indicates that quartile configuration is identical for 1st/3rd and means we can consolidate
@@ -100,7 +100,7 @@ module powerbi.extensibility.visual {
 
         /**
          *  Details about the data view that we will repeatadly need, rather than ampping the data view all the time
-         * 
+         *
          *  @property {string} categoryDisplayName              - Display name of category field
          *  @property {string} measureDisplayName               - Display name of measure field
          */
@@ -108,14 +108,14 @@ module powerbi.extensibility.visual {
                 categoryDisplayName: string;
                 measureDisplayName: string;
             }
-        
+
         /**
          * Specifics for plotting a violin that don't fit into the other view model properties
-         * 
+         *
          * @property {number} width                             - Dervied width of box plot, relative to `IViolinPlot` width and box plot inner padding setting
-         * @property {number} scaledMeanRadius                  - Derived radius of the mean circle, based on the size of the box plot. Designed to not get too big if the visual 
+         * @property {number} scaledMeanRadius                  - Derived radius of the mean circle, based on the size of the box plot. Designed to not get too big if the visual
          *                                                          size increases to large amounts, and also to handle responsvieness if the visual gets too small
-         * @property {number} scaledMeanDiameter                - Derived diameter of the mean circle (basically `scaledMeanRadius * 2`); used for managing width of circle vs. 
+         * @property {number} scaledMeanDiameter                - Derived diameter of the mean circle (basically `scaledMeanRadius * 2`); used for managing width of circle vs.
          *                                                          the box plot
          * @property {number} maxMeanRadius                     - Specified value to cap radius at when rendering; used as a comparator for `actualMeanRadius` and
          *                                                           `scaledMeanRadius`
@@ -145,7 +145,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Specifics for plotting a barcode combo plot within the violin
-         * 
+         *
          * @property {number} width                             - Derived width of barcode plot, relative to `IViolinPlot` width and combo plot inner padding setting
          * @property {number} xLeft                             - Calculated left x-coordinate of the box plot based on width calculations
          * @property {number} xRight                            - Calculated right x-coordinate of the box plot based on width calculations
@@ -164,13 +164,13 @@ module powerbi.extensibility.visual {
 
         /**
          * Specific properties for managing the display of an axis with the visual
-         * 
+         *
          * @property {boolean} collapsed                        - Indicates whether the axis is renderable or not based on the viewport dimensions
          * @property {number} widthLimit                        - Minimum pixel width required to correctly render the axis
          * @property {number} heightLimit                       - Minimum pixel height required to correctly render the axis
          * @property {number} ticks                             - The number of ticks to display
          * @property {number} tickSize                          - The pixel width/height required to display tick lines on the visual
-         * @property {string[]} ticksFormatted                  - The formatted tick values for the axis, after applying any responsiveness handling and number 
+         * @property {string[]} ticksFormatted                  - The formatted tick values for the axis, after applying any responsiveness handling and number
          *                                                          formatting from the data model and/or visual settings
          * @property {d3.svg.Axis} generator                    - d3.js axis function required to render the axis
          * @property {IDimensions} dimensions                   - Computed dimensions of axis based on viewport, other axes visual settings
@@ -202,9 +202,9 @@ module powerbi.extensibility.visual {
                 padding: IPadding;
             }
 
-        /** 
+        /**
          * Specific implementation of a linear axis within this visual
-         * 
+         *
          * @extends IAxis
          * @property {[number, number]} domain                  - Min/max value of axis domain
          * @property {[number, number]} range                   - Min/max value of axis range
@@ -216,9 +216,9 @@ module powerbi.extensibility.visual {
                 scale: d3.scale.Linear<number, number>;
             }
 
-        /** 
+        /**
          * Specific implementation of a categorical axis within this visual
-         * 
+         *
          * @extends IAxis
          * @property {string[]} domain                          - All categorical values to include in the domain
          * @property {[number, number]} range                   - Min/max value of axis range
@@ -232,18 +232,18 @@ module powerbi.extensibility.visual {
 
         /**
          * Raw value and text properties for a chart axis
-         * 
+         *
          * @property {number} value                             - Raw axis value
          * @property {TextProperties} textProperties            - Properties for value, including formatted value for supplied font configuration
          */
             export interface IAxisValue {
                 value: number;
                 textProperties: TextProperties;
-            }        
+            }
 
         /**
          * Used to specify padding dimensions, where we want them in our view model
-         * 
+         *
          * @property {number} bottom                            - Number of pixels to pad from bottom
          * @property {number} left                              - Number of pixels to pad from left
          * @property {number} right                             - Number of pixels to pad from right
@@ -258,7 +258,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Used to specify dimensions and coordinates, where we want them in our view model
-         * 
+         *
          * @property {number} width                             - Specified or calculated width of element
          * @property {number} height                            - Specified or calculated height of element
          * @property {number} x                                 - Specified or calculated x-coordinate of element
@@ -273,9 +273,9 @@ module powerbi.extensibility.visual {
 
         /**
          * Used to hold data to render a category within the visual
-         * 
+         *
          * @property {string} name                              - Category name (unformatted & untailored)
-         * @property {number} sortOrder                         - The order in which the category is added to the view model; allows us to 
+         * @property {number} sortOrder                         - The order in which the category is added to the view model; allows us to
          *                                                          ensure that we respect the 'sort by column' from the data model
          * @property {IDisplayName} displayName                 - The display name and/or tailored name of the category
          * @property {number} objectIndex                       - Position in the category array in the `dataView` in which the metadata
@@ -287,7 +287,6 @@ module powerbi.extensibility.visual {
          * @property {number[]} dataPoints                      - All data points for the category in question
          * @property {IDataPointAggregate[]} dataPointsAgg      - All data points aggregated for combo plots that need individual points
          * @property {IDataPointKde[]} dataKde                  - KDE processed data points for the category, according to visual settings
-         * 
          * @property {d3.svg.Line<IDataPointKde>} lineGen       - Line generation function for category KDE plot
          * @property {d3.svg.Line<IDataPointKde>} areaGen       - Area generation function for category KDE plot
          * @property {IStatistics} statistics                   - Statistics across this category's data points
@@ -312,7 +311,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Used to manage the display/tailored name of a label or title (or other textual value)
-         * 
+         *
          * @property {string} formattedName                     - Value with formatting applied from data model and/or visual settings
          * @property {number} formattedWidth                    - Computed width of `formattedName` value based on `textProperties`
          * @property {TextProperties} textProperties            - Text properties applied to value based on settings. used in calculating size requirements
@@ -331,7 +330,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Used to hold statistical information about a category or the entire dataset
-         * 
+         *
          * @property {number} count                             - The number of records in the set
          * @property {number} min                               - Minimum value in data points
          * @property {number} confidenceLower                   - Calculated lower confidence value
@@ -370,7 +369,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Represents a data point in the KDE calculations for a category
-         * 
+         *
          * @property {number} x                                 - Calculated x-position of value for plotting
          * @property {number} y                                 - Calculated y-position of value for plotting
          * @property {boolean} remove                           - As we calculate KDE for each y-axis tick we add to our plot, this flags whether
@@ -387,7 +386,7 @@ module powerbi.extensibility.visual {
          *  Represents an aggregation of data points, for combo plots that need to plot individual values. In these cases, it doesn't make sense to
          *  render the same point multiple times in the DOM as it's a massive performance hit. We can keep details around these such as count if we
          *  wish to communicate their volume within the combo plot.
-         * 
+         *
          *  @property {string} key                              - The value we're aggregating (d3.js coerces to string)
          *  @property {IStatistics} values                      - The statistics we want to capture for this data point aggregation
          */

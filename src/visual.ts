@@ -56,7 +56,7 @@ module powerbi.extensibility.visual {
         import ICategory = ViolinPlotModels.ICategory;
         import IDataPointAggregate = ViolinPlotModels.IDataPointAggregate;
         import EComboPlotType = ViolinPlotModels.EComboPlotType;
-    
+
     export class ViolinPlot implements IVisual {
         private element: HTMLElement;
         private container: d3.Selection<{}>;
@@ -75,7 +75,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Instantiation of the visual
-         * @param options 
+         * @param options
          */
             constructor(options: VisualConstructorOptions) {
                 this.element = options.element;
@@ -103,7 +103,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Visual update event handling
-         * @param options 
+         * @param options
          */
             public update(options: VisualUpdateOptions) {
                 this.options = options;
@@ -125,7 +125,7 @@ module powerbi.extensibility.visual {
                     debug.log('Locale', this.locale);
 
                 /** This is a bit hacky, but I wanted to populate the default colour in parseSettings. I could manage it for the properties pane
-                 *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first 
+                 *  (and that code remains in-place below) but not in the settings object, so this "coerces" it based on the palette's first
                  *  assigned colour.
                  */
                     if (!this.settings.dataColours.defaultFillColour) {
@@ -134,8 +134,8 @@ module powerbi.extensibility.visual {
 
                 /** Clear down existing plot */
                     this.container.selectAll('*').remove();
-                
-                /** Size our initial container to match the viewport 
+
+                /** Size our initial container to match the viewport
                  *  TODO: we could compare this on resize and do the appropriate calculations to minimise rework
                  */
                     this.container.attr({
@@ -162,19 +162,19 @@ module powerbi.extensibility.visual {
                             return;
                         }
 
-                    /** 
-                     *  Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering 
+                    /**
+                     *  Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering
                      *  while we're fetching more data.
-                     *  
+                     *
                      *  For people viewing the source code, this option is hard-switched off in the settings, as I have observed some issues when
                      *  using categories and individual data colours (the property pane breaks), as well as resizing the visual (sometimes it just
                      *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The 1.x API has
                      *  memory leak issues, which don't help with diagnosis. The fecthMoreData() function is also broken in v2.1 and v2.2 of the custom
-                     *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just 
+                     *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just
                      *  switch it on once I find a suitable API version.
                      */
                         if (this.settings.dataLimit.enabled) {
-                            if (options.operationKind == VisualDataChangeOperationKind.Create) {
+                            if (options.operationKind === VisualDataChangeOperationKind.Create) {
                                 this.canFetchMore = true;
                                 this.windowsLoaded = 1;
                             } else {
@@ -183,7 +183,7 @@ module powerbi.extensibility.visual {
 
                             let rowCount = options.dataViews[0].categorical.values[0].values.length;
 
-                            if (        options.dataViews[0].metadata.segment 
+                            if (        options.dataViews[0].metadata.segment
                                     &&  this.settings.dataLimit.override
                                     &&  this.canFetchMore
                             ) {
@@ -215,25 +215,25 @@ module powerbi.extensibility.visual {
         /**
          * Decoupling of the chart rendering, just in case we needed to load more data above (which will fire the `update()` method again and
          * it makes no sense to actually render the visual if we're going back to the well...)
-         * 
-         * @param options 
-         * @param debug 
+         *
+         * @param options
+         * @param debug
          */
             private renderVisual(options, debug) {
 
-                /** #44: When the visual updates, we don't always need to re-map the view model data, as we already have it. 
+                /** #44: When the visual updates, we don't always need to re-map the view model data, as we already have it.
                  *  We only want to do the things that depend on data change vents and de-couple the rest so they fire on the events that don't require it
                  */
                     switch (options.type) {
                         case VisualUpdateType.Data:
                         case VisualUpdateType.All: {
-                            
+
                             debug.footer();
 
                             this.viewModelHandler.mapDataView(options, this.host, this.colourPalette);
                             this.viewModelHandler.calculateStatistics();
                             this.viewModelHandler.sortAndFilterData();
-                            this.renderLegend();                                
+                            this.renderLegend();
                             this.viewModelHandler.initialiseAxes(options);
                             break;
                         }
@@ -245,9 +245,9 @@ module powerbi.extensibility.visual {
 
                     debug.log('Viewport (Post-legend)', this.viewModelHandler.viewport);
                     debug.log('Data View', options.dataViews[0]);
-                    
+
                 /** Map the rest of the view model */
-                    this.viewModelHandler.processAxisText(); 
+                    this.viewModelHandler.processAxisText();
                     this.viewModelHandler.doKde(options);
                     let viewModel = this.viewModelHandler.viewModel;
                     debug.log('View model', viewModel);
@@ -257,7 +257,7 @@ module powerbi.extensibility.visual {
 
                         visualCollapsed(this.container);
                         debug.log('Visual fully collapsed due to viewport size!');
-                        
+
                     } else {
 
                         /** Add our main SVG */
@@ -271,7 +271,7 @@ module powerbi.extensibility.visual {
                                     });
 
                         /** Watermark for non-production use, if the dev flag is set */
-                            if (this.settings.about.development || this.settings.about.version.indexOf("DEV") != -1) {
+                            if (this.settings.about.development || this.settings.about.version.indexOf("DEV") !== -1) {
                                 let fontSize = 12;
                                 violinPlotCanvas
                                     .append('text')
@@ -309,7 +309,7 @@ module powerbi.extensibility.visual {
 
                                 /** Add mouse events to show/hide warning on mouseover (we don't want it showing all the time,
                                  *  but we should inform the user what's going on as this is not part of the dataReductionAlgorithm
-                                 *  stuff) 
+                                 *  stuff)
                                  */
                                     violinPlotCanvas.on('mouseover', () => {
                                         warningElement.style('display', null);
@@ -334,7 +334,7 @@ module powerbi.extensibility.visual {
 
                                 /** Add title if required */
                                     if (this.settings.yAxis.showTitle && viewModel.yAxis.titleDisplayName && viewModel.yAxis.titleDimensions.width > 0) {
-                                        
+
                                         debug.log('Plotting y-axis title...');
                                         yAxisContainer
                                             .append('text')
@@ -351,7 +351,7 @@ module powerbi.extensibility.visual {
                                                     'font-family': this.settings.yAxis.titleFontFamily,
                                                     'fill': this.settings.yAxis.titleColor
                                                 })
-                                                .text(viewModel.yAxis.titleDisplayName.tailoredName)
+                                                .text(viewModel.yAxis.titleDisplayName.tailoredName);
                                     }
 
                                 debug.log('Plotting y-axis ticks...');
@@ -376,7 +376,7 @@ module powerbi.extensibility.visual {
                                         .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
 
                             }
-                        
+
                         /** Create an X-axis */
                             if (this.settings.xAxis.show) {
 
@@ -389,7 +389,7 @@ module powerbi.extensibility.visual {
                                             'font-family': this.settings.xAxis.fontFamily,
                                             'fill': this.settings.xAxis.fontColor
                                         });
-                                
+
                                 debug.log('Plotting x-axis ticks...');
                                 let xAxisTicks = xAxisContainer
                                     .append('g')
@@ -435,7 +435,7 @@ module powerbi.extensibility.visual {
                             }
 
                         /** Do the rest, if required */
-                        
+
                             /** Add series elements */
                                 debug.log('Plotting category elements...');
                                 let seriesContainer = violinPlotCanvas.selectAll('.violinPlotCanvas')
@@ -455,8 +455,8 @@ module powerbi.extensibility.visual {
                                 this.tooltipServiceWrapper.addTooltip(
                                     violinPlotCanvas.selectAll('.violinPlotSeries'),
                                     (tooltipEvent: TooltipEventArgs<ICategory>) => ViolinPlot.getTooltipData(
-                                        tooltipEvent, 
-                                        this.settings, 
+                                        tooltipEvent,
+                                        this.settings,
                                         viewModel
                                     ),
                                     (tooltipEvent: TooltipEventArgs<ICategory>) => tooltipEvent.data.selectionId,
@@ -516,15 +516,15 @@ module powerbi.extensibility.visual {
                             performance reasons. Not displaying all data. Filter the data or choose another field.`,
                         value: ''
                     }
-                ]
+                ];
             }
 
         /**
          * For a highlighted data point, get its tooltip data and return it to the `tooltipServiceWrapper`.
          * Behaviour will depend on the tooltip settings, so this will handle the adding or omission of statistics accordingly.
-         * @param value 
-         * @param settings 
-         * @param viewModel 
+         * @param value
+         * @param settings
+         * @param viewModel
          */
             private static getTooltipData(tooltipEvent: any, settings: VisualSettings, viewModel: IViewModel): VisualTooltipDataItem[] {
                 let debug = new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
@@ -770,7 +770,7 @@ module powerbi.extensibility.visual {
                 let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
                 debug.log('Starting renderLegend');
                 debug.log('Checking legend position...');
-                debug.profileStart();               
+                debug.profileStart();
 
                 let violinLegend = new ViolinLegend(
                     this.errorState,
@@ -786,7 +786,7 @@ module powerbi.extensibility.visual {
                 this.viewModelHandler.viewport = {
                     width: violinLegend.newViewport.width,
                     height: violinLegend.newViewport.height
-                }
+                };
                 debug.log('Adjusted viewport:', this.viewModelHandler.viewport);
                 this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
                 debug.footer();
@@ -795,20 +795,20 @@ module powerbi.extensibility.visual {
 
         /**
          * Parses and gets the visual settings
-         * @param dataView 
+         * @param dataView
          */
             private static parseSettings(dataView: DataView): VisualSettings {
                 return VisualSettings.parse(dataView) as VisualSettings;
             }
 
-        /** 
-         * This function gets called for each of the objects defined in the `capabilities.json` file and allows you to select which of the 
+        /**
+         * This function gets called for each of the objects defined in the `capabilities.json` file and allows you to select which of the
          * objects and properties you want to expose to the users in the property pane.
          */
             public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
                 const instances: VisualObjectInstance[] = (VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options) as VisualObjectInstanceEnumerationObject).instances;
                 let objectName = options.objectName;
-                let categories: boolean = (this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) ? true: false;
+                let categories: boolean = (this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) ? true : false;
 
                 /** Initial debugging for properties update */
                     let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugProperties);
@@ -816,8 +816,8 @@ module powerbi.extensibility.visual {
 
                 /** Apply instance-specific transformations */
                     switch (objectName) {
-                        
-                        /** 
+
+                        /**
                          *  The data limit options were intended to be enabled in conditions where we could fetch more data from the model, but there have been
                          *  some issues in getting this to work reliably, so for now they are turned off. Refer to notes above in `update()` for more details as
                          *  to why. As the code represents a fair bit of work to get the implementation going, we'll enable it based on the `enabled` property
@@ -839,7 +839,7 @@ module powerbi.extensibility.visual {
                                         ||  (
                                                     !this.options.dataViews[0].metadata.segment
                                                 &&  (
-                                                            this.options.dataViews[0].categorical.values 
+                                                            this.options.dataViews[0].categorical.values
                                                         &&  this.options.dataViews[0].categorical.values[0].values.length <= 30000
                                                     )
                                             )
@@ -854,21 +854,21 @@ module powerbi.extensibility.visual {
                             /** Version should always show the default */
                                 instances[0].properties['version'] = VisualSettings.getDefault()['about'].version;
                             /** Switch off and hide debug mode if development flag is disabled */
-                                if(!this.settings.about.development) {
+                                if (!this.settings.about.development) {
                                     delete instances[0].properties['debugMode'];
                                     delete instances[0].properties['debugVisualUpdate'];
                                     delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
                                 }
                             /** Reset the individual flags if debug mode switched off */
-                                if(!this.settings.about.debugMode) {
+                                if (!this.settings.about.debugMode) {
                                     this.settings.about.debugVisualUpdate = false;
                                     this.settings.about.debugTooltipEvents = false;
                                     this.settings.about.debugProperties = false;
                                     delete instances[0].properties['debugVisualUpdate'];
                                     delete instances[0].properties['debugTooltipEvents'];
                                     delete instances[0].properties['debugProperties'];
-                                    
+
                                 }
                                 break;
                         }
@@ -906,7 +906,7 @@ module powerbi.extensibility.visual {
                             /** Manual bandwidth toggle */
                                 if (!this.settings.violin.specifyBandwidth) {
                                     delete instances[0].properties['bandwidth'];
-                                };
+                                }
 
                             /** Add categories if we want to specify individual bandwidth */
                                 if (this.settings.violin.bandwidthByCategory && categories && this.settings.violin.specifyBandwidth && !this.errorState) {
@@ -930,7 +930,7 @@ module powerbi.extensibility.visual {
                         case 'dataPoints': {
                             /** Range validation on stroke width */
                                 instances[0].validValues = instances[0].validValues || {};
-                                instances[0].validValues.strokeWidth 
+                                instances[0].validValues.strokeWidth
                                     = instances[0].validValues.medianStrokeWidth
                                     = instances[0].validValues.meanStrokeWidth
                                     = instances[0].validValues.quartile1StrokeWidth
@@ -984,7 +984,7 @@ module powerbi.extensibility.visual {
                                     case 'barcodePlot': {
 
                                         /** Remove non-barcode plot properties */
-                                            delete instances[0].properties['transparency'];    
+                                            delete instances[0].properties['transparency'];
                                             delete instances[0].properties['boxFillColour'];
                                             delete instances[0].properties['showWhiskers'];
                                             delete instances[0].properties['showMean'];
@@ -1068,7 +1068,7 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['defaultFillColour'];
                                     for (let category of this.viewModelHandler.viewModel.categories) {
                                         if (!category) {
-                                            continue;    
+                                            continue;
                                         }
                                         instances.push({
                                             objectName: objectName,
@@ -1102,16 +1102,16 @@ module powerbi.extensibility.visual {
                                 }
 
                             /** Hide combo plot-specific items */
-                                if (this.settings.dataPoints.plotType == 'boxPlot') {
+                                if (this.settings.dataPoints.plotType === 'boxPlot') {
                                     delete instances[0].properties['dataPointText'];
                                     delete instances[0].properties['quartileCombinedText'];
                                     delete instances[0].properties['quartile1Text'];
                                     delete instances[0].properties['quartile3Text'];
                                 }
-                                if (this.settings.dataPoints.plotType == 'barcodePlot') {
+                                if (this.settings.dataPoints.plotType === 'barcodePlot') {
                                     delete instances[0].properties['meanText'];
                                 }
-                                if (this.settings.dataPoints.plotType == 'columnPlot') {
+                                if (this.settings.dataPoints.plotType === 'columnPlot') {
                                     delete instances[0].properties['dataPointText'];
                                 }
                             /** Reset legend measure value items to default if blanked out */
@@ -1141,7 +1141,7 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['fontColor'];
                                     delete instances[0].properties['fontSize'];
                                     delete instances[0].properties['fontFamily'];
-                                }     
+                                }
                             /** Gridline toggle */
                                 if (!this.settings.xAxis.gridlines) {
                                     delete instances[0].properties['gridlineColor'];
@@ -1173,7 +1173,7 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['fontFamily'];
                                     delete instances[0].properties['labelDisplayUnits'];
                                     delete instances[0].properties['precision'];
-                                }                    
+                                }
                             /** Gridline toggle */
                                 if (!this.settings.yAxis.gridlines) {
                                     delete instances[0].properties['gridlineColor'];
@@ -1189,7 +1189,7 @@ module powerbi.extensibility.visual {
                                     delete instances[0].properties['titleFontFamily'];
                                 }
                             /** Title style toggle if units are none */
-                                if (this.settings.yAxis.labelDisplayUnits == 1) {
+                                if (this.settings.yAxis.labelDisplayUnits === 1) {
                                     instances[0].properties['titleStyle'] = 'title'; /** TODO: Delete entries from list */
                                 }
                             /** Range validation on grid line stroke width and precision */
@@ -1212,14 +1212,14 @@ module powerbi.extensibility.visual {
                                 instances[0].validValues.start = {
                                     numberRange: {
                                         min: safeMin,
-                                        max: this.settings.yAxis.end === 0 
+                                        max: this.settings.yAxis.end === 0
                                             ?   0
                                             :   this.settings.yAxis.end || safeMax
                                     }
                                 };
                                 instances[0].validValues.end = {
                                     numberRange: {
-                                        min: this.settings.yAxis.start === 0 
+                                        min: this.settings.yAxis.start === 0
                                         ?   0
                                         :   this.settings.yAxis.start || safeMin,
                                         max: safeMax

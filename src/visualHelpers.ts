@@ -46,14 +46,14 @@ module powerbi.extensibility.visual {
 
         /**
          * Render SVG line and area for a given violin series
-         * 
+         *
          * @param seriesContainer                               - The element to apply the SVG rendering to
          * @param viewModel                                     - The view model object to use
          * @param settings                                      - Visual settings
          * @param side                                          - The side to render the plot on (we need two plots per series for a violin)
          */
             function renderViolinLine(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, side: EViolinSide) {
-                
+
                 /** Add the violin side container */
                     let violinContainer = seriesContainer.append('g')
                         .classed({
@@ -62,12 +62,12 @@ module powerbi.extensibility.visual {
                         .datum(d => d)
                         .classed(`${EViolinSide[side]}`, true)
                         .attr({
-                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side == EViolinSide.right ? 'scale(1, -1)' : ''}`,
+                            'transform': `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${side === EViolinSide.right ? 'scale(1, -1)' : ''}`,
                             'shape-rendering': 'geometricPrecision'
                         });
 
                 /** Area - no point bothering if we're fully transparent */
-                    if (settings.dataColours.transparency != 100) {
+                    if (settings.dataColours.transparency !== 100) {
                         violinContainer.append('path')
                             .classed('violinPlotViolinPlot', true)
                             .classed('area', true)
@@ -97,14 +97,14 @@ module powerbi.extensibility.visual {
 
         /**
          * Handle rendering of the violin based on the selected type
-         * 
+         *
          * @param seriesContainer                               - The element to apply the SVG rendering to
          * @param viewModel                                     - The view model object to use
          * @param settings                                      - Visual settings
          */
             export function renderViolin(seriesContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings) {
 
-                if (settings.violin.type == 'line') {
+                if (settings.violin.type === 'line') {
 
                     renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.left);
                     renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.right);
@@ -117,11 +117,11 @@ module powerbi.extensibility.visual {
          * Handle rendering of a box plot whisker. Will render for the specified range.
          * For top, this will run from `quartile 3` to `95%`;
          * For bottom, this will run from `5%` to `quartile 1`
-         * 
+         *
          * @param seriesContainer                               - The element to apply the SVG rendering to
          * @param viewModel                                     - The view model object to use
          * @param settings                                      - Visual settings
-         * @param whisker                                       - The whisker to render 
+         * @param whisker                                       - The whisker to render
          */
             function renderBoxPlotWhisker(boxPlotContainer: d3.Selection<ViolinPlotModels.ICategory>, viewModel: IViewModel, settings: VisualSettings, whisker: EBoxPlotWhisker) {
 
@@ -135,12 +135,12 @@ module powerbi.extensibility.visual {
                         'x1': (viewModel.xAxis.scale.rangeBand() / 2),
                         'x2': (viewModel.xAxis.scale.rangeBand() / 2),
                         'y1': (d) => viewModel.yAxis.scale(
-                            whisker == EBoxPlotWhisker.bottom
+                            whisker === EBoxPlotWhisker.bottom
                                 ?   d.statistics.confidenceLower
                                 :   d.statistics.confidenceUpper
                         ),
                         'y2': (d) => viewModel.yAxis.scale(
-                            whisker == EBoxPlotWhisker.bottom
+                            whisker === EBoxPlotWhisker.bottom
                                 ?   d.statistics.quartile1
                                 :   d.statistics.quartile3
                         ),
@@ -152,7 +152,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Handles rendering of a mean within the appropariate combo plot.
-         * 
+         *
          * @param container                                     - Container to apply the mean circle to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
@@ -169,7 +169,7 @@ module powerbi.extensibility.visual {
                             'cx': (viewModel.xAxis.scale.rangeBand() / 2),
                             'cy': (d) => viewModel.yAxis.scale(d.statistics.mean),
                             'r': /** Don't render if larger than the box height */
-                                (d)=> -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) < viewModel.boxPlot.actualMeanDiameter
+                                (d) => -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) < viewModel.boxPlot.actualMeanDiameter
                                     ?   0
                                     :   viewModel.boxPlot.actualMeanRadius
                         })
@@ -183,7 +183,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Handles the rendering of a box/column plot rectangle for the combo plot
-         * 
+         *
          * @param container                                     - Container to apply the rectangle to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
@@ -212,7 +212,7 @@ module powerbi.extensibility.visual {
                                     case 'boxPlot':
                                         return -viewModel.yAxis.scale(d.statistics.quartile3) + viewModel.yAxis.scale(d.statistics.quartile1);
                                     case 'columnPlot':
-                                        return -viewModel.yAxis.scale(d.statistics.max) + viewModel.yAxis.scale(d.statistics.min)
+                                        return -viewModel.yAxis.scale(d.statistics.max) + viewModel.yAxis.scale(d.statistics.min);
                                 }
                             },
                             'stroke': `${settings.dataPoints.boxFillColour}`,
@@ -225,7 +225,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
-         * 
+         *
          * @param seriesContainer                               - Container to apply the box plot to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
@@ -271,7 +271,7 @@ module powerbi.extensibility.visual {
                                 .attr({
                                     width: viewModel[`${EComboPlotType[comboPlotType]}`].width,
                                     /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
-                                     *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly) 
+                                     *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly)
                                      */
                                     height: (d) => -(viewModel.yAxis.scale(d.statistics.interpolateMax) - viewModel.yAxis.scale(d.statistics.interpolateMin))
                                         +   (settings.dataPoints.strokeWidth * 2),
@@ -321,7 +321,7 @@ module powerbi.extensibility.visual {
 
                     /** Plot data points */
                         comboPlotContainer.selectAll('.tooltipDataPoint')
-                            .data((d, i) => <IVisualDataPoint[]>d.dataPointsAgg.map(dp => 
+                            .data((d, i) => <IVisualDataPoint[]>d.dataPointsAgg.map(dp =>
                                 ({
                                     value: dp.key,
                                     count: dp.count,
@@ -367,7 +367,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Handle rendering of ranged column combo plot
-         * 
+         *
          * @param seriesContainer                               - Container to apply the column plot to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
@@ -382,10 +382,10 @@ module powerbi.extensibility.visual {
                                 .attr({
                                     'shape-rendering': 'geometricPrecision'
                                 });
-                        renderComboPlotRectangle(boxContainer, viewModel, settings)
+                        renderComboPlotRectangle(boxContainer, viewModel, settings);
 
                     /** Mean, median & quartiles */
-                        if (settings.dataPoints.showMedian){
+                        if (settings.dataPoints.showMedian) {
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
                         if (settings.dataPoints.showQuartiles) {
@@ -402,7 +402,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Handle rendering of box plot
-         * 
+         *
          * @param seriesContainer                               - Container to apply the box plot to
          * @param viewModel                                     - View model to use when calculating
          * @param settings                                      - Visual settings
@@ -417,7 +417,7 @@ module powerbi.extensibility.visual {
                                 .attr({
                                     'shape-rendering': 'geometricPrecision'
                                 });
-                        renderComboPlotRectangle(boxContainer, viewModel, settings)
+                        renderComboPlotRectangle(boxContainer, viewModel, settings);
 
                     /** Do the whiskers, if we need them */
                         if (settings.dataPoints.showWhiskers) {
@@ -426,7 +426,7 @@ module powerbi.extensibility.visual {
                         }
 
                     /** Mean and median */
-                        if (settings.dataPoints.showMedian){
+                        if (settings.dataPoints.showMedian) {
                             renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, EComboPlotType.boxPlot);
                         }
                         if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
@@ -439,7 +439,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Render a 'feature' line, i.e. a non-standard data point. Currently supports median and 1st/3rd quartiles based on the `EFeatureLineType` enum
-         * 
+         *
          * @param containingElement                             - The element to attach the message to
          * @param viewModel                                     - View model containing data and other required properties
          * @param settings                                      - Visual settings
@@ -448,8 +448,8 @@ module powerbi.extensibility.visual {
          */
             export function renderFeatureLine(containingElement: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings, lineType: EFeatureLineType, comboPlotType: EComboPlotType) {
                 let featureXLeft: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
-                    featureXRight: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight;                
-                
+                    featureXRight: number = viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight;
+
                 containingElement.append('line')
                     .classed('violinPlotComboPlotFeatureLine', true)
                     .classed(`${EFeatureLineType[lineType]}`, true)
@@ -467,7 +467,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Display usage information within the viewport
-         * 
+         *
          * @param containingElement                             - The element to attach the message to
          * @param host                                          - The visual host
          * @param settings                                      - Current visual instance settings
@@ -483,7 +483,7 @@ module powerbi.extensibility.visual {
                     .append('h5')
                         .classed('card-title', true)
                         .html('Usage');
-                container     
+                container
                     .append('p')
                         .classed('card-text', true)
                         .html('Please ensure that you have added data to the <strong>Sampling</strong>\
@@ -508,7 +508,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Display additional information to the end-user when loading more data from the data model.
-         * 
+         *
          * @param rowCount                                      - Total number of rows currently loaded
          * @param containingElement                             - The element to attach the message to
          * @param settings                                      - Current visual instance settings
@@ -550,7 +550,7 @@ module powerbi.extensibility.visual {
 
         /**
          * Display 'collapsed' state of the visual
-         * 
+         *
          * @param containingElement                              - The element to attach the message to
          */
             export function visualCollapsed(containingElement: d3.Selection<{}>) {
@@ -562,14 +562,14 @@ module powerbi.extensibility.visual {
 
         /**
          * Use the mouse position to determine the nearest data point on the y-axis
-         * 
+         *
          * @param overlay                                       - The overlay element to track
          * @param mouse                                         - Number array of corodinate data
          * @param yAxis                                         - Axis object to use for scaling
          */
             export function getHighlightedDataPoints(overlay: d3.Selection<ICategory>, mouse: number[], yAxis: IAxisLinear): IDataPointAggregate {
                 let yData = yAxis.scale.invert(mouse[1]),
-                    bisectValue = d3.bisector((d:IDataPointAggregate) => Number(d.key)).left,
+                    bisectValue = d3.bisector((d: IDataPointAggregate) => Number(d.key)).left,
                     ttv: IDataPointAggregate;
 
                 overlay.each((d, i) => {
@@ -577,14 +577,14 @@ module powerbi.extensibility.visual {
                         idx = bisectValue(data, yData, 1),
                         d0 = data[idx - 1],
                         d1 = data[idx] ? data[idx] : d0;
-                    ttv = yData - Number(d0.key) > Number(d1.key) - yData ? d1: d0;
-                });              
+                    ttv = yData - Number(d0.key) > Number(d1.key) - yData ? d1 : d0;
+                });
                 return ttv;
             }
 
         /**
          *  Return a formatted `VisualTooltipDataItem` based on the supplied parameters
-         * 
+         *
          *  @param displayName      - Display name to apply to tooltip data point
          *  @param measureFormat    - The format string to apply to the value
          *  @param value            - The value to format
@@ -593,16 +593,16 @@ module powerbi.extensibility.visual {
          *  @param locale           - Regional settings to apply to the number format
          */
             export function formatTooltipValue(
-                displayName: string, 
-                measureFormat: string, 
-                value: number, 
-                displayUnits: number, 
+                displayName: string,
+                measureFormat: string,
+                value: number,
+                displayUnits: number,
                 precision: number,
                 locale: string
-            ) : VisualTooltipDataItem {
+            ): VisualTooltipDataItem {
                 let formatter = valueFormatter.create({
                     format: measureFormat,
-                    value: displayUnits == 0
+                    value: displayUnits === 0
                         ?   value
                         :   displayUnits,
                         precision: precision != null
@@ -613,7 +613,7 @@ module powerbi.extensibility.visual {
                 return {
                     displayName: displayName,
                     value: formatter.format(value)
-                }
+                };
             }
 
     }

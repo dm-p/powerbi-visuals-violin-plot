@@ -59,13 +59,13 @@ module powerbi.extensibility.visual {
              *  had specified to colour by category. We had some feedback (#65) that showed it would be good to include the additional
              *  annotations to the violin (median, mean, quartiles & data points), so we artifically create these here and then do some
              *  post-processing on these afterwards.
-             * 
+             *
              *  @param viewModel                                - View model object to use for processing
              *  @param settings                                 - Settings object to use for processing
              *  @param host                                     - Visual host
              */
                 private constructLegendData() {
-                
+
                     let measureOnly = (!this.viewModel.categoryNames || !this.settings.dataColours.colourByCategory);
 
                     this.debug.log('Creating legend data...');
@@ -105,7 +105,7 @@ module powerbi.extensibility.visual {
                                             selected: false,
                                             identity: c.selectionId
                                         }
-                                    ))
+                                    ));
                                 }
                             }
 
@@ -123,12 +123,12 @@ module powerbi.extensibility.visual {
                                             .createSelectionId()
                                     });
                                 }
-                        
+
                             if (this.settings.legend.showStatisticalPoints) {
 
                                 /** Barcode plot specifics */
-                                    if (this.settings.dataPoints.plotType == 'barcodePlot') {
-                                        
+                                    if (this.settings.dataPoints.plotType === 'barcodePlot') {
+
                                         /** Data points */
                                             legendData.dataPoints.push({
                                                 label: this.viewModel.legend.dataPointText,
@@ -143,7 +143,7 @@ module powerbi.extensibility.visual {
                                     }
 
                                 /** Quartiles */
-                                    if (this.settings.dataPoints.showQuartiles && this.settings.dataPoints.plotType != 'boxPlot') {
+                                    if (this.settings.dataPoints.showQuartiles && this.settings.dataPoints.plotType !== 'boxPlot') {
                                         if (this.viewModel.legend.quartilesMatch) {
                                             legendData.dataPoints.push({
                                                 label: this.viewModel.legend.quartileCombinedText,
@@ -153,7 +153,7 @@ module powerbi.extensibility.visual {
                                                 identity: this.host.createSelectionIdBuilder()
                                                     .withMeasure(this.viewModel.legend.quartileCombinedText)
                                                     .createSelectionId()
-                                            });     
+                                            });
                                         } else {
                                             legendData.dataPoints.push({
                                                 label: this.viewModel.legend.quartile1Text,
@@ -191,7 +191,7 @@ module powerbi.extensibility.visual {
                                     }
 
                                 /** Mean */
-                                    if (this.settings.dataPoints.plotType != 'barcodePlot' && this.settings.dataPoints.showMean) {
+                                    if (this.settings.dataPoints.plotType !== 'barcodePlot' && this.settings.dataPoints.showMean) {
                                         legendData.dataPoints.push({
                                             label: this.viewModel.legend.meanText,
                                             color: '#000000',
@@ -208,7 +208,7 @@ module powerbi.extensibility.visual {
                     }
 
                     this.debug.log('Legend data instantiated.');
-                        
+
                     this.data = legendData;
 
                 }
@@ -217,8 +217,8 @@ module powerbi.extensibility.visual {
              *  Manage position based on our settings
              */
                 private positionLegend() {
-                    this.position = this.settings.legend.show 
-                        && !this.errorState 
+                    this.position = this.settings.legend.show
+                        && !this.errorState
                             ?   LegendPosition[this.settings.legend.position]
                             :   LegendPosition.None;
                     this.debug.log(`Position: ${LegendPosition[this.position]}`);
@@ -231,7 +231,7 @@ module powerbi.extensibility.visual {
              */
                 private fixViewportForLegend() {
                     this.debug.log('Checking legend position...');
-                
+
                     /** If this exceeds our limits, then we will hide and re-draw prior to render */
                         let legendBreaksViewport = false;
                         switch (this.legend.getOrientation()) {
@@ -239,7 +239,7 @@ module powerbi.extensibility.visual {
                             case LegendPosition.LeftCenter:
                             case LegendPosition.Right:
                             case LegendPosition.RightCenter:
-                                legendBreaksViewport = 
+                                legendBreaksViewport =
                                         (this.newViewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit)
                                     ||  (this.newViewport.height < this.settings.legend.heightLimit);
                                 break;
@@ -247,7 +247,7 @@ module powerbi.extensibility.visual {
                             case LegendPosition.TopCenter:
                             case LegendPosition.Bottom:
                             case LegendPosition.BottomCenter:
-                                legendBreaksViewport =         
+                                legendBreaksViewport =
                                         (this.newViewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit)
                                     ||  (this.newViewport.width < this.settings.legend.widthLimit);
                                 break;
@@ -311,9 +311,9 @@ module powerbi.extensibility.visual {
                                     'fill': vl.viewModel.legend.boxColour,
                                     'fill-opacity': vl.viewModel.legend.boxOpacity
                                 };
-                        
+
                         vl.debug.log('Legend point data', d);
-                        switch(d.tooltip) {
+                        switch (d.tooltip) {
 
                             case vl.settings.legend.spacerText:
                                 vl.debug.log('Spacer: blank out');
@@ -358,7 +358,7 @@ module powerbi.extensibility.visual {
                                         stroke = vl.settings.dataPoints.quartile3FillColour;
                                         break;
                                     default:
-                                        vl.debug.log('Chart line: not catered for yet. Using defaults.')
+                                        vl.debug.log('Chart line: not catered for yet. Using defaults.');
                                         className = 'unknown';
                                         strokeLineStyle = 'solid';
                                         stroke = '#000000';
@@ -439,7 +439,7 @@ module powerbi.extensibility.visual {
                                     .append('path')
                                         .classed('customLegendIcon', true)
                                         .attr({
-                                            'd': /** This draws a violin-like shape based on the radius */ 
+                                            'd': /** This draws a violin-like shape based on the radius */
                                                 `  M${radius},-${radius}\
                                                     C${radius},${radius} -${radius},${radius} ${radius},${radius * 2}\
                                                     C${radius * 3},${radius} ${radius},${radius} ${radius},-${radius}`,

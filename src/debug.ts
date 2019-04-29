@@ -57,9 +57,9 @@ module powerbi.extensibility.visual {
 
                 profileStart() {
                     if (this.enabled) {
-                        this.log('Profiling started.')
+                        this.log('Profiling started.');
                         this.startTime = performance.now();
-                    }                    
+                    }
                 }
 
                 reportExecutionTime() {
