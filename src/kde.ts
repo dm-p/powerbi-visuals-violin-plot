@@ -9,18 +9,18 @@ module powerbi.extensibility.visual {
 
             /**
              * Kernel density estimator - used to produce smoother estimate than a histogram
-             * 
+             *
              * @param kernel        Desired (supported) kernel to run over our data
              * @param bandwidth     Desired bandwidth value to apply to our data
-             * @param values        Array of values to calculate KDE over 
+             * @param values        Array of values to calculate KDE over
              */
                 export function kernelDensityEstimator(kernel, bandwidth: number, values: number[]) {
                     return (sample) => {
                         return values.map(function(x) {
                             return {
-                                x: x, 
-                                y: d3.mean(sample, function(v: number) { 
-                                    return kernel((x - v) / bandwidth); 
+                                x: x,
+                                y: d3.mean(sample, function(v: number) {
+                                    return kernel((x - v) / bandwidth);
                                 }),
                                 remove: false
                             };
@@ -31,17 +31,17 @@ module powerbi.extensibility.visual {
             /**
              * If we want to converge a violin, we need to find the point at which to do so. This tries to use the
              * selected kernel to find a suitable point that we can use if not within the bounds of our data.
-             * 
+             *
              * @param kernel        Desired (supported) kernel to run over our data
              * @param bandwidth     Desired bandwidth value to apply to our data
-             * @param values        Array of values to calculate KDE over 
+             * @param values        Array of values to calculate KDE over
              */
                 export function kernelDensityRoot(kernel, bandwidth: number, values: number[]) {
                     return function(x) {
                         return d3.mean(values, function(v) {
                             return kernel((x - v) / bandwidth);
                         });
-                    }
+                    };
                 }
 
             /** Enum specifying which values are acceptable for using limits */
@@ -53,16 +53,16 @@ module powerbi.extensibility.visual {
             /**
              * Recursively call the specified `kernelDensityRoot` function until a suitable interpolation/convergence
              * point is found. If not, jump out before we get too far away from our data's min/max values.
-             * 
+             *
              * @param value         Value to resolve
              * @param limit         Whether the limit is a `min` or `max`
-             * @param kdeRoot 
+             * @param kdeRoot
              */
                 export function kernelDensityInterpolator(value: number, limit: ELimit, kdeRoot) {
                     let interY = kdeRoot(value),
                         interX = value,
                         count = 10; /** Prevent infinite loop */
-                    while (count > 0 && interY != 0) {
+                    while (count > 0 && interY !== 0) {
                         switch (limit) {
                             case ELimit.max: {
                                 interX += 1;
@@ -90,7 +90,6 @@ module powerbi.extensibility.visual {
                 window(k: number);
             }
 
-            
             export interface IKernels {
                 epanechnikov: IKernel;
                 gaussian: IKernel;
@@ -98,7 +97,7 @@ module powerbi.extensibility.visual {
                 triweight: IKernel;
             }
 
-            export var kernels: IKernels = {
+            export let kernels: IKernels = {
                 epanechnikov: {
                     factor: 2.3449,
                     window: function(u) {
@@ -118,18 +117,18 @@ module powerbi.extensibility.visual {
                 quartic: {
                     factor: 2.7779,
                     window: function(u) {
-                        var t = Math.pow(u, 2);
+                        let t = Math.pow(u, 2);
                         return Math.abs(u) <= 1 ? (15 / 16) * Math.pow(1 - t, 2) : 0;
                     }
                 },
                 triweight: {
                     factor: 3.1545,
                     window: function(u) {
-                        var t = Math.pow(u, 2);
+                        let t = Math.pow(u, 2);
                         return Math.abs(u) <= 1 ? (35 / 32) * Math.pow(1 - t, 3) : 0;
                     }
                 }
-            }
+            };
 
     }
 

@@ -56,24 +56,24 @@ module powerbi.extensibility.visual {
             /**
              * Populates the core data from the data view, meaning that if we don't need to re-do this (e.g. for resizes or other non-data-volatile
              * operations), then we can omit it.
-             * 
+             *
              * @param options                                   - visual update options
              * @param host                                      - visual host
              * @param colourPalette                             - visual colour palette object (for colour assignment to categories)
              */
                 mapDataView(options: VisualUpdateOptions, host: IVisualHost, colourPalette: IColorPalette) {
-                                
+
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting mapDataView');
-                        debug.log('Mapping data view to view model...'); 
+                        debug.log('Mapping data view to view model...');
                         debug.profileStart();
 
                     let dataViews = options.dataViews;
 
                     /** Create bare-minimum view model */
                         let viewModel = this.viewModel;
-    
+
                     /** Return this bare-minimum model if the conditions for our data view are not satisfied (basically don't draw the chart) */
                         if (!dataViews
                             || !dataViews[0]
@@ -101,46 +101,54 @@ module powerbi.extensibility.visual {
                         viewModel.measure = this.measureMetadata.displayName;
                         viewModel.locale = host.locale;
                         viewModel.categories = [];
+                        viewModel.dataViewMetadata = {
+                            categoryDisplayName: this.categoryMetadata
+                                ?   this.categoryMetadata.displayName
+                                :   null,
+                            measureDisplayName: this.measureMetadata.displayName
+                                ?   this.measureMetadata.displayName
+                                :   null
+                        };
 
-                        /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly. 
+                        /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly.
                          *
-                         *  WHY ARE WE USING A CATEGORICAL DATA VIEW MAPPING IN THIS WAY? 
-                         * 
-                         *  Using a matrix, table or categorical mapping with grouping makes more sense, but as our sampling value is typically unique to each 
+                         *  WHY ARE WE USING A CATEGORICAL DATA VIEW MAPPING IN THIS WAY?
+                         *
+                         *  Using a matrix, table or categorical mapping with grouping makes more sense, but as our sampling value is typically unique to each
                          *  row, this means that Power BI needs to calculate and retrieve an aggregate for every combination of sampling and category. This will
                          *  mean that of the data that comes back, it will be mostly `null` values, for each category, with the actual values in there somewhere.
                          *  This creates a lot of data to transfer over HTTP and a lot of memory to process and organise when we get it.
-                         * 
+                         *
                          *  By doing it this way, we get sinlge-dimension arrays for all category/sampling combinations, and then values, so at most this gives us
                          *  a 30K row limit (until we can implement `fetchmoreData` successfully). We trade-off a bit of WTF this side as a result. Maybe I'll
                          *  revisit when I'm a bit wiser.
-                         * 
+                         *
                          *  We also have an issue in that the user could conceivably add a high-cardinality-field to the category, when they actually
                          *  meant to put it in the sampling field and vice-versa. This would cause us to render up to 30K categories, with a single data
-                         *  point in them, which is also incredibly costly from a KDE perspective. 
-                         * 
+                         *  point in them, which is also incredibly costly from a KDE perspective.
+                         *
                          *  This actually cause the visual to fail validation due to the MS tester trying this out. I was a little too close to the project
                          *  and made sure that the "happy path" was working well, but hadn't considered this scenario. It is entirely possible and should be
-                         *  mitigated. 
-                         * 
+                         *  mitigated.
+                         *
                          *  In this scenario, we'd normally use the `dataReductionAlgorithm` setting in the `capabilities.json` file to manage this
                          *  but the sacrifices we made to the data view mapping (see notes in `mapDataView`), we don't get the flexibility we need to
                          *  prevent a user from killing their own browser.
-                         * 
+                         *
                          *  So, we leverage the `categoryLimit` setting in the `dataLimitSettings` class to place an arbitrary restriction on this that we
                          *  may be able to relax in a user setting later on, should it be successful, or we can better manage with the `capabilities.json'
                          *  file if yours truly gets a bit smarter further down the track.
-                         * 
+                         *
                          *  We filter down the array here, as we need to calculate stats for all categories obtained from the data model so that we can do the
                          *  requisite sorting on them. The stats calculation is pretty negligible in terms of processing time for large datasets (< 200ms
                          *  on average).
-                         * 
+                         *
                          *  By doing this we can also avoid unnecessary KDE operations, which outside of rendering are the biggest cost by far.
-                         * 
-                         *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.                         * 
+                         *
+                         *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.
                          */
 
-                            /** Create our allDatapoints array for later (as we only want to include datapoints that are in the final set after 
+                            /** Create our allDatapoints array for later (as we only want to include datapoints that are in the final set after
                              *  category reduction, if applicable) */
                                 this.allDataPoints = [];
 
@@ -166,7 +174,7 @@ module powerbi.extensibility.visual {
                             } else {
 
                                 /** Get unique category values and data points
-                                 * 
+                                 *
                                  *  #44: We used an `Array.prototype.reduce()` here previously but this would take ages to iterate over and check for duplicates
                                  *  when we had put a high-cardinality field in the Category well and we couldn't break out. The `for` loop is less elegant but
                                  *  performs much better and allows us to break out when we hit our prescribed limit.
@@ -181,9 +189,9 @@ module powerbi.extensibility.visual {
                                         let categoryName = category.values[i].toString(),
                                             value = <number>values[0].values[i];
 
-                                        if (!distinctCategories.filter(c => c.name == `${categoryName}`)[0]) {
+                                        if (!distinctCategories.filter(c => c.name === `${categoryName}`)[0]) {
 
-                                            if (distinctCategoriesFound == distinctCategoryLimit) {
+                                            if (distinctCategoriesFound === distinctCategoryLimit) {
                                                 debug.log(`Category limit of ${distinctCategoryLimit} reached. Ending category resolution to avoid performance issues.`);
                                                 this.viewModel.categoriesReduced = true;
                                                 break;
@@ -196,7 +204,7 @@ module powerbi.extensibility.visual {
                                                     solid: {
                                                         color: colourPalette.getColor(categoryName).value
                                                     }
-                                                }
+                                                };
 
                                             /** Create the initial display name here, so that we can use it in legends and later on when we do the tailoring */
                                                 let formattedName = categoryName;
@@ -228,14 +236,14 @@ module powerbi.extensibility.visual {
                                                         ).solid.color
                                                     :   this.settings.dataColours.defaultFillColour,
                                             } as ICategory);
-                                            
+
                                         }
 
                                         /** Add the value, to save us doing one iteration of a potentially large value array later on */
                                             distinctCategories[distinctCategoriesFound - 1].dataPoints.push(value);
                                             this.allDataPoints.push(value);
                                     }
-                                    
+
                                 viewModel.categoryNames = true;
 
                                 /** Create view model template */
@@ -243,6 +251,37 @@ module powerbi.extensibility.visual {
                                     debug.log('Mapping distinct categories into view model...');
                                     viewModel.categories = distinctCategories;
                             }
+
+                    /** Add in the legend override properties now that we have the categories mapped */
+                        viewModel.legend = {
+                            boxColour: this.settings.dataPoints.plotType === 'barcodePlot'
+                                ?   this.viewModel.categories[0].colour
+                                :   this.settings.dataPoints.boxFillColour,
+                            boxOpacity: this.settings.dataPoints.plotType === 'barcodePlot'
+                                ?   1 - (this.settings.dataColours.transparency / 100)
+                                :   1 - (this.settings.dataPoints.transparency / 100),
+                            quartilesMatch: this.settings.dataPoints.showQuartiles
+                                &&  this.settings.dataPoints.quartile1StrokeLineStyle === this.settings.dataPoints.quartile3StrokeLineStyle
+                                &&  this.settings.dataPoints.quartile1FillColour === this.settings.dataPoints.quartile3FillColour,
+                            quartileCombinedText: this.settings.legend.quartileCombinedText === ''
+                                ?   VisualSettings.getDefault()['legend'].quartileCombinedText
+                                :   this.settings.legend.quartileCombinedText,
+                            quartile1Text: this.settings.legend.quartile1Text === ''
+                                ?   VisualSettings.getDefault()['legend'].quartile1Text
+                                :   this.settings.legend.quartile1Text,
+                            quartile3Text: this.settings.legend.quartile3Text === ''
+                                ?   VisualSettings.getDefault()['legend'].quartile3Text
+                                :   this.settings.legend.quartile3Text,
+                            dataPointText: this.settings.legend.dataPointText === ''
+                                ?   VisualSettings.getDefault()['legend'].dataPointText
+                                :   this.settings.legend.dataPointText,
+                            meanText: this.settings.legend.meanText === ''
+                                ?   VisualSettings.getDefault()['legend'].meanText
+                                :   this.settings.legend.meanText,
+                            medianText: this.settings.legend.medianText === ''
+                                ?   VisualSettings.getDefault()['legend'].medianText
+                                :   this.settings.legend.medianText
+                        };
 
                     /** We're done! */
                         this.viewModel = viewModel;
@@ -253,7 +292,7 @@ module powerbi.extensibility.visual {
 
             /**
              * Pushes an IProfilerCategory into the view model `profiling` object
-             * 
+             *
              * @param debug                                     - `VisualDebugger` instance to attach
              * @param category                                  - name of profiling category
              */
@@ -269,11 +308,12 @@ module powerbi.extensibility.visual {
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting calculateStatistics');
-                        debug.log('Calculating statistics over view model data...'); 
+                        debug.log('Calculating statistics over view model data...');
                         debug.profileStart();
 
                     /** All data points */
                         debug.log('All data points...');
+                        this.viewModel.statistics.count = this.allDataPoints.length;
                         this.viewModel.statistics.max = d3.max(this.allDataPoints);
                         this.viewModel.statistics.min = d3.min(this.allDataPoints);
                         this.viewModel.statistics.deviation = d3.deviation(this.allDataPoints);
@@ -282,9 +322,9 @@ module powerbi.extensibility.visual {
                         this.viewModel.statistics.iqr = this.viewModel.statistics.quartile3 - this.viewModel.statistics.quartile1;
                         this.viewModel.statistics.span = this.viewModel.statistics.max - this.viewModel.statistics.min;
 
-                    /** Process the remainder of the view model by category 
+                    /** Process the remainder of the view model by category
                      *  #44: For no categories, we can re-use the min/max/iqr/deviation/span/quartiles withough going back to the d3.js well.
-                     *          For those with categories, we'll caculate all data points once and re-use where we can to avoid unnecessary
+                     *          For those with categories, we'll calculate all data points once and re-use where we can to avoid unnecessary
                      *          array processing operations.
                      */
                         debug.log('Updating categories...');
@@ -292,7 +332,23 @@ module powerbi.extensibility.visual {
                             c.dataPoints
                                 .sort(d3.ascending)
                                 .filter(v => v !== null);
+
+                            /** Aggregate data points so that when we render individual values (like the barcode plot), we don't plot
+                             *  duplicate elements, but only if we're going to need them. Note that keys (the value) are coerced to strings
+                             *  by d3, so we'll need to consider that later on, when we need to display values in tooltips etc.
+                             */
+                                if (this.settings.dataPoints.plotType === 'barcodePlot') {
+                                    c.dataPointsAgg = d3.nest()
+                                        .key(d => d.toString())
+                                        .rollup(v => ({
+                                            count: v.length
+                                        }) as IStatistics)
+                                        .entries(c.dataPoints)
+                                        .sort((x, y) => d3.ascending(Number(x.key), Number(y.key)));
+                                }
+
                             c.statistics = {
+                                count: c.dataPoints.length,
                                 min: d3.min(c.dataPoints),
                                 max: d3.max(c.dataPoints),
                                 deviation: d3.deviation(c.dataPoints),
@@ -302,8 +358,8 @@ module powerbi.extensibility.visual {
                                 median: d3.median(c.dataPoints),
                                 mean: d3.mean(c.dataPoints),
                                 confidenceUpper: d3.quantile(c.dataPoints, 0.95)
-                            } as IStatistics
-                            
+                            } as IStatistics;
+
                             c.statistics.iqr = c.statistics.quartile3 - c.statistics.quartile1;
                             c.statistics.span = c.statistics.max - c.statistics.min;
                         });
@@ -312,33 +368,33 @@ module powerbi.extensibility.visual {
                      *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking
                      *  at potentially different sub-ranges of data in groups). Also, if we wish to apply a manual override for bandwidth,
                      *  then the custom viz framework doesn't let us tailor this per series very easily.
-                     * 
-                     *  Sources: 
+                     *
+                     *  Sources:
                      *      - https://core.ac.uk/download/pdf/6591111.pdf
                      *      - https://www.bauer.uh.edu/rsusmel/phd/ec1-26.pdf
                      *      - https://en.wikipedia.org/wiki/Kernel_density_estimation#A_rule-of-thumb_bandwidth_estimator
                      *      - https://stats.stackexchange.com/a/6671
                      *      - https://www.ssc.wisc.edu/~bhansen/718/NonParametrics1.pdf
                      */
-                        if (this.settings.violin.type == 'line') {
+                        if (this.settings.violin.type === 'line') {
 
                             debug.log('Instantiating KDE kernel and bandwidth settings...');
-                        
+
                             /** Sigma function to account for outliers */
                                 let bwSigma = Math.min(this.viewModel.statistics.deviation, this.viewModel.statistics.iqr / 1.349);
-                                
+
                             /** Allocate the selected kernel from the properties pane */
                                 debug.log(`Using ${this.settings.violin.kernel} kernel`);
                                 this.kernel = KDE.kernels[this.settings.violin.kernel];
 
                             /** Because bandwidth is subjective, we use Silverman's rule-of-thumb to try and predict the bandwidth based on the spread of data.
                                  *  The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
-                                 *  to obtain from the tooltip, should they wish to 
+                                 *  to obtain from the tooltip, should they wish to.
                                  */
-                                this.viewModel.statistics.bandwidthSilverman = 
-                                        this.kernel.factor 
-                                    *   bwSigma 
-                                    *   Math.pow(this.allDataPoints.length, -1/5);
+                                this.viewModel.statistics.bandwidthSilverman =
+                                        this.kernel.factor
+                                    *   bwSigma
+                                    *   Math.pow(this.allDataPoints.length, -1 / 5);
                                 this.viewModel.statistics.bandwidthActual = this.settings.violin.specifyBandwidth && this.settings.violin.bandwidth
                                     ?   this.settings.violin.bandwidth
                                     :   this.viewModel.statistics.bandwidthSilverman;
@@ -349,7 +405,7 @@ module powerbi.extensibility.visual {
                         debug.log('Finished calculateStatistics');
                         this.addDebugProfile(debug, 'calculateStatistics');
                         debug.footer();
-                    
+
                 }
 
             /** If we're sorting, sort the categories appropriately. */
@@ -358,7 +414,7 @@ module powerbi.extensibility.visual {
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting sortData');
-                        debug.log('Managing sorting based on preferences'); 
+                        debug.log('Managing sorting based on preferences');
                         debug.profileStart();
 
                     /** Manage the sort */
@@ -392,15 +448,15 @@ module powerbi.extensibility.visual {
 
             /**
              * Creates the bare-bones a and y axis objects in the view model.
-             * 
+             *
              * @param options                                   - visual update options
              */
                 initialiseAxes(options: VisualUpdateOptions) {
-                    
+
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting initialiseAxes');
-                        debug.log('Creating bare-minimum axis objects...'); 
+                        debug.log('Creating bare-minimum axis objects...');
                         debug.profileStart();
 
                     /** Other pre-requisites */
@@ -420,7 +476,7 @@ module powerbi.extensibility.visual {
                             },
                             labelFormatter: valueFormatter.create({
                                 format: this.measureMetadata.format,
-                                value: this.settings.yAxis.labelDisplayUnits == 0
+                                value: this.settings.yAxis.labelDisplayUnits === 0
                                     ?   this.viewModel.statistics.max
                                     :   this.settings.yAxis.labelDisplayUnits,
                                 precision: this.settings.yAxis.precision != null
@@ -473,17 +529,17 @@ module powerbi.extensibility.visual {
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting processAxisText');
-                        debug.log('Calculating axis labels and titles'); 
+                        debug.log('Calculating axis labels and titles');
                         debug.profileStart();
 
                     /** Y-axis title */
                         this.viewModel.yAxis.titleTextProperties = {
                             fontFamily: this.settings.yAxis.titleFontFamily,
-                            fontSize:PixelConverter.toString(this.settings.yAxis.titleFontSize),
+                            fontSize: PixelConverter.toString(this.settings.yAxis.titleFontSize),
                             text: this.formatYAxistitle(debug)
                         };
                         if (this.settings.yAxis.showTitle) {
-                                    
+
                             debug.log('Y-axis title initial setup...');
 
                             this.viewModel.yAxis.titleDisplayName = this.getTailoredDisplayName(
@@ -492,7 +548,7 @@ module powerbi.extensibility.visual {
                                 this.viewModel.yAxis.dimensions
                                     ?   this.viewModel.yAxis.dimensions.height
                                     :   this.viewport.height
-                            )
+                            );
 
                         }
 
@@ -507,13 +563,13 @@ module powerbi.extensibility.visual {
                         /** Manage display label overflow if required. By doing this, we can use the raw,
                          *  unformatted category name to define our ticks, but format them correctly in the
                          *  event of us wishing to use ellipses etc.
-                         *  
+                         *
                          *  We'll work out the tailored name vs. the original name, and that way we can determine
                          *  how many categories have been reduced to their ellipses. If all have been reduced then
                          *  we can just remove the axis labels as they serve no purpose.
                          */
-                            
-                            if (this.viewModel.categoryNames){
+
+                            if (this.viewModel.categoryNames) {
 
                                 debug.log('X-axis labels...');
                                 let xTickMapper = {},
@@ -532,21 +588,21 @@ module powerbi.extensibility.visual {
                                                 ?   this.viewModel.xAxis.scale.rangeBand()
                                                 :   this.viewport.width / this.viewModel.categories.length
                                         );
-                                        
+
                                         collapsedCount += c.displayName.collapsed
                                             ?   1
                                             :   0;
-                                        
+
                                         xTickMapper[`${c.name}`] = c.displayName.tailoredName;
 
                                     });
 
-                                this.viewModel.categoriesAllCollapsed = collapsedCount == this.viewModel.categories.length;
+                                this.viewModel.categoriesAllCollapsed = collapsedCount === this.viewModel.categories.length;
 
-                                if (this.viewModel.xAxis.generator){
+                                if (this.viewModel.xAxis.generator) {
 
                                     this.viewModel.xAxis.generator.tickFormat(d => {
-                                    
+
                                         /** If all our ticks got collapsed, we might as well not have them... */
                                             if (this.viewModel.categoriesAllCollapsed || !this.settings.xAxis.showLabels) {
                                                 return '';
@@ -557,7 +613,7 @@ module powerbi.extensibility.visual {
                                     });
 
                                 }
-                                
+
                             } else {
 
                                 this.viewModel.xAxis.generator.tickFormat('');
@@ -566,11 +622,11 @@ module powerbi.extensibility.visual {
 
                         /** Repeat for the X-Axis title */
                             if (this.settings.xAxis.showTitle) {
-                                
+
                                 debug.log('X-axis title...');
-                                let xAxisTitleFormatted = !this.categoryMetadata 
+                                let xAxisTitleFormatted = !this.categoryMetadata
                                         ?   ''
-                                        :   (!this.settings.xAxis.titleText 
+                                        :   (!this.settings.xAxis.titleText
                                                 ?   this.categoryMetadata.displayName
                                                 :   this.settings.xAxis.titleText
                                             ).trim();
@@ -578,18 +634,18 @@ module powerbi.extensibility.visual {
                                     xAxisTitleFormatted,
                                     {
                                         fontFamily: this.settings.xAxis.titleFontFamily,
-                                        fontSize:PixelConverter.toString(this.settings.xAxis.titleFontSize),
+                                        fontSize: PixelConverter.toString(this.settings.xAxis.titleFontSize),
                                         text: xAxisTitleFormatted
                                     },
                                     this.viewModel.xAxis.dimensions.width
-                                )
+                                );
 
                             }
 
                         /** Resync if showing the axis at all */
                             if (this.settings.xAxis.show) {
                                 this.resyncDimensions();
-                            }                    
+                            }
 
                     /** We're done! */
                         debug.log('Finished processAxisText');
@@ -605,7 +661,7 @@ module powerbi.extensibility.visual {
                     /** Set up debugging */
                         let debug = new VisualDebugger(this.debug);
                         debug.log('Starting doKde');
-                        debug.log('Performing KDE on visual data...'); 
+                        debug.log('Performing KDE on visual data...');
                         debug.profileStart();
 
                     let dataViews = options.dataViews,
@@ -614,12 +670,12 @@ module powerbi.extensibility.visual {
                             ?   dataViews[0].categorical.categories[0]
                             :   null;
 
-                    if (this.settings.violin.type == 'line' && !this.viewModel.yAxis.collapsed) {
+                    if (this.settings.violin.type === 'line' && !this.viewModel.yAxis.collapsed) {
 
                         /** Keep track of the axis limits so that we can adjust them later if necessary */
                         let yMin = this.viewModel.yAxis.domain[0],
                             yMax = this.viewModel.yAxis.domain[1];
-                    
+
                         debug.reportExecutionTime();
                         debug.log('Kernel Density Estimation...');
 
@@ -638,10 +694,10 @@ module powerbi.extensibility.visual {
                                             defaultBandwidth = this.settings.violin.bandwidth
                                                 ?   this.settings.violin.bandwidth
                                                 :   10;
-                                        v.statistics.bandwidthSilverman = 
+                                        v.statistics.bandwidthSilverman =
                                                 this.kernel.factor
                                             *   bwSigma
-                                            *   Math.pow(v.dataPoints.length, -1/5);
+                                            *   Math.pow(v.dataPoints.length, -1 / 5);
                                         if (this.settings.violin.specifyBandwidth) {
                                             v.statistics.bandwidthActual = this.settings.violin.bandwidthByCategory
                                             ?   getCategoricalObjectValue(
@@ -651,19 +707,19 @@ module powerbi.extensibility.visual {
                                                     'categoryBandwidth',
                                                     defaultBandwidth
                                                 )
-                                            :   defaultBandwidth
+                                            :   defaultBandwidth;
                                         } else {
                                             v.statistics.bandwidthActual = v.statistics.bandwidthSilverman;
                                         }
                                     } else {
                                         v.statistics.bandwidthActual = this.viewModel.statistics.bandwidthActual;
-                                        v.statistics.bandwidthSilverman = this.viewModel.statistics.bandwidthSilverman
+                                        v.statistics.bandwidthSilverman = this.viewModel.statistics.bandwidthSilverman;
                                     }
 
                                 /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
                                  *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
                                  *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
-                                 *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the 
+                                 *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the
                                  *  process sufficiently straightforward for the end-user...
                                  */
                                     let kde = KDE.kernelDensityEstimator(
@@ -672,7 +728,7 @@ module powerbi.extensibility.visual {
                                             this.viewModel.xVaxis.scale.ticks(parseInt(this.settings.violin.resolution))
                                         );
 
-                                    /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out 
+                                    /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out
                                      *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
                                      */
                                         let kdeData = kde(v.dataPoints),
@@ -686,13 +742,13 @@ module powerbi.extensibility.visual {
                                             /** Second phase - we try to converge the chart within the confines of the series min/max */
                                                 debug.log(`[${series}] Convergence required on violin plot. Doing further interpolation checks and processing...`);
                                                 interpolateMin = d3.max(
-                                                    kdeData.filter(d => d.x < v.statistics.min && d.y == 0), (d) => d.x
+                                                    kdeData.filter(d => d.x < v.statistics.min && d.y === 0), (d) => d.x
                                                 ),
                                                 interpolateMax = d3.min(
-                                                    kdeData.filter(d => d.x > v.statistics.max && d.y == 0), (d) => d.x
+                                                    kdeData.filter(d => d.x > v.statistics.max && d.y === 0), (d) => d.x
                                                 );
                                                 debug.log(`[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`);
-                                            
+
                                             /** Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one */
                                                 if (!interpolateMin || !interpolateMax) {
                                                     debug.log(`[${series}] Couldn\'t converge following checkpoint #2. Applying further KDE to data to find a suitable point...`);
@@ -701,7 +757,7 @@ module powerbi.extensibility.visual {
                                                         this.viewModel.statistics.bandwidthActual,
                                                         v.dataPoints
                                                     );
-                                                    
+
                                                     if (!interpolateMin) {
                                                         interpolateMin = KDE.kernelDensityInterpolator(v.statistics.min, KDE.ELimit.min, kdeRoot);
                                                         debug.log(`[${series}] Applied KDE to minimum value. New value: ${interpolateMin}`);
@@ -711,7 +767,7 @@ module powerbi.extensibility.visual {
                                                         debug.log(`[${series}] Applied KDE to maximum value. New value: ${interpolateMax}`);
                                                     }
                                                     debug.log(`[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`);
-                                                }                                            
+                                                }
 
                                             /** If our KDE value exceeds the y-axis domain, then we need to extend it to fit the plot.
                                              *  There are some other adjustments to make as well (detailed in comments below).
@@ -735,8 +791,8 @@ module powerbi.extensibility.visual {
                                                         x: interpolateMin,
                                                         y: 0,
                                                         remove: false
-                                                    })
-                                                };
+                                                    });
+                                                }
 
                                             /** Highest value is a little different, as it can exist somewhere before the end of the array, so we need
                                              *  to find the correct element in there to apply the convergence point.
@@ -747,7 +803,7 @@ module powerbi.extensibility.visual {
                                                         x: interpolateMax,
                                                         y: 0,
                                                         remove: false
-                                                    })
+                                                    });
                                                 }
 
                                             /** We'll now re-process the array to ensure that we filter out the correct erroneous KDE values */
@@ -761,7 +817,7 @@ module powerbi.extensibility.visual {
                                                                     y: d.y,
                                                                     remove: false
                                                                 } as IDataPointKde;
-                                                            
+
                                                         /** Converge anything outside of the min/max extents */
                                                             if (d.x <= interpolateMin || d.x >= interpolateMax) {
                                                                 kdePoint.y = 0;
@@ -791,21 +847,63 @@ module powerbi.extensibility.visual {
                                             /** Filter out the data we don't need after processing it and we are go! */
                                                 debug.log(`[${series}] Removing erroneous KDE array elements...`);
                                                 v.dataKde = kdeData
-                                                    .filter((d) => 
-                                                        d.remove == false
+                                                    .filter((d) =>
+                                                        d.remove === false
                                                     );
 
                                         } else {
-                                            /** Just filter out anything outside the ranges, as we're not converging */
+
+                                            /** For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders */
+                                                const minBisect = d3.bisector(function(d: IDataPointKde) { return d.x; }).left;
+                                                const maxBisect = d3.bisector(function(d: IDataPointKde) { return d.x; }).right;
+                                                let min = minBisect(kdeData, interpolateMin),
+                                                    max = maxBisect(kdeData, interpolateMax);
+
+                                                    debug.log(`Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`);
+
+                                            /** Add 2 max elements: the KDE plot value, and a 0 to converge */
+                                                debug.log('Resolving maximum values...');
+                                                kdeData.splice(max, 0, {
+                                                    x: interpolateMax,
+                                                    y: kdeData[max > kdeData.length - 1
+                                                            ?   max - 1
+                                                            :   max
+                                                        ].y,
+                                                    remove: false
+                                                });
+                                                kdeData.splice(max + 1, 0, {
+                                                    x: interpolateMax,
+                                                    y: 0,
+                                                    remove: false
+                                                });
+
+                                            /** Add 2 min elements; similar to above */
+                                                debug.log('Resolving minimum values...');
+                                                kdeData.splice(min, 0, {
+                                                    x: interpolateMin,
+                                                    y: kdeData[min === 0
+                                                            ?   0
+                                                            :   min - 1
+                                                        ].y,
+                                                    remove: false
+                                                });
+                                                kdeData.splice(min, 0, {
+                                                    x: interpolateMin,
+                                                    y: 0,
+                                                    remove: false
+                                                });
+
+                                            /** Filter out anything outside our interpolation values */
+                                                debug.log('Filtering extents...');
                                                 v.dataKde = kdeData
-                                                    .filter(d => !interpolateMin || (d.x >= interpolateMin && d.y != 0))    
-                                                    .filter(d => !interpolateMax || (d.x <= interpolateMax && d.y != 0));
+                                                    .filter(d => d.x >= interpolateMin)
+                                                    .filter(d => d.x <= interpolateMax);
                                         }
-                                        
+
                                     /** Adjust violin scale to account for inner padding preferences */
                                         v.yVScale = d3.scale.linear()
                                             .range([
-                                                0, 
+                                                0,
                                                 this.viewModel.violinPlot.width / 2
                                             ])
                                             .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
@@ -833,7 +931,7 @@ module powerbi.extensibility.visual {
                          */
                             this.updateYDomain([yMin, yMax], debug);
                             this.resyncDimensions();
-                            
+
                     }
 
                     /** We're done! */
@@ -866,10 +964,10 @@ module powerbi.extensibility.visual {
                     /** X-axis height */
                         debug.log('X-axis vertical space...');
                         xAxis.titleDimensions = {
-                            height:     this.settings.xAxis.show 
+                            height:     this.settings.xAxis.show
                                     &&  this.settings.xAxis.showTitle
-                                    &&  xAxis.titleDisplayName 
-                                    &&  !xAxis.titleDisplayName.collapsed 
+                                    &&  xAxis.titleDisplayName
+                                    &&  !xAxis.titleDisplayName.collapsed
                                     &&  xAxis.titleDisplayName.tailoredName !== ''
                                     &&  !xAxis.collapsed
                                 ?   textMeasurementService.measureSvgTextHeight({
@@ -881,9 +979,9 @@ module powerbi.extensibility.visual {
                         };
                         debug.log(`X-axis title height: ${xAxis.titleDimensions.height}`);
                         xAxis.labelDimensions = {
-                            height:     this.settings.xAxis.show 
-                                    &&  this.viewModel.categoryNames 
-                                    &&  this.settings.xAxis.showLabels 
+                            height:     this.settings.xAxis.show
+                                    &&  this.viewModel.categoryNames
+                                    &&  this.settings.xAxis.showLabels
                                     &&  !this.viewModel.categoriesAllCollapsed
                                     &&  !xAxis.collapsed
                                 ?   textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
@@ -905,7 +1003,7 @@ module powerbi.extensibility.visual {
                         yAxis.collapsed = false;
                         let yPadVert = this.settings.yAxis.fontSize / 2,
                             yHeight = this.viewport.height - yPadVert - xAxis.dimensions.height;
-                            
+
                         /** Make adjustments to the x-axis if short on room to see if we can fre eup space. As a last resort, just say we can't render the axis */
                             if (yHeight < yAxis.heightLimit) {
                                 if (xAxis.titleDimensions.height > 0) {
@@ -915,14 +1013,14 @@ module powerbi.extensibility.visual {
                                     xAxis.titleDimensions.height = 0;
                                 }
                             }
-                            if (yHeight < yAxis.heightLimit && xAxis.titleDimensions.height == 0) {
+                            if (yHeight < yAxis.heightLimit && xAxis.titleDimensions.height === 0) {
                                 if (xAxis.labelDimensions.height > 0) {
                                     debug.log('Reducing X-axis labels to make room for Y-axis...');
                                     yHeight += xAxis.labelDimensions.height;
                                     xAxis.labelDimensions.height = xAxis.dimensions.height = 0;
                                 }
                             }
-                            if (yHeight < yAxis.heightLimit && xAxis.dimensions.height == 0) {
+                            if (yHeight < yAxis.heightLimit && xAxis.dimensions.height === 0) {
                                 debug.log('Y-axis too short to render properly!');
                                 this.viewModel.yAxis.collapsed = true;
                             }
@@ -932,7 +1030,7 @@ module powerbi.extensibility.visual {
                                     yAxis.titleDisplayName.formattedName,
                                     yAxis.titleDisplayName.textProperties,
                                     yHeight
-                                )
+                                );
                             }
 
                         /** Providing that we managed to keep the Y-axis... */
@@ -941,33 +1039,35 @@ module powerbi.extensibility.visual {
                                     height: yHeight,
                                     y: yPadVert /** TODO: manage categorical axis, padding etc. */
                                 };
-                
+
                                 yAxis.range = [
                                     yAxis.dimensions.height,
                                     yAxis.dimensions.y
                                 ];
-                
+
                                 debug.log('Y-Axis ticks and scale...');
                                 yAxis.ticks = axisHelper.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
                                 yAxis.scale = d3.scale.linear()
                                     .domain(yAxis.domain)
                                     .range(yAxis.range)
-                                    .nice(yAxis.ticks)
                                     .clamp(true);
-                                yAxis.ticksFormatted = yAxis.scale.ticks().map(v => ( 
+                                if (!(this.settings.yAxis.start || this.settings.yAxis.end)) {
+                                    yAxis.scale.nice(yAxis.ticks);
+                                }
+                                yAxis.ticksFormatted = yAxis.scale.ticks().map(v => (
                                     this.settings.yAxis.showLabels
                                         ?   yAxis.labelFormatter.format(v)
                                         :   ''
                                 ));
-                
+
                                 /** Resolve the title dimensions */
                                     debug.log('Y-Axis title sizing...');
                                     yAxis.titleDimensions = {
                                         width: (
-                                                    this.settings.yAxis.show 
+                                                    this.settings.yAxis.show
                                                 &&  this.settings.yAxis.showTitle
-                                                &&  yAxis.titleDisplayName 
-                                                &&  !yAxis.titleDisplayName.collapsed 
+                                                &&  yAxis.titleDisplayName
+                                                &&  !yAxis.titleDisplayName.collapsed
                                                 &&  yAxis.titleDisplayName.tailoredName !== ''
                                                 &&  !yAxis.collapsed
                                             )
@@ -978,11 +1078,11 @@ module powerbi.extensibility.visual {
                                         y: 0
                                     };
                                     debug.log(`Y-axis title width: ${yAxis.titleDimensions.width}`);
-                    
+
                                 /** Find the widest label and use that for our Y-axis width overall */
                                     debug.log('Y-Axis label sizing...');
                                     yAxis.labelDimensions = {
-                                        width:      this.settings.yAxis.show 
+                                        width:      this.settings.yAxis.show
                                                 &&  this.settings.yAxis.showLabels
                                                 &&  !yAxis.collapsed
                                             ?   Math.max(
@@ -993,7 +1093,7 @@ module powerbi.extensibility.visual {
                                             : 0
                                         };
                                     debug.log(`Y-axis label width: ${yAxis.labelDimensions.width}`);
-                    
+
                                 /** Total Y-axis width */
                                     yAxis.dimensions.width = yAxis.labelDimensions.width + yAxis.titleDimensions.width;
                                     debug.log(`Y-axis total width: ${yAxis.dimensions.width}`);
@@ -1010,12 +1110,12 @@ module powerbi.extensibility.visual {
                                             yAxis.titleDimensions.width = 0;
                                         }
                                     }
-                                    if (xWidth < xAxis.widthLimit && yAxis.titleDimensions.width == 0) {
+                                    if (xWidth < xAxis.widthLimit && yAxis.titleDimensions.width === 0) {
                                         debug.log('Reducing Y-axis labels to make room for X-axis...');
                                         xWidth += yAxis.labelDimensions.width;
                                         yAxis.labelDimensions.width = yAxis.dimensions.width = 0;
                                     }
-                                    if (xWidth < xAxis.widthLimit && yAxis.dimensions.width == 0) {
+                                    if (xWidth < xAxis.widthLimit && yAxis.dimensions.width === 0) {
                                         debug.log('X-axis too narrow to render properly!');
                                         xAxis.collapsed = true;
                                     } else {
@@ -1027,9 +1127,9 @@ module powerbi.extensibility.visual {
                                             xAxis.titleDisplayName.formattedName,
                                             xAxis.titleDisplayName.textProperties,
                                             xWidth
-                                        )
+                                        );
                                     }
-                                    
+
                                 /** Solve the remaining axis dimensions */
                                     yAxis.dimensions.x = yAxis.titleDimensions.width;
                                     xAxis.dimensions.width = xWidth;
@@ -1039,7 +1139,7 @@ module powerbi.extensibility.visual {
                                 /** Revise Y-axis properties as necessary */
                                     debug.log('Y-Axis generator functions...');
                                     if (!yAxis.generator) {
-                                        yAxis.generator = d3.svg.axis()
+                                        yAxis.generator = d3.svg.axis();
                                     }
                                     yAxis.generator
                                         .scale(yAxis.scale)
@@ -1057,11 +1157,11 @@ module powerbi.extensibility.visual {
                                     xAxis.scale = d3.scale.ordinal()
                                         .domain(xAxis.domain)
                                         .rangeRoundBands(xAxis.range);
-                                    
+
                                     if (!xAxis.generator) {
-                                        xAxis.generator = d3.svg.axis()
-                                    };
-                                    xAxis.generator    
+                                        xAxis.generator = d3.svg.axis();
+                                    }
+                                    xAxis.generator
                                         .scale(xAxis.scale)
                                         .orient('bottom')
                                         .tickSize(-yAxis.dimensions.height);
@@ -1072,7 +1172,7 @@ module powerbi.extensibility.visual {
                                             categoryWidth: xAxis.scale.rangeBand(),
                                             width: xAxis.scale.rangeBand() - (xAxis.scale.rangeBand() * (this.settings.violin.innerPadding / 100))
                                         } as IViolinPlot;
-                                        
+
                                     /** Box plot specifics */
                                         debug.log('Box plot dimensions...');
                                         this.viewModel.boxPlot = {
@@ -1082,19 +1182,23 @@ module powerbi.extensibility.visual {
                                         this.viewModel.boxPlot.maxMeanDiameter = this.viewModel.boxPlot.maxMeanRadius * 2;
                                         this.viewModel.boxPlot.scaledMeanRadius = (this.viewModel.boxPlot.width / 5);
                                         this.viewModel.boxPlot.scaledMeanDiameter = this.viewModel.boxPlot.scaledMeanRadius * 2;
-                                        
+
                                         if (Math.min(this.viewModel.boxPlot.scaledMeanDiameter, this.viewModel.boxPlot.maxMeanDiameter) >= this.viewModel.boxPlot.width) {
-                                            this.viewModel.boxPlot.actualMeanDiameter = 0
+                                            this.viewModel.boxPlot.actualMeanDiameter = 0;
                                         } else {
                                             this.viewModel.boxPlot.actualMeanDiameter = this.viewModel.boxPlot.scaledMeanDiameter > this.viewModel.boxPlot.maxMeanDiameter
                                                 ?   this.viewModel.boxPlot.maxMeanDiameter
-                                                :   this.viewModel.boxPlot.scaledMeanDiameter
+                                                :   this.viewModel.boxPlot.scaledMeanDiameter;
                                         }
                                         this.viewModel.boxPlot.actualMeanRadius = this.viewModel.boxPlot.actualMeanDiameter / 2;
                                         this.viewModel.boxPlot.xLeft = (this.viewModel.violinPlot.categoryWidth / 2) - (this.viewModel.boxPlot.width / 2);
                                         this.viewModel.boxPlot.xRight = (this.viewModel.violinPlot.categoryWidth / 2) + (this.viewModel.boxPlot.width / 2);
                                         this.viewModel.boxPlot.featureXLeft = this.viewModel.boxPlot.xLeft + (this.settings.dataPoints.strokeWidth / 2);
                                         this.viewModel.boxPlot.featureXRight = this.viewModel.boxPlot.xRight - (this.settings.dataPoints.strokeWidth / 2);
+
+                                    /** Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to use min/max rather than quartiles */
+                                        debug.log('Ranged column plot dimensions...');
+                                        this.viewModel.columnPlot = this.viewModel.boxPlot;
 
                                     /** Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes */
                                         debug.log('Barcode plot dimensions...');
@@ -1106,7 +1210,7 @@ module powerbi.extensibility.visual {
                                             featureXLeft: (this.viewModel.violinPlot.categoryWidth / 2) - ((this.viewModel.boxPlot.width * 1.4) / 2),
                                             featureXRight: (this.viewModel.violinPlot.categoryWidth / 2) + ((this.viewModel.boxPlot.width * 1.4) / 2)
                                         };
-                                        
+
                                 if (this.viewModel.xVaxis && this.viewModel.xAxis.domain && this.viewModel.xVaxis.scale) {
                                     debug.log('Assigning xVaxis scale...');
                                     this.viewModel.xVaxis.scale
@@ -1116,7 +1220,7 @@ module powerbi.extensibility.visual {
                                 }
 
                             }
-                            
+
                         /** Transfer variables to view model */
                             if (this.viewModel && this.viewModel.yAxis) {
                                 this.viewModel.yAxis = yAxis;
@@ -1132,12 +1236,23 @@ module powerbi.extensibility.visual {
 
             /**
              * The y-axis can grow if the KDE calculations require it. This manages the update of both dependent axes (the main chart and the violin) in that particular
-             * event.
-             * 
+             * event. Also ensure that any user override of the start/end y-axis values is catered for.
+             *
              * @param domain                                    - [number, number] aray of min and max value
              * @param debug                                     - debugger to attach
              */
                 updateYDomain(domain: [number, number], debug: VisualDebugger) {
+
+                    /** If the user has supplied their own start/end values, use those */
+                        domain = [
+                            this.settings.yAxis.start === 0
+                                ?   0
+                                :   this.settings.yAxis.start || domain[0],
+                            this.settings.yAxis.end === 0
+                                ?   0
+                                :   this.settings.yAxis.end || domain[1]
+                        ];
+
                     debug.log(`Updating y-axis domain to [${domain}]`);
                     if (this.viewModel.yAxis) {
                         this.viewModel.yAxis.domain = domain;
@@ -1149,21 +1264,21 @@ module powerbi.extensibility.visual {
 
             /**
              * Manages the formatting of the y-axis title, based on the value of the y-axis Title Style property.
-             * 
-             * @param debug 
+             *
+             * @param debug
              */
                 formatYAxistitle(debug: VisualDebugger): string {
 
                     debug.log('Formatting y-axis title...');
 
                     /** If we supplied a title, use that, otherwise format our measure names */
-                        let title = (!this.settings.yAxis.titleText) 
+                        let title = (!this.settings.yAxis.titleText)
                             ? this.measureMetadata.displayName
                             : this.settings.yAxis.titleText;
 
                     /** Return the correct title based on our supplied settings */
                         debug.log(`Resolving title based on setting: ${this.settings.yAxis.titleStyle}`);
-                        if (this.settings.yAxis.labelDisplayUnits == 1 || !this.viewModel.yAxis.labelFormatter.displayUnit) {
+                        if (this.settings.yAxis.labelDisplayUnits === 1 || !this.viewModel.yAxis.labelFormatter.displayUnit) {
                             return title;
                         }
                         switch (this.settings.yAxis.titleStyle) {
@@ -1178,20 +1293,20 @@ module powerbi.extensibility.visual {
                             }
                         }
 
-                };
+                }
 
             /**
              * Calculate the necessary IDisplayName object for the supplied properties. Used to return a tailored value
              * (i.e. with ellipses) if the bounding width is not wide enough. An IDisplayName object is regarded as
              * `collapsed` if the tailored value is solely an ellipsis (`...`), which can then be used to determine
              * whether to display it at all based on other specific business logic.
-             * 
+             *
              * @param formattedName                                 - The formatted string to evaluate
              * @param textProperties                                - The text properties to use when calculating dimensions
              * @param boundingWidth                                 - The width to test against
              */
-                getTailoredDisplayName(formattedName: string, textProperties : TextProperties, boundingWidth): IDisplayName {
-                    
+                getTailoredDisplayName(formattedName: string, textProperties: TextProperties, boundingWidth): IDisplayName {
+
                     let formattedWidth = textMeasurementService.measureSvgTextWidth(
                             textProperties,
                             formattedName
@@ -1216,8 +1331,8 @@ module powerbi.extensibility.visual {
                         textProperties: textProperties,
                         tailoredName: tailoredName,
                         tailoredWidth: tailoredWidth,
-                        collapsed: tailoredName == '...'
-                    }
+                        collapsed: tailoredName === '...'
+                    };
 
                 }
 

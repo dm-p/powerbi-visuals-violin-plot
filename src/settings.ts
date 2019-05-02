@@ -38,23 +38,23 @@ module powerbi.extensibility.visual {
         defaultBoxDataColour: string = '#FFFFFF',
         defaultLineStyle: string = 'solid',
         defaultStrokeWidth: number = 2;
-    
+
 
     export class VisualSettings extends DataViewObjectsParser {
-        public yAxis: yAxisSettings = new yAxisSettings();
-        public xAxis: xAxisSettings = new xAxisSettings();
-        public sorting: sortingSettings = new sortingSettings();
-        public dataLimit: dataLimitSettings = new dataLimitSettings();
-        public violin: violinSettings = new violinSettings();
-        public dataColours: dataColourSettings = new dataColourSettings();
-        public dataPoints: dataPointSettings = new dataPointSettings();
-        public tooltip: tooltipSettings = new tooltipSettings();
-        public legend: legendSettings = new legendSettings();
-        public about: aboutSettings = new aboutSettings();
+        public yAxis: YAxisSettings = new YAxisSettings();
+        public xAxis: XAxisSettings = new XAxisSettings();
+        public sorting: SortingSettings = new SortingSettings();
+        public dataLimit: DataLimitSettings = new DataLimitSettings();
+        public violin: ViolinSettings = new ViolinSettings();
+        public dataColours: DataColourSettings = new DataColourSettings();
+        public dataPoints: DataPointSettings = new DataPointSettings();
+        public tooltip: TooltipSettings = new TooltipSettings();
+        public legend: LegendSettings = new LegendSettings();
+        public about: AboutSettings = new AboutSettings();
     }
 
     /** Common axis settings */
-        export class axisSettings {
+        export class AxisSettings {
             /** Show whole axis */
             public show: boolean = true;
             /** Labels */
@@ -72,7 +72,7 @@ module powerbi.extensibility.visual {
             /** Show Title */
             public showTitle: boolean = false;
             /** Title Style */
-            public titleStyle: string = 'title'
+            public titleStyle: string = 'title';
             /** Title Colour */
             public titleColor: string = defaultAxisFontColor;
             /** Title */
@@ -95,7 +95,12 @@ module powerbi.extensibility.visual {
         }
 
     /** Y-axis specific settings */
-        export class yAxisSettings extends axisSettings {
+        export class YAxisSettings extends AxisSettings {
+            /** Axis range start */
+                public start: number = null;
+            /** Axis range end */
+                public end: number = null;
+
             constructor() {
                 super();
                 this.gridlines = true;
@@ -104,7 +109,7 @@ module powerbi.extensibility.visual {
         }
 
     /** X-axis specific settings */
-        export class xAxisSettings extends axisSettings {
+        export class XAxisSettings extends AxisSettings {
             constructor() {
                 super();
                 this.gridlines = false;
@@ -113,7 +118,7 @@ module powerbi.extensibility.visual {
         }
 
     /** Used to hold violin settings */
-    export class violinSettings {
+    export class ViolinSettings {
         /** How far to pad the violin from the outside of the x-range band */
         public innerPadding: number = 20;
         /** Violin type - currently `line` only */
@@ -137,7 +142,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to manage violin colour configuration */
-    export class dataColourSettings {
+    export class DataColourSettings {
         /** Default colour for series */
         public defaultFillColour: string = null;
         /** How transparent the violin fill should be */
@@ -147,7 +152,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold box plot settings */
-    export class dataPointSettings{
+    export class DataPointSettings {
         /** Show data points */
         public show: boolean = true;
         /** Plot type */
@@ -197,7 +202,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold tooltip settings */
-    export class tooltipSettings {
+    export class TooltipSettings {
         /** Show tooltips */
         public show: boolean = true;
         public numberSamplesDisplayUnits: number = 0;
@@ -217,7 +222,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Legend settings */
-    export class legendSettings{
+    export class LegendSettings {
         /** Show legend */
         public show: boolean = true;
         /** Legend position */
@@ -233,10 +238,21 @@ module powerbi.extensibility.visual {
         /** Height and width limit constants */
         public heightLimit: number = 75;
         public widthLimit: number = 75;
+        /** Show/hide categories */
+        public showCategories: boolean = true;
+        /** Manage statistical data points */
+        public showStatisticalPoints: boolean = true;
+        public spacerText: string = '    ';
+        public dataPointText: string = 'Individual Data Point';
+        public medianText: string = 'Median Value';
+        public meanText: string = 'Mean Value';
+        public quartileCombinedText: string = '1st & 3rd Quartiles';
+        public quartile1Text: string = '1st Quartile';
+        public quartile3Text: string = '3rd Quartile';
     }
 
     /** Sorting */
-    export class sortingSettings {
+    export class SortingSettings {
         /** Sort by */
         public by: string = 'category';
         /** Sort order */
@@ -244,7 +260,7 @@ module powerbi.extensibility.visual {
     }
 
     /** Data Limit */
-    export class dataLimitSettings {
+    export class DataLimitSettings {
         /** Enable feature - currently off; refer to notes in visual.ts for details */
         public enabled: boolean = false;
         public override: boolean = false;
@@ -255,9 +271,9 @@ module powerbi.extensibility.visual {
     }
 
     /** Used to hold about info and manage debugging */
-    export class aboutSettings {
+    export class AboutSettings {
         public visualName: string = 'Violin Plot';
-        public version: string = '1.2.0.3';
+        public version: string = '1.3.0.4';
         public debugMode: boolean = false;
         public debugVisualUpdate: boolean = false;
         public debugTooltipEvents: boolean = false;

@@ -51,6 +51,13 @@ svg:not(:root) {
     stroke-width: 0;
 }
 
+line.customLegendIcon.median.dotted, line.customLegendIcon.median.dashed, line.customLegendIcon.median.dotdash,
+line.customLegendIcon.quartile1.dotted, line.customLegendIcon.quartile1.dashed, line.customLegendIcon.quartile1.dotdash,
+line.customLegendIcon.quartile3.dotted, line.customLegendIcon.quartile3.dashed, line.customLegendIcon.quartile3.dotdash,
+line.customLegendIcon.quartilesCombined.dotted, line.customLegendIcon.quartilesCombined.dashed, line.customLegendIcon.quartilesCombined.dotdash {
+    stroke-dasharray: 1, 2;
+}
+
 .grid .tick line.dashed, line.median.dashed, line.quartile1.dashed, line.quartile3.dashed {
     stroke-dasharray: 5, 5;
 }
