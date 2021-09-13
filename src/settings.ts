@@ -24,262 +24,260 @@
  *  THE SOFTWARE.
  */
 
-module powerbi.extensibility.visual {
-    "use strict";
-    import DataViewObjectsParser = powerbi.extensibility.utils.dataview.DataViewObjectsParser;
+import { dataViewObjectsParser } from 'powerbi-visuals-utils-dataviewutils';
+import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
-    let defaultFontSize: number = 11,
-        defaultFontSizeSmall: number = 8,
-        defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
-        defaultFontColor: string = '#777777',
-        defaultAxisFontColor: string = '#777777',
-        defaultAxisGridlineColor: string = '#EAEAEA',
-        defaultBoxFillColour: string = '#000000',
-        defaultBoxDataColour: string = '#FFFFFF',
-        defaultLineStyle: string = 'solid',
-        defaultStrokeWidth: number = 2;
+const defaultFontSize: number = 11,
+    defaultFontSizeSmall: number = 8,
+    defaultFontFamily: string =
+        '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
+    defaultFontColor: string = '#777777',
+    defaultAxisFontColor: string = '#777777',
+    defaultAxisGridlineColor: string = '#EAEAEA',
+    defaultBoxFillColour: string = '#000000',
+    defaultBoxDataColour: string = '#FFFFFF',
+    defaultLineStyle: string = 'solid',
+    defaultStrokeWidth: number = 2;
 
+export class VisualSettings extends DataViewObjectsParser {
+    public yAxis: YAxisSettings = new YAxisSettings();
+    public xAxis: XAxisSettings = new XAxisSettings();
+    public sorting: SortingSettings = new SortingSettings();
+    public dataLimit: DataLimitSettings = new DataLimitSettings();
+    public violin: ViolinSettings = new ViolinSettings();
+    public dataColours: DataColourSettings = new DataColourSettings();
+    public dataPoints: DataPointSettings = new DataPointSettings();
+    public tooltip: TooltipSettings = new TooltipSettings();
+    public legend: LegendSettings = new LegendSettings();
+    public about: AboutSettings = new AboutSettings();
+}
 
-    export class VisualSettings extends DataViewObjectsParser {
-        public yAxis: YAxisSettings = new YAxisSettings();
-        public xAxis: XAxisSettings = new XAxisSettings();
-        public sorting: SortingSettings = new SortingSettings();
-        public dataLimit: DataLimitSettings = new DataLimitSettings();
-        public violin: ViolinSettings = new ViolinSettings();
-        public dataColours: DataColourSettings = new DataColourSettings();
-        public dataPoints: DataPointSettings = new DataPointSettings();
-        public tooltip: TooltipSettings = new TooltipSettings();
-        public legend: LegendSettings = new LegendSettings();
-        public about: AboutSettings = new AboutSettings();
+/** Common axis settings */
+export class AxisSettings {
+    /** Show whole axis */
+    public show: boolean = true;
+    /** Labels */
+    public showLabels: boolean = true;
+    /** Font color */
+    public fontColor: string = defaultFontColor;
+    /** Text Size */
+    public fontSize: number = defaultFontSize;
+    /** Font */
+    public fontFamily: string = defaultFontFamily;
+    /** Display Units */
+    public labelDisplayUnits: number = 0;
+    /** Precision */
+    public precision: number = null;
+    /** Show Title */
+    public showTitle: boolean = false;
+    /** Title Style */
+    public titleStyle: string = 'title';
+    /** Title Colour */
+    public titleColor: string = defaultAxisFontColor;
+    /** Title */
+    public titleText: string = null;
+    /** Title Text Size */
+    public titleFontSize: number = defaultFontSize;
+    /** Title Font */
+    public titleFontFamily: string = defaultFontFamily;
+    /** Gridlines Toggle */
+    public gridlines: boolean = true;
+    /** Gridline colour */
+    public gridlineColor: string = defaultAxisGridlineColor;
+    /** Gridline stroke width */
+    public gridlineStrokeWidth: number = 1;
+    /** Gridline line style */
+    public gridlineStrokeLineStyle: string = 'solid';
+    /** Height and width limit constants */
+    public heightLimit: number;
+    public widthLimit: number;
+}
+
+/** Y-axis specific settings */
+export class YAxisSettings extends AxisSettings {
+    /** Axis range start */
+    public start: number = null;
+    /** Axis range end */
+    public end: number = null;
+
+    constructor() {
+        super();
+        this.gridlines = true;
+        this.heightLimit = 55;
     }
+}
 
-    /** Common axis settings */
-        export class AxisSettings {
-            /** Show whole axis */
-            public show: boolean = true;
-            /** Labels */
-            public showLabels: boolean = true;
-            /** Font color */
-            public fontColor: string = defaultFontColor;
-            /** Text Size */
-            public fontSize: number = defaultFontSize;
-            /** Font */
-            public fontFamily: string = defaultFontFamily;
-            /** Display Units */
-            public labelDisplayUnits: number = 0;
-            /** Precision */
-            public precision: number = null;
-            /** Show Title */
-            public showTitle: boolean = false;
-            /** Title Style */
-            public titleStyle: string = 'title';
-            /** Title Colour */
-            public titleColor: string = defaultAxisFontColor;
-            /** Title */
-            public titleText: string = null;
-            /** Title Text Size */
-            public titleFontSize: number = defaultFontSize;
-            /** Title Font */
-            public titleFontFamily: string = defaultFontFamily;
-            /** Gridlines Toggle */
-            public gridlines: boolean = true;
-            /** Gridline colour */
-            public gridlineColor: string = defaultAxisGridlineColor;
-            /** Gridline stroke width */
-            public gridlineStrokeWidth: number = 1;
-            /** Gridline line style */
-            public gridlineStrokeLineStyle: string = 'solid';
-            /** Height and width limit constants */
-            public heightLimit: number;
-            public widthLimit: number;
-        }
-
-    /** Y-axis specific settings */
-        export class YAxisSettings extends AxisSettings {
-            /** Axis range start */
-                public start: number = null;
-            /** Axis range end */
-                public end: number = null;
-
-            constructor() {
-                super();
-                this.gridlines = true;
-                this.heightLimit = 55;
-            }
-        }
-
-    /** X-axis specific settings */
-        export class XAxisSettings extends AxisSettings {
-            constructor() {
-                super();
-                this.gridlines = false;
-                this.widthLimit = 55;
-            }
-        }
-
-    /** Used to hold violin settings */
-    export class ViolinSettings {
-        /** How far to pad the violin from the outside of the x-range band */
-        public innerPadding: number = 20;
-        /** Violin type - currently `line` only */
-        public type: string = 'line';
-        /** Violin line stroke width */
-        public strokeWidth: number = defaultStrokeWidth;
-        /** Clamp values to min/max or converge */
-        public clamp: boolean = false;
-        /** Line interpolation */
-        public lineType: string = 'basis';
-        /** Resolution to use when binning the violin plot */
-        public resolution: string = '25';
-        /** Kernel to use for line generation */
-        public kernel: string = 'epanechnikov';
-        /** Specify manual bandwidth */
-        public specifyBandwidth: boolean = false;
-        /** Manual bandwidth */
-        public bandwidth: number = 10;
-        /** Derive bandwidth by category */
-        public bandwidthByCategory: boolean = false;
+/** X-axis specific settings */
+export class XAxisSettings extends AxisSettings {
+    constructor() {
+        super();
+        this.gridlines = false;
+        this.widthLimit = 55;
     }
+}
 
-    /** Used to manage violin colour configuration */
-    export class DataColourSettings {
-        /** Default colour for series */
-        public defaultFillColour: string = null;
-        /** How transparent the violin fill should be */
-        public transparency: number = 40;
-        /** Whether to colour by category or not */
-        public colourByCategory: boolean = false;
-    }
+/** Used to hold violin settings */
+export class ViolinSettings {
+    /** How far to pad the violin from the outside of the x-range band */
+    public innerPadding: number = 20;
+    /** Violin type - currently `line` only */
+    public type: string = 'line';
+    /** Violin line stroke width */
+    public strokeWidth: number = defaultStrokeWidth;
+    /** Clamp values to min/max or converge */
+    public clamp: boolean = false;
+    /** Line interpolation */
+    public lineType: string = 'basis';
+    /** Resolution to use when binning the violin plot */
+    public resolution: string = '25';
+    /** Kernel to use for line generation */
+    public kernel: string = 'epanechnikov';
+    /** Specify manual bandwidth */
+    public specifyBandwidth: boolean = false;
+    /** Manual bandwidth */
+    public bandwidth: number = 10;
+    /** Derive bandwidth by category */
+    public bandwidthByCategory: boolean = false;
+}
 
-    /** Used to hold box plot settings */
-    export class DataPointSettings {
-        /** Show data points */
-        public show: boolean = true;
-        /** Plot type */
-        public plotType: string = 'boxPlot';
-        /** Width (as % of violin) */
-        public innerPadding: number = 75;
-        /** Box plot line stroke width */
-        public strokeWidth: number = defaultStrokeWidth;
-        /** Box fill colour */
-        public boxFillColour: string = defaultBoxFillColour;
-        /** Bar stroke colour */
-        public barColour: string = defaultBoxFillColour;
-        /** How transparent the box plot fill should be */
-        public transparency: number = 40;
-        /** Whisker toggle */
-        public showWhiskers: boolean = true;
-        /** Quartile line toggle */
-        public showQuartiles: boolean = false;
-        /** Quartile 1 line colour */
-        public quartile1FillColour: string = defaultBoxDataColour;
-        /** Quartile 1 stroke width */
-        public quartile1StrokeWidth: number = defaultStrokeWidth;
-        /** Quartile 1 line style */
-        public quartile1StrokeLineStyle: string = 'dashed';
-        /** Quartile 3 line colour */
-        public quartile3FillColour: string = defaultBoxDataColour;
-        /** Quartile 1 stroke width */
-        public quartile3StrokeWidth: number = defaultStrokeWidth;
-        /** Quartile 3 line style */
-        public quartile3StrokeLineStyle: string = 'dashed';
-        /** Median toggle */
-        public showMedian: boolean = true;
-        /** Median stroke width */
-        public medianStrokeWidth: number = defaultStrokeWidth;
-        /** Median line colour */
-        public medianFillColour: string = defaultBoxDataColour;
-        /** Median line style */
-        public medianStrokeLineStyle: string = defaultLineStyle;
-        /** Mean toggle */
-        public showMean: boolean = true;
-        /** Mean stroke width */
-        public meanStrokeWidth: number = defaultStrokeWidth;
-        /** Mean circle colour */
-        public meanFillColour: string = defaultBoxDataColour;
-        /** Mean circle inner colour */
-        public meanFillColourInner: string = defaultBoxFillColour;
-    }
+/** Used to manage violin colour configuration */
+export class DataColourSettings {
+    /** Default colour for series */
+    public defaultFillColour: string = null;
+    /** How transparent the violin fill should be */
+    public transparency: number = 40;
+    /** Whether to colour by category or not */
+    public colourByCategory: boolean = false;
+}
 
-    /** Used to hold tooltip settings */
-    export class TooltipSettings {
-        /** Show tooltips */
-        public show: boolean = true;
-        public numberSamplesDisplayUnits: number = 0;
-        public numberSamplesPrecision: number = 0;
-        public measureDisplayUnits: number = 0;
-        public measurePrecision: number = 2;
-        /** Individual statistics */
-        public showMaxMin: boolean = true;
-        public showSpan: boolean = false;
-        public showMedian: boolean = true;
-        public showMean: boolean = true;
-        public showDeviation: boolean = true;
-        public showQuartiles: boolean = false;
-        public showIqr: boolean = false;
-        public showConfidence: boolean = false;
-        public showBandwidth: boolean = false;
-    }
+/** Used to hold box plot settings */
+export class DataPointSettings {
+    /** Show data points */
+    public show: boolean = true;
+    /** Plot type */
+    public plotType: string = 'boxPlot';
+    /** Width (as % of violin) */
+    public innerPadding: number = 75;
+    /** Box plot line stroke width */
+    public strokeWidth: number = defaultStrokeWidth;
+    /** Box fill colour */
+    public boxFillColour: string = defaultBoxFillColour;
+    /** Bar stroke colour */
+    public barColour: string = defaultBoxFillColour;
+    /** How transparent the box plot fill should be */
+    public transparency: number = 40;
+    /** Whisker toggle */
+    public showWhiskers: boolean = true;
+    /** Quartile line toggle */
+    public showQuartiles: boolean = false;
+    /** Quartile 1 line colour */
+    public quartile1FillColour: string = defaultBoxDataColour;
+    /** Quartile 1 stroke width */
+    public quartile1StrokeWidth: number = defaultStrokeWidth;
+    /** Quartile 1 line style */
+    public quartile1StrokeLineStyle: string = 'dashed';
+    /** Quartile 3 line colour */
+    public quartile3FillColour: string = defaultBoxDataColour;
+    /** Quartile 1 stroke width */
+    public quartile3StrokeWidth: number = defaultStrokeWidth;
+    /** Quartile 3 line style */
+    public quartile3StrokeLineStyle: string = 'dashed';
+    /** Median toggle */
+    public showMedian: boolean = true;
+    /** Median stroke width */
+    public medianStrokeWidth: number = defaultStrokeWidth;
+    /** Median line colour */
+    public medianFillColour: string = defaultBoxDataColour;
+    /** Median line style */
+    public medianStrokeLineStyle: string = defaultLineStyle;
+    /** Mean toggle */
+    public showMean: boolean = true;
+    /** Mean stroke width */
+    public meanStrokeWidth: number = defaultStrokeWidth;
+    /** Mean circle colour */
+    public meanFillColour: string = defaultBoxDataColour;
+    /** Mean circle inner colour */
+    public meanFillColourInner: string = defaultBoxFillColour;
+}
 
-    /** Legend settings */
-    export class LegendSettings {
-        /** Show legend */
-        public show: boolean = true;
-        /** Legend position */
-        public position: string = 'Top';
-        /** Show title */
-        public showTitle: boolean = true;
-        /** Title text */
-        public titleText: string = null;
-        /** Font color */
-        public fontColor: string = defaultFontColor;
-        /** Text Size */
-        public fontSize: number = defaultFontSizeSmall;
-        /** Height and width limit constants */
-        public heightLimit: number = 75;
-        public widthLimit: number = 75;
-        /** Show/hide categories */
-        public showCategories: boolean = true;
-        /** Manage statistical data points */
-        public showStatisticalPoints: boolean = true;
-        public spacerText: string = '    ';
-        public dataPointText: string = 'Individual Data Point';
-        public medianText: string = 'Median Value';
-        public meanText: string = 'Mean Value';
-        public quartileCombinedText: string = '1st & 3rd Quartiles';
-        public quartile1Text: string = '1st Quartile';
-        public quartile3Text: string = '3rd Quartile';
-    }
+/** Used to hold tooltip settings */
+export class TooltipSettings {
+    /** Show tooltips */
+    public show: boolean = true;
+    public numberSamplesDisplayUnits: number = 0;
+    public numberSamplesPrecision: number = 0;
+    public measureDisplayUnits: number = 0;
+    public measurePrecision: number = 2;
+    /** Individual statistics */
+    public showMaxMin: boolean = true;
+    public showSpan: boolean = false;
+    public showMedian: boolean = true;
+    public showMean: boolean = true;
+    public showDeviation: boolean = true;
+    public showQuartiles: boolean = false;
+    public showIqr: boolean = false;
+    public showConfidence: boolean = false;
+    public showBandwidth: boolean = false;
+}
 
-    /** Sorting */
-    export class SortingSettings {
-        /** Sort by */
-        public by: string = 'category';
-        /** Sort order */
-        public order: string = 'ascending';
-    }
+/** Legend settings */
+export class LegendSettings {
+    /** Show legend */
+    public show: boolean = true;
+    /** Legend position */
+    public position: string = 'Top';
+    /** Show title */
+    public showTitle: boolean = true;
+    /** Title text */
+    public titleText: string = null;
+    /** Font color */
+    public fontColor: string = defaultFontColor;
+    /** Text Size */
+    public fontSize: number = defaultFontSizeSmall;
+    /** Height and width limit constants */
+    public heightLimit: number = 75;
+    public widthLimit: number = 75;
+    /** Show/hide categories */
+    public showCategories: boolean = true;
+    /** Manage statistical data points */
+    public showStatisticalPoints: boolean = true;
+    public spacerText: string = '    ';
+    public dataPointText: string = 'Individual Data Point';
+    public medianText: string = 'Median Value';
+    public meanText: string = 'Mean Value';
+    public quartileCombinedText: string = '1st & 3rd Quartiles';
+    public quartile1Text: string = '1st Quartile';
+    public quartile3Text: string = '3rd Quartile';
+}
 
-    /** Data Limit */
-    export class DataLimitSettings {
-        /** Enable feature - currently off; refer to notes in visual.ts for details */
-        public enabled: boolean = false;
-        public override: boolean = false;
-        public showInfo: boolean = true;
-        public showCustomVisualNotes: boolean = true;
-        /** Use to prevent the visual from rendering too many categories and breaking the browser */
-        public categoryLimit: number = 100;
-    }
+/** Sorting */
+export class SortingSettings {
+    /** Sort by */
+    public by: string = 'category';
+    /** Sort order */
+    public order: string = 'ascending';
+}
 
-    /** Used to hold about info and manage debugging */
-    export class AboutSettings {
-        public visualName: string = 'Violin Plot';
-        public version: string = '1.3.0.4';
-        public debugMode: boolean = false;
-        public debugVisualUpdate: boolean = false;
-        public debugTooltipEvents: boolean = false;
-        public debugProperties: boolean = false;
-        public development: boolean = false; /** SET TO `false` FOR RELEASE */
-        public usageUrl: string = 'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
-    }
+/** Data Limit */
+export class DataLimitSettings {
+    /** Enable feature - currently off; refer to notes in visual.ts for details */
+    public enabled: boolean = false;
+    public override: boolean = false;
+    public showInfo: boolean = true;
+    public showCustomVisualNotes: boolean = true;
+    /** Use to prevent the visual from rendering too many categories and breaking the browser */
+    public categoryLimit: number = 10;
+}
 
+/** Used to hold about info and manage debugging */
+export class AboutSettings {
+    public visualName: string = 'Violin Plot';
+    public version: string = '1.3.0.4';
+    public debugMode: boolean = true;
+    public debugVisualUpdate: boolean = true;
+    public debugTooltipEvents: boolean = true;
+    public debugProperties: boolean = true;
+    public development: boolean = false; /** SET TO `false` FOR RELEASE */
+    public usageUrl: string =
+        'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
 }
