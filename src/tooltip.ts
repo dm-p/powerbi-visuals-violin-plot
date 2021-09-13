@@ -5,7 +5,7 @@ import ITooltipService = powerbi.extensibility.ITooltipService;
 import * as d3 from 'd3';
 
 import { VisualSettings } from './settings';
-import { VisualDebugger } from './debug';
+import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
 import { getHighlightedDataPoints, formatTooltipValue } from './visualHelpers';
 
@@ -156,7 +156,7 @@ const getTooltipData = (
     );
     debug.log('Pushed category and samples');
 
-    if (tts.showMaxMin) {
+    tts.showMaxMin &&
         tooltips.push(
             formatTooltipValue(
                 'Maximum',
@@ -175,10 +175,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed max/min');
-    }
 
-    if (tts.showSpan) {
+    tts.showSpan &&
         tooltips.push(
             formatTooltipValue(
                 'Span (Min to Max)',
@@ -189,10 +187,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed span');
-    }
 
-    if (tts.showMedian) {
+    tts.showMedian &&
         tooltips.push(
             formatTooltipValue(
                 'Median',
@@ -203,10 +199,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed median');
-    }
 
-    if (tts.showMean) {
+    tts.showMean &&
         tooltips.push(
             formatTooltipValue(
                 'Mean',
@@ -217,10 +211,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed mean');
-    }
 
-    if (tts.showDeviation) {
+    tts.showDeviation &&
         tooltips.push(
             formatTooltipValue(
                 'Standard Deviation',
@@ -231,10 +223,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed standard deviation');
-    }
 
-    if (tts.showQuartiles) {
+    tts.showQuartiles &&
         tooltips.push(
             formatTooltipValue(
                 'Upper Quartile',
@@ -253,10 +243,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed upper/lower quartile');
-    }
 
-    if (tts.showIqr) {
+    tts.showIqr &&
         tooltips.push(
             formatTooltipValue(
                 'Inter Quartile Range',
@@ -267,10 +255,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed IQR');
-    }
 
-    if (tts.showConfidence) {
+    tts.showConfidence &&
         tooltips.push(
             formatTooltipValue(
                 'Upper whisker (95%)',
@@ -289,23 +275,20 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed confidence');
-    }
 
-    if (tts.showBandwidth) {
-        if (settings.violin.specifyBandwidth) {
-            tooltips.push(
-                formatTooltipValue(
-                    'Bandwidth (Specified)',
-                    measureFormat,
-                    v.statistics.bandwidthActual,
-                    tts.measureDisplayUnits,
-                    tts.measurePrecision,
-                    viewModel.locale
-                )
-            );
-            debug.log('Pushed specified bandwidth');
-        }
+    tts.showBandwidth &&
+        settings.violin.specifyBandwidth &&
+        tooltips.push(
+            formatTooltipValue(
+                'Bandwidth (Specified)',
+                measureFormat,
+                v.statistics.bandwidthActual,
+                tts.measureDisplayUnits,
+                tts.measurePrecision,
+                viewModel.locale
+            )
+        );
+    tts.showBandwidth &&
         tooltips.push(
             formatTooltipValue(
                 `Bandwidth (Estimated${
@@ -318,10 +301,8 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed estimated bandwidth');
-    }
 
-    if (highlightedValue) {
+    highlightedValue &&
         tooltips.push(
             formatTooltipValue(
                 `${viewModel.measure} - Highlighted`,
@@ -340,8 +321,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-        debug.log('Pushed data point value');
-    }
 
     debug.log('Tooltip Data', tooltips);
     return tooltips;

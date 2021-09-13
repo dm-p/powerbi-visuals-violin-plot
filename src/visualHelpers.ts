@@ -68,7 +68,7 @@ function renderViolinLine(
     settings: VisualSettings,
     side: EViolinSide
 ) {
-    /** Add the violin side container */
+    // Add the violin side container
     let violinContainer = seriesContainer
         .append('g')
         .classed({
@@ -82,7 +82,7 @@ function renderViolinLine(
             'shape-rendering': 'geometricPrecision'
         });
 
-    /** Area - no point bothering if we're fully transparent */
+    // Area - no point bothering if we're fully transparent
     if (settings.dataColours.transparency !== 100) {
         violinContainer
             .append('path')
@@ -96,7 +96,7 @@ function renderViolinLine(
             });
     }
 
-    /** Line  */
+    // Line
     violinContainer
         .append('path')
         .classed('violinPlotViolinPlot', true)
@@ -207,7 +207,7 @@ function renderComboPlotMean(
             .attr({
                 cx: viewModel.xAxis.scale.rangeBand() / 2,
                 cy: d => viewModel.yAxis.scale(d.statistics.mean),
-                /** Don't render if larger than the box height */
+                // Don't render if larger than the box height
                 r: d =>
                     -(
                         viewModel.yAxis.scale(d.statistics.quartile3) -
@@ -309,7 +309,7 @@ export function renderLinePlot(
     }
 
     if (canRender) {
-        /** Add the container */
+        // Add the container
         let comboPlotContainer = seriesContainer
             .append('g')
             .classed('violinPlotComboLinePlotContainer', true)
@@ -317,7 +317,7 @@ export function renderLinePlot(
                 'shape-rendering': 'geometricPrecision'
             });
 
-        /** Add overlay for interactivity - the shape of this is going to depend on the plot */
+        // Add overlay for interactivity - the shape of this is going to depend on the plot
         let overlay = seriesContainer
             .append('rect')
             .classed('violinPlotComboPlotOverlay', true)
@@ -338,7 +338,7 @@ export function renderLinePlot(
                     settings.dataPoints.strokeWidth
             });
 
-        /** Line used to represent highlighted data point. Will be moved/hidden on mouse events */
+        // Line used to represent highlighted data point. Will be moved/hidden on mouse events
         comboPlotContainer
             .append('line')
             .classed('comboPlotToolipDataPoint', true)
@@ -365,7 +365,7 @@ export function renderLinePlot(
             })
             .style('display', 'none');
 
-        /** Plot data points */
+        // Plot data points
         comboPlotContainer
             .selectAll('.tooltipDataPoint')
             .data(
@@ -400,7 +400,7 @@ export function renderLinePlot(
                 'stroke-linecap': 'butt'
             });
 
-        /** Add quartile, mean and median features as appropriate */
+        // Add quartile, mean and median features as appropriate
         if (settings.dataPoints.showMedian) {
             renderFeatureLine(
                 comboPlotContainer,
@@ -442,13 +442,13 @@ export function renderColumnPlot(
     settings: VisualSettings
 ) {
     if (viewModel.columnPlot.width > settings.dataPoints.strokeWidth) {
-        /** Add the box */
+        // Add the box
         let boxContainer = seriesContainer.append('g').attr({
             'shape-rendering': 'geometricPrecision'
         });
         renderComboPlotRectangle(boxContainer, viewModel, settings);
 
-        /** Mean, median & quartiles */
+        // Mean, median & quartiles
         if (settings.dataPoints.showMedian) {
             renderFeatureLine(
                 boxContainer,
@@ -496,13 +496,13 @@ export function renderBoxPlot(
     settings: VisualSettings
 ) {
     if (viewModel.boxPlot.width > settings.dataPoints.strokeWidth) {
-        /** Add the box */
+        // Add the box
         let boxContainer = seriesContainer.append('g').attr({
             'shape-rendering': 'geometricPrecision'
         });
         renderComboPlotRectangle(boxContainer, viewModel, settings);
 
-        /** Do the whiskers, if we need them */
+        // Do the whiskers, if we need them
         if (settings.dataPoints.showWhiskers) {
             renderBoxPlotWhisker(
                 boxContainer,
@@ -518,7 +518,7 @@ export function renderBoxPlot(
             );
         }
 
-        /** Mean and median */
+        // Mean and median
         if (settings.dataPoints.showMedian) {
             renderFeatureLine(
                 boxContainer,

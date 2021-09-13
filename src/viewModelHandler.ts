@@ -29,7 +29,7 @@ import {
 } from './models';
 import { getCategoricalObjectValue } from './visualHelpers';
 import { VisualSettings } from './settings';
-import { VisualDebugger } from './debug';
+import { VisualDebugger } from './visualDebugger';
 import {
     IKernel,
     ELimit,
@@ -52,13 +52,13 @@ export class ViewModelHandler {
     private allDataPoints: number[];
 
     constructor() {
-        this.viewModel = {
+        this.viewModel = <IViewModel>{
             categoriesReduced: false,
             profiling: {
                 categories: []
             },
             statistics: {}
-        } as IViewModel;
+        };
         this.debug = false;
     }
 
@@ -75,7 +75,7 @@ export class ViewModelHandler {
         host: IVisualHost,
         colourPalette: ISandboxExtendedColorPalette
     ) {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting mapDataView');
         debug.log('Mapping data view to view model...');
@@ -83,10 +83,10 @@ export class ViewModelHandler {
 
         let dataViews = options.dataViews;
 
-        /** Create bare-minimum view model */
+        // Create bare-minimum view model
         let viewModel = this.viewModel;
 
-        /** Return this bare-minimum model if the conditions for our data view are not satisfied (basically don't draw the chart) */
+        // Return this bare-minimum model if the conditions for our data view are not satisfied (basically don't draw the chart)
         if (
             !dataViews ||
             !dataViews[0] ||
@@ -100,7 +100,7 @@ export class ViewModelHandler {
             this.viewModel = viewModel;
         }
 
-        /** Otherwise, let's get that data! */
+        // Otherwise, let's get that data!
         debug.log(
             'Data mapping conditions met. Proceeding with view model transform.'
         );
@@ -181,7 +181,7 @@ export class ViewModelHandler {
                 d3.ascending
             );
             viewModel.categoryNames = false;
-            viewModel.categories.push({
+            viewModel.categories.push(<ICategory>{
                 name: '',
                 displayName: {
                     formattedName: '',
@@ -194,7 +194,7 @@ export class ViewModelHandler {
                     .withMeasure(this.measureMetadata.queryName)
                     .createSelectionId(),
                 dataPoints: this.allDataPoints
-            } as ICategory);
+            });
         } else {
             /** Get unique category values and data points
              *
@@ -226,14 +226,14 @@ export class ViewModelHandler {
 
                     distinctCategoriesFound++;
 
-                    /** We need the colour palette default for this category, if it has not been explicitly set by the user */
+                    // We need the colour palette default for this category, if it has not been explicitly set by the user
                     let defaultColour: Fill = {
                         solid: {
                             color: colourPalette.getColor(categoryName).value
                         }
                     };
 
-                    /** Create the initial display name here, so that we can use it in legends and later on when we do the tailoring */
+                    // Create the initial display name here, so that we can use it in legends and later on when we do the tailoring
                     let formattedName = categoryName;
                     if (this.categoryMetadata.type.dateTime) {
                         formattedName = valueFormatter.format(
@@ -248,7 +248,7 @@ export class ViewModelHandler {
                         );
                     }
 
-                    distinctCategories.push({
+                    distinctCategories.push(<ICategory>{
                         name: categoryName,
                         displayName: {
                             formattedName: formattedName
@@ -269,10 +269,10 @@ export class ViewModelHandler {
                                   defaultColour
                               ).solid.color
                             : this.settings.dataColours.defaultFillColour
-                    } as ICategory);
+                    });
                 }
 
-                /** Add the value, to save us doing one iteration of a potentially large value array later on */
+                // Add the value, to save us doing one iteration of a potentially large value array later on
                 distinctCategories[distinctCategoriesFound - 1].dataPoints.push(
                     value
                 );
@@ -281,7 +281,7 @@ export class ViewModelHandler {
 
             viewModel.categoryNames = true;
 
-            /** Create view model template */
+            // Create view model template
             debug.log(
                 `${distinctCategoriesFound} distinct categories found (or capped).`
             );
@@ -289,7 +289,7 @@ export class ViewModelHandler {
             viewModel.categories = distinctCategories;
         }
 
-        /** Add in the legend override properties now that we have the categories mapped */
+        // Add in the legend override properties now that we have the categories mapped
         viewModel.legend = {
             boxColour:
                 this.settings.dataPoints.plotType === 'barcodePlot'
@@ -331,7 +331,7 @@ export class ViewModelHandler {
                     : this.settings.legend.medianText
         };
 
-        /** We're done! */
+        // We're done!
         this.viewModel = viewModel;
         debug.log('Finished mapDataView');
         this.addDebugProfile(debug, 'mapDataView');
@@ -352,13 +352,13 @@ export class ViewModelHandler {
      * For the data that we have, calculate all necessary statistics we will need for drawing the plot
      */
     calculateStatistics() {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting calculateStatistics');
         debug.log('Calculating statistics over view model data...');
         debug.profileStart();
 
-        /** All data points */
+        // All data points
         debug.log('All data points...');
         this.viewModel.statistics.count = this.allDataPoints.length;
         this.viewModel.statistics.max = d3.max(this.allDataPoints);
@@ -397,15 +397,15 @@ export class ViewModelHandler {
                     .key(d => d.toString())
                     .rollup(
                         v =>
-                            ({
+                            <IStatistics>{
                                 count: v.length
-                            } as IStatistics)
+                            }
                     )
                     .entries(c.dataPoints)
                     .sort((x, y) => d3.ascending(Number(x.key), Number(y.key)));
             }
 
-            c.statistics = {
+            c.statistics = <IStatistics>{
                 count: c.dataPoints.length,
                 min: d3.min(c.dataPoints),
                 max: d3.max(c.dataPoints),
@@ -416,7 +416,7 @@ export class ViewModelHandler {
                 median: d3.median(c.dataPoints),
                 mean: d3.mean(c.dataPoints),
                 confidenceUpper: d3.quantile(c.dataPoints, 0.95)
-            } as IStatistics;
+            };
 
             c.statistics.iqr = c.statistics.quartile3 - c.statistics.quartile1;
             c.statistics.span = c.statistics.max - c.statistics.min;
@@ -437,13 +437,13 @@ export class ViewModelHandler {
         if (this.settings.violin.type === 'line') {
             debug.log('Instantiating KDE kernel and bandwidth settings...');
 
-            /** Sigma function to account for outliers */
+            // Sigma function to account for outliers
             let bwSigma = Math.min(
                 this.viewModel.statistics.deviation,
                 this.viewModel.statistics.iqr / 1.349
             );
 
-            /** Allocate the selected kernel from the properties pane */
+            // Allocate the selected kernel from the properties pane
             debug.log(`Using ${this.settings.violin.kernel} kernel`);
             this.kernel = kernels[this.settings.violin.kernel];
 
@@ -462,21 +462,23 @@ export class ViewModelHandler {
                     : this.viewModel.statistics.bandwidthSilverman;
         }
 
-        /** We're done! */
+        // We're done!
         debug.log('Finished calculateStatistics');
         this.addDebugProfile(debug, 'calculateStatistics');
         debug.footer();
     }
 
-    /** If we're sorting, sort the categories appropriately. */
+    /**
+     * If we're sorting, sort the categories appropriately.
+     */
     sortAndFilterData() {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting sortData');
         debug.log('Managing sorting based on preferences');
         debug.profileStart();
 
-        /** Manage the sort */
+        // Manage the sort
         if (this.viewModel.categoryNames) {
             debug.log(`Sorting by ${this.settings.sorting.by}`);
             this.viewModel.categories.sort((x, y) => {
@@ -508,7 +510,7 @@ export class ViewModelHandler {
             debug.log('No sorting required!');
         }
 
-        /** We're done! */
+        // We're done!
         debug.log('Finished sortData');
         this.addDebugProfile(debug, 'sortData');
         debug.footer();
@@ -520,19 +522,16 @@ export class ViewModelHandler {
      * @param options                                   - visual update options
      */
     initialiseAxes(options: VisualUpdateOptions) {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting initialiseAxes');
         debug.log('Creating bare-minimum axis objects...');
         debug.profileStart();
 
-        /** Other pre-requisites */
-        let dataViews = options.dataViews;
-
-        /** Y-axis (initial) */
+        // Y-axis (initial)
         debug.log('Initial Y-Axis setup...');
 
-        this.viewModel.yAxis = {
+        this.viewModel.yAxis = <IAxisLinear>{
             padding: {
                 left: 5
             },
@@ -553,17 +552,17 @@ export class ViewModelHandler {
                         : null,
                 cultureSelector: this.viewModel.locale
             })
-        } as IAxisLinear;
+        };
 
-        /** Initial domain based on view model statistics */
+        // Initial domain based on view model statistics
         this.updateYDomain(
             [this.viewModel.statistics.min, this.viewModel.statistics.max],
             debug
         );
 
-        /** X-Axis (initial) */
+        // X-Axis (initial)
         debug.log('Initial X-Axis setup...');
-        this.viewModel.xAxis = {
+        this.viewModel.xAxis = <IAxisCategorical>{
             padding: {
                 top: 5
             },
@@ -574,16 +573,16 @@ export class ViewModelHandler {
                 text: this.viewModel.categories[0].name
             },
             domain: this.viewModel.categories.map(d => d.name)
-        } as IAxisCategorical;
+        };
 
-        /** Add vertical X-axis properties */
+        // Add vertical X-axis properties
         debug.log('Cloning y-axis into vertical x-axis...');
         this.viewModel.xVaxis = this.viewModel.yAxis;
 
-        /** Initial sizing */
+        // Initial sizing
         this.resyncDimensions();
 
-        /** We're done! */
+        // We're done!
         debug.log('Finished initialiseAxes');
         this.addDebugProfile(debug, 'initialiseAxes');
         debug.footer();
@@ -593,13 +592,13 @@ export class ViewModelHandler {
      * Set up the display of the axis title and labels, and manage any sizing calculations and re-draws as necessary.
      */
     processAxisText() {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting processAxisText');
         debug.log('Calculating axis labels and titles');
         debug.profileStart();
 
-        /** Y-axis title */
+        // Y-axis title
         this.viewModel.yAxis.titleTextProperties = {
             fontFamily: this.settings.yAxis.titleFontFamily,
             fontSize: pixelConverter.toString(
@@ -619,12 +618,12 @@ export class ViewModelHandler {
             );
         }
 
-        /** Resync if showing the axis at all */
+        // Resync if showing the axis at all
         if (this.settings.yAxis.show) {
             this.resyncDimensions();
         }
 
-        /** Manage the x-axis label/title and sizing */
+        // Manage the x-axis label/title and sizing
         debug.log('X-axis label and title sizing...');
 
         /** Manage display label overflow if required. By doing this, we can use the raw,
@@ -664,7 +663,7 @@ export class ViewModelHandler {
 
             if (this.viewModel.xAxis.generator) {
                 this.viewModel.xAxis.generator.tickFormat(d => {
-                    /** If all our ticks got collapsed, we might as well not have them... */
+                    // If all our ticks got collapsed, we might as well not have them...
                     if (
                         this.viewModel.categoriesAllCollapsed ||
                         !this.settings.xAxis.showLabels
@@ -679,7 +678,7 @@ export class ViewModelHandler {
             this.viewModel.xAxis.generator.tickFormat('');
         }
 
-        /** Repeat for the X-Axis title */
+        // Repeat for the X-Axis title
         if (this.settings.xAxis.showTitle) {
             debug.log('X-axis title...');
             let xAxisTitleFormatted = !this.categoryMetadata
@@ -701,12 +700,12 @@ export class ViewModelHandler {
             );
         }
 
-        /** Resync if showing the axis at all */
+        // Resync if showing the axis at all
         if (this.settings.xAxis.show) {
             this.resyncDimensions();
         }
 
-        /** We're done! */
+        // We're done!
         debug.log('Finished processAxisText');
         this.addDebugProfile(debug, 'processAxisText');
         debug.footer();
@@ -716,7 +715,7 @@ export class ViewModelHandler {
      * Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin.
      */
     doKde(options: VisualUpdateOptions) {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting doKde');
         debug.log('Performing KDE on visual data...');
@@ -732,16 +731,16 @@ export class ViewModelHandler {
             this.settings.violin.type === 'line' &&
             !this.viewModel.yAxis.collapsed
         ) {
-            /** Keep track of the axis limits so that we can adjust them later if necessary */
+            // Keep track of the axis limits so that we can adjust them later if necessary
             let yMin = this.viewModel.yAxis.domain[0],
                 yMax = this.viewModel.yAxis.domain[1];
 
             debug.reportExecutionTime();
             debug.log('Kernel Density Estimation...');
 
-            /** Map out KDE for each series (TODO we might be able to do this in-line when we refactor the data mapping) */
+            // Map out KDE for each series (we might be able to do this in-line when we refactor the data mapping)
             this.viewModel.categories.map(v => {
-                /** Makes logging a bit less complex when discerning between series */
+                // Makes logging a bit less complex when discerning between series
                 let series = v.name ? v.name : 'ALL';
 
                 /** Derive category bandwidths based on settings:
@@ -801,7 +800,7 @@ export class ViewModelHandler {
                  *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
                  */
                 let kdeData = kde(v.dataPoints),
-                    /** If not clamping then we'll always cap at the min/max boundaries of the series */
+                    // If not clamping then we'll always cap at the min/max boundaries of the series
                     interpolateMin = v.statistics.min,
                     interpolateMax = v.statistics.max;
                 debug.log(
@@ -809,7 +808,7 @@ export class ViewModelHandler {
                 );
 
                 if (!this.settings.violin.clamp) {
-                    /** Second phase - we try to converge the chart within the confines of the series min/max */
+                    // Second phase - we try to converge the chart within the confines of the series min/max
                     debug.log(
                         `[${series}] Convergence required on violin plot. Doing further interpolation checks and processing...`
                     );
@@ -829,7 +828,7 @@ export class ViewModelHandler {
                         `[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`
                     );
 
-                    /** Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one */
+                    // Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one
                     if (!interpolateMin || !interpolateMax) {
                         debug.log(
                             `[${series}] Couldn\'t converge following checkpoint #2. Applying further KDE to data to find a suitable point...`
@@ -910,26 +909,26 @@ export class ViewModelHandler {
                         });
                     }
 
-                    /** We'll now re-process the array to ensure that we filter out the correct erroneous KDE values */
+                    // We'll now re-process the array to ensure that we filter out the correct erroneous KDE values
                     debug.log(
                         `[${series}] Finding suitable KDE array min/max convergence points...`
                     );
                     let foundExtentMax = false;
 
-                    kdeData = kdeData.map(function(d, i) {
-                        /** Grab the current data point; we'll return it unprocessed if no conditions are hit */
-                        let kdePoint = {
+                    kdeData = kdeData.map((d, i) => {
+                        // Grab the current data point; we'll return it unprocessed if no conditions are hit
+                        let kdePoint: IDataPointKde = {
                             x: d.x,
                             y: d.y,
                             remove: false
-                        } as IDataPointKde;
+                        };
 
-                        /** Converge anything outside of the min/max extents */
+                        // Converge anything outside of the min/max extents
                         if (d.x <= interpolateMin || d.x >= interpolateMax) {
                             kdePoint.y = 0;
                         }
 
-                        /** If we hit the minimum extent, then flag anything else that comes ahead of it, as we've already moved past them */
+                        // If we hit the minimum extent, then flag anything else that comes ahead of it, as we've already moved past them
                         if (
                             d.x < interpolateMin &&
                             kdeData[i + 1] &&
@@ -938,7 +937,7 @@ export class ViewModelHandler {
                             kdePoint.remove = true;
                         }
 
-                        /** Deal with max extent */
+                        // Deal with max extent
                         if (d.x >= interpolateMax) {
                             if (!foundExtentMax) {
                                 foundExtentMax = true;
@@ -951,19 +950,17 @@ export class ViewModelHandler {
                         return kdePoint;
                     });
 
-                    /** Filter out the data we don't need after processing it and we are go! */
+                    // Filter out the data we don't need after processing it and we are go!
                     debug.log(
                         `[${series}] Removing erroneous KDE array elements...`
                     );
                     v.dataKde = kdeData.filter(d => d.remove === false);
                 } else {
-                    /** For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders */
-                    const minBisect = d3.bisector(function(d: IDataPointKde) {
-                        return d.x;
-                    }).left;
-                    const maxBisect = d3.bisector(function(d: IDataPointKde) {
-                        return d.x;
-                    }).right;
+                    // For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders
+                    const minBisect = d3.bisector((d: IDataPointKde) => d.x)
+                        .left;
+                    const maxBisect = d3.bisector((d: IDataPointKde) => d.x)
+                        .right;
                     let min = minBisect(kdeData, interpolateMin),
                         max = maxBisect(kdeData, interpolateMax);
 
@@ -971,7 +968,7 @@ export class ViewModelHandler {
                         `Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`
                     );
 
-                    /** Add 2 max elements: the KDE plot value, and a 0 to converge */
+                    // Add 2 max elements: the KDE plot value, and a 0 to converge
                     debug.log('Resolving maximum values...');
                     kdeData.splice(max, 0, {
                         x: interpolateMax,
@@ -984,7 +981,7 @@ export class ViewModelHandler {
                         remove: false
                     });
 
-                    /** Add 2 min elements; similar to above */
+                    // Add 2 min elements; similar to above
                     debug.log('Resolving minimum values...');
                     kdeData.splice(min, 0, {
                         x: interpolateMin,
@@ -997,21 +994,21 @@ export class ViewModelHandler {
                         remove: false
                     });
 
-                    /** Filter out anything outside our interpolation values */
+                    // Filter out anything outside our interpolation values
                     debug.log('Filtering extents...');
                     v.dataKde = kdeData
                         .filter(d => d.x >= interpolateMin)
                         .filter(d => d.x <= interpolateMax);
                 }
 
-                /** Adjust violin scale to account for inner padding preferences */
+                // Adjust violin scale to account for inner padding preferences
                 v.yVScale = d3.scale
                     .linear()
                     .range([0, this.viewModel.violinPlot.width / 2])
                     .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
                     .clamp(true);
 
-                /** Now we have our scaling, we can generate the functions for each series */
+                // Now we have our scaling, we can generate the functions for each series
                 v.lineGen = d3.svg
                     .line<IDataPointKde>()
                     .interpolate(this.settings.violin.lineType)
@@ -1024,7 +1021,7 @@ export class ViewModelHandler {
                     .y0(v.yVScale(0))
                     .y1(d => v.yVScale(d.y));
 
-                /** Store the min/max interpolation points for use later on */
+                // Store the min/max interpolation points for use later on
                 v.statistics.interpolateMin = interpolateMin;
                 v.statistics.interpolateMax = interpolateMax;
             });
@@ -1036,13 +1033,15 @@ export class ViewModelHandler {
             this.resyncDimensions();
         }
 
-        /** We're done! */
+        // We're done!
         debug.log('Finished doKde');
         this.addDebugProfile(debug, 'doKde');
         debug.footer();
     }
 
-    /** Clears down the profiling data so that multiple updates don't accumulate */
+    /**
+     * Clears down the profiling data so that multiple updates don't accumulate
+     */
     clearProfiling() {
         if (this.viewModel.profiling) {
             this.viewModel.profiling.categories = [];
@@ -1054,7 +1053,7 @@ export class ViewModelHandler {
      * as necessary. This function will do the necessary checks and balances to make sure that things resize correctly.
      */
     resyncDimensions() {
-        /** Set up debugging */
+        // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Syncing view model dimensions...');
         debug.profileStart();
@@ -1062,7 +1061,7 @@ export class ViewModelHandler {
         let xAxis = this.viewModel.xAxis,
             yAxis = this.viewModel.yAxis;
 
-        /** X-axis height */
+        // X-axis height
         debug.log('X-axis vertical space...');
         xAxis.titleDimensions = {
             height:
@@ -1108,13 +1107,13 @@ export class ViewModelHandler {
         };
         debug.log(`X-axis total height: ${xAxis.dimensions.height}`);
 
-        /** Figure out how much vertical space we have for the y-axis and assign what we know currently */
+        // Figure out how much vertical space we have for the y-axis and assign what we know currently
         debug.log('Y-Axis vertical space...');
         yAxis.collapsed = false;
         let yPadVert = this.settings.yAxis.fontSize / 2,
             yHeight = this.viewport.height - yPadVert - xAxis.dimensions.height;
 
-        /** Make adjustments to the x-axis if short on room to see if we can fre eup space. As a last resort, just say we can't render the axis */
+        // Make adjustments to the x-axis if short on room to see if we can fre eup space. As a last resort, just say we can't render the axis
         if (yHeight < yAxis.heightLimit) {
             if (xAxis.titleDimensions.height > 0) {
                 debug.log('Reducing X-axis title to make room for Y-axis...');
@@ -1147,11 +1146,11 @@ export class ViewModelHandler {
             );
         }
 
-        /** Providing that we managed to keep the Y-axis... */
+        // Providing that we managed to keep the Y-axis...
         if (!yAxis.collapsed) {
             yAxis.dimensions = {
                 height: yHeight,
-                y: yPadVert /** TODO: manage categorical axis, padding etc. */
+                y: yPadVert
             };
 
             yAxis.range = [yAxis.dimensions.height, yAxis.dimensions.y];
@@ -1176,7 +1175,7 @@ export class ViewModelHandler {
                         : ''
                 );
 
-            /** Resolve the title dimensions */
+            // Resolve the title dimensions
             debug.log('Y-Axis title sizing...');
             yAxis.titleDimensions = {
                 width:
@@ -1196,7 +1195,7 @@ export class ViewModelHandler {
             };
             debug.log(`Y-axis title width: ${yAxis.titleDimensions.width}`);
 
-            /** Find the widest label and use that for our Y-axis width overall */
+            // Find the widest label and use that for our Y-axis width overall
             debug.log('Y-Axis label sizing...');
             yAxis.labelDimensions = {
                 width:
@@ -1219,13 +1218,13 @@ export class ViewModelHandler {
             };
             debug.log(`Y-axis label width: ${yAxis.labelDimensions.width}`);
 
-            /** Total Y-axis width */
+            // Total Y-axis width
             yAxis.dimensions.width =
                 yAxis.labelDimensions.width + yAxis.titleDimensions.width;
             debug.log(`Y-axis total width: ${yAxis.dimensions.width}`);
 
             /** Make adjustments to the width to compensate for smaller viewports
-             *  TODO: very similar to x-axis code above; we can probably turn this into a function
+             *  Very similar to x-axis code above; we can probably turn this into a function
              */
             let xWidth = this.viewport.width - yAxis.dimensions.width;
             if (xWidth < xAxis.widthLimit) {
@@ -1261,7 +1260,7 @@ export class ViewModelHandler {
                 );
             }
 
-            /** Solve the remaining axis dimensions */
+            // Solve the remaining axis dimensions
             yAxis.dimensions.x = yAxis.titleDimensions.width;
             xAxis.dimensions.width = xWidth;
             xAxis.titleDimensions.x =
@@ -1269,7 +1268,7 @@ export class ViewModelHandler {
             xAxis.titleDimensions.y =
                 this.viewport.height - xAxis.titleDimensions.height;
 
-            /** Revise Y-axis properties as necessary */
+            // Revise Y-axis properties as necessary
             debug.log('Y-Axis generator functions...');
             if (!yAxis.generator) {
                 yAxis.generator = d3.svg.axis();
@@ -1286,7 +1285,7 @@ export class ViewModelHandler {
                         : ''
                 );
 
-            /** Now we have y-axis width, do remaining x-axis width stuff */
+            // Now we have y-axis width, do remaining x-axis width stuff
             debug.log('X-Axis ticks and scale...');
             xAxis.range = [0, xAxis.dimensions.width];
             xAxis.scale = d3.scale
@@ -1302,25 +1301,25 @@ export class ViewModelHandler {
                 .orient('bottom')
                 .tickSize(-yAxis.dimensions.height);
 
-            /** Violin plot specifics */
+            // Violin plot specifics
             debug.log('Violin dimensions...');
-            this.viewModel.violinPlot = {
+            this.viewModel.violinPlot = <IViolinPlot>{
                 categoryWidth: xAxis.scale.rangeBand(),
                 width:
                     xAxis.scale.rangeBand() -
                     xAxis.scale.rangeBand() *
                         (this.settings.violin.innerPadding / 100)
-            } as IViolinPlot;
+            };
 
-            /** Box plot specifics */
+            // Box plot specifics
             debug.log('Box plot dimensions...');
-            this.viewModel.boxPlot = {
+            this.viewModel.boxPlot = <IBoxPlot>{
                 width:
                     this.viewModel.violinPlot.width -
                     this.viewModel.violinPlot.width *
                         (this.settings.dataPoints.innerPadding / 100),
                 maxMeanRadius: 3
-            } as IBoxPlot;
+            };
             this.viewModel.boxPlot.maxMeanDiameter =
                 this.viewModel.boxPlot.maxMeanRadius * 2;
             this.viewModel.boxPlot.scaledMeanRadius =
@@ -1357,11 +1356,11 @@ export class ViewModelHandler {
                 this.viewModel.boxPlot.xRight -
                 this.settings.dataPoints.strokeWidth / 2;
 
-            /** Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to use min/max rather than quartiles */
+            // Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to use min/max rather than quartiles
             debug.log('Ranged column plot dimensions...');
             this.viewModel.columnPlot = this.viewModel.boxPlot;
 
-            /** Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes */
+            // Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes
             debug.log('Barcode plot dimensions...');
             this.viewModel.barcodePlot = {
                 width: this.viewModel.boxPlot.width,
@@ -1389,7 +1388,7 @@ export class ViewModelHandler {
             }
         }
 
-        /** Transfer variables to view model */
+        // Transfer variables to view model
         if (this.viewModel && this.viewModel.yAxis) {
             this.viewModel.yAxis = yAxis;
         }
@@ -1409,7 +1408,7 @@ export class ViewModelHandler {
      * @param debug                                     - debugger to attach
      */
     updateYDomain(domain: [number, number], debug: VisualDebugger) {
-        /** If the user has supplied their own start/end values, use those */
+        // If the user has supplied their own start/end values, use those
         domain = [
             this.settings.yAxis.start === 0
                 ? 0
@@ -1436,12 +1435,12 @@ export class ViewModelHandler {
     formatYAxistitle(debug: VisualDebugger): string {
         debug.log('Formatting y-axis title...');
 
-        /** If we supplied a title, use that, otherwise format our measure names */
+        // If we supplied a title, use that, otherwise format our measure names
         let title = !this.settings.yAxis.titleText
             ? this.measureMetadata.displayName
             : this.settings.yAxis.titleText;
 
-        /** Return the correct title based on our supplied settings */
+        // Return the correct title based on our supplied settings
         debug.log(
             `Resolving title based on setting: ${this.settings.yAxis.titleStyle}`
         );

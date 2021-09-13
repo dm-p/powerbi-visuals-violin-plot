@@ -23,7 +23,7 @@ import LegendPosition = legendInterfaces.LegendPosition;
 import * as d3 from 'd3';
 
 import { VisualSettings } from './settings';
-import { VisualDebugger } from './debug';
+import { VisualDebugger } from './visualDebugger';
 
 import { ViewModelHandler } from './viewModelHandler';
 import { ICategory, EComboPlotType } from './models';
@@ -36,7 +36,7 @@ import {
     dataLimitLoadingStatus,
     visualCollapsed
 } from './visualHelpers';
-import { ViolinLegend } from './legendHelpers';
+import { ViolinLegend } from './violinLegend';
 import { bindSeriesTooltipEvents, bindWarningTooltipEvents } from './tooltip';
 
 export class Visual implements IVisual {
@@ -69,7 +69,7 @@ export class Visual implements IVisual {
         this.defaultColour = this.colourPalette['colors'][0].value;
         this.viewModelHandler = new ViewModelHandler();
 
-        /** Legend container */
+        // Legend container
         this.legend = createLegend(
             options.element,
             false,
@@ -78,7 +78,7 @@ export class Visual implements IVisual {
             LegendPosition.Top
         );
 
-        /** Visual container */
+        // Visual container
         this.container = d3
             .select(options.element)
             .append('div')
@@ -100,7 +100,7 @@ export class Visual implements IVisual {
         this.viewModelHandler.settings = this.settings;
         this.viewModelHandler.viewport = options.viewport;
 
-        /** Initial debugging for visual update */
+        // Initial debugging for visual update
         this.viewModelHandler.debug =
             this.settings.about.debugMode &&
             this.settings.about.debugVisualUpdate;
@@ -124,20 +124,21 @@ export class Visual implements IVisual {
             this.settings.dataColours.defaultFillColour = this.defaultColour;
         }
 
-        /** Clear down existing plot */
+        // Clear down existing plot
         this.container.selectAll('*').remove();
 
-        /** Size our initial container to match the viewport
-         *  TODO: we could compare this on resize and do the appropriate calculations to minimise rework
+        /**
+         *  Size our initial container to match the viewport
+         *  We could potentially compare this on resize and do the appropriate calculations to minimise rework
          */
         this.container.attr({
             width: `${options.viewport.width}`,
             height: `${options.viewport.height}`
         });
 
-        /** Things that can terminate the update process early */
+        // Things that can terminate the update process early
 
-        /** Validation of inputs and display a nice message */
+        // Validation of inputs and display a nice message
         if (
             !options.dataViews ||
             !options.dataViews[0] ||
@@ -192,7 +193,7 @@ export class Visual implements IVisual {
                 );
                 debug.log(`We have loaded ${this.windowsLoaded} times so far.`);
 
-                /** Handle rendering of 'help text', if enabled */
+                // Handle rendering of 'help text', if enabled
                 if (this.settings.dataLimit.showInfo) {
                     dataLimitLoadingStatus(
                         rowCount,
@@ -201,7 +202,7 @@ export class Visual implements IVisual {
                     );
                 }
                 this.canFetchMore = this.host.fetchMoreData();
-                /** Clear down existing info and render if we have no more allocated memory */
+                // Clear down existing info and render if we have no more allocated memory
                 if (!this.canFetchMore) {
                     debug.log(
                         `Memory limit hit after ${this.windowsLoaded} fetch(es). We managed to get ${rowCount} rows.`
@@ -257,18 +258,18 @@ export class Visual implements IVisual {
         debug.log('Viewport (Post-legend)', this.viewModelHandler.viewport);
         debug.log('Data View', options.dataViews[0]);
 
-        /** Map the rest of the view model */
+        // Map the rest of the view model
         this.viewModelHandler.processAxisText();
         this.viewModelHandler.doKde(options);
         let viewModel = this.viewModelHandler.viewModel;
         debug.log('View model', viewModel);
 
-        /** We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator */
+        // We may not have any room for anything after we've done our responsiveness chacks, so let's display an indicator
         if (viewModel.yAxis.collapsed || viewModel.xAxis.collapsed) {
             visualCollapsed(this.container);
             debug.log('Visual fully collapsed due to viewport size!');
         } else {
-            /** Add our main SVG */
+            // Add our main SVG
             debug.log('Plotting SVG canvas...');
             let violinPlotCanvas = this.container
                 .append('svg')
@@ -278,7 +279,7 @@ export class Visual implements IVisual {
                     height: `${options.viewport.height}`
                 });
 
-            /** Watermark for non-production use, if the dev flag is set */
+            // Watermark for non-production use, if the dev flag is set
             if (
                 this.settings.about.development ||
                 this.settings.about.version.indexOf('DEV') !== -1
@@ -309,7 +310,7 @@ export class Visual implements IVisual {
                     });
             }
 
-            /** Handle category reduction, if applied */
+            // Handle category reduction, if applied
             if (viewModel.categoriesReduced) {
                 debug.log('Plotting warning icon and interactivity...');
                 let warningElement = violinPlotCanvas
@@ -336,7 +337,7 @@ export class Visual implements IVisual {
                 });
             }
 
-            /** Create a Y axis */
+            // Create a Y axis
             if (this.settings.yAxis.show) {
                 debug.log('Plotting y-axis...');
                 let yAxisContainer = violinPlotCanvas
@@ -349,7 +350,7 @@ export class Visual implements IVisual {
                         fill: this.settings.yAxis.fontColor
                     });
 
-                /** Add title if required */
+                // Add title if required
                 if (
                     this.settings.yAxis.showTitle &&
                     viewModel.yAxis.titleDisplayName &&
@@ -389,7 +390,7 @@ export class Visual implements IVisual {
                     )
                     .call(viewModel.yAxis.generator);
 
-                /** Apply gridline styling */
+                // Apply gridline styling
                 debug.log('Applying y-axis gridline styling...');
                 yAxisTicks
                     .selectAll('line')
@@ -402,7 +403,7 @@ export class Visual implements IVisual {
                     .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
             }
 
-            /** Create an X-axis */
+            // Create an X-axis
             if (this.settings.xAxis.show) {
                 debug.log('Plotting x-axis...');
                 let xAxisContainer = violinPlotCanvas
@@ -431,7 +432,7 @@ export class Visual implements IVisual {
                     )
                     .call(viewModel.xAxis.generator);
 
-                /** Apply gridline styling */
+                // Apply gridline styling
                 debug.log('Applying x-axis gridline styling...');
                 xAxisTicks
                     .selectAll('line')
@@ -443,7 +444,7 @@ export class Visual implements IVisual {
                     })
                     .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
 
-                /** Add title if required */
+                // Add title if required
                 if (
                     this.settings.xAxis.showTitle &&
                     viewModel.xAxis.titleDisplayName &&
@@ -470,9 +471,9 @@ export class Visual implements IVisual {
                 }
             }
 
-            /** Do the rest, if required */
+            // Do the rest, if required
 
-            /** Add series elements */
+            // Add series elements
             debug.log('Plotting category elements...');
             let seriesContainer = violinPlotCanvas
                 .selectAll('.violinPlotCanvas')
@@ -489,7 +490,7 @@ export class Visual implements IVisual {
                     width: viewModel.xAxis.scale.rangeBand()
                 });
 
-            /** Tooltips */
+            // Tooltips
             debug.log('Adding tooltip events...');
             const series: d3.Selection<ICategory> = violinPlotCanvas.selectAll(
                 '.violinPlotSeries'
@@ -507,11 +508,11 @@ export class Visual implements IVisual {
                 this.settings
             );
 
-            /** Violin plot */
+            // KDE plot
             debug.log('Rendering violins...');
             renderViolin(seriesContainer, viewModel, this.settings);
 
-            /** Combo plot */
+            // Combo plot
             if (this.settings.dataPoints.show) {
                 switch (this.settings.dataPoints.plotType) {
                     case 'boxPlot': {
@@ -548,14 +549,16 @@ export class Visual implements IVisual {
             }
         }
 
-        /** Success! */
+        // Success!
         debug.log('Visual fully rendered!');
         viewModel.profiling.categories.push(debug.getSummary('Total'));
         debug.footer();
         this.events.renderingFinished(options);
     }
 
-    /** Renders the legend, based on the properties supplied in the update method */
+    /**
+     * Renders the legend, based on the properties supplied in the update method
+     */
     private renderLegend(): void {
         let debug = new VisualDebugger(
             this.settings.about.debugMode &&
@@ -592,7 +595,7 @@ export class Visual implements IVisual {
      * @param dataView
      */
     private static parseSettings(dataView: DataView): VisualSettings {
-        return VisualSettings.parse(dataView) as VisualSettings;
+        return <VisualSettings>VisualSettings.parse(dataView);
     }
 
     /**
@@ -602,10 +605,12 @@ export class Visual implements IVisual {
     public enumerateObjectInstances(
         options: EnumerateVisualObjectInstancesOptions
     ): VisualObjectInstance[] {
-        const instances: VisualObjectInstance[] = (VisualSettings.enumerateObjectInstances(
+        const instances: VisualObjectInstance[] = (<
+            VisualObjectInstanceEnumerationObject
+        >VisualSettings.enumerateObjectInstances(
             this.settings || VisualSettings.getDefault(),
             options
-        ) as VisualObjectInstanceEnumerationObject).instances;
+        )).instances;
         let objectName = options.objectName;
         let categories: boolean = this.options.dataViews[0].metadata.columns.filter(
             c => c.roles['category']
@@ -613,13 +618,13 @@ export class Visual implements IVisual {
             ? true
             : false;
 
-        /** Initial debugging for properties update */
+        // Initial debugging for properties update
         let debug = new VisualDebugger(
             this.settings.about.debugMode && this.settings.about.debugProperties
         );
         debug.heading(`Properties: ${objectName}`);
 
-        /** Apply instance-specific transformations */
+        // Apply instance-specific transformations
         switch (objectName) {
             /**
              *  The data limit options were intended to be enabled in conditions where we could fetch more data from the model, but there have been
@@ -629,16 +634,16 @@ export class Visual implements IVisual {
              *  to see where I got to with it as a feature.
              */
             case 'dataLimit': {
-                /** If not overriding then we don't need to show the addiitonal info options */
+                // If not overriding then we don't need to show the additional info options
                 if (!this.settings.dataLimit.override) {
                     delete instances[0].properties['showInfo'];
                     delete instances[0].properties['showCustomVisualNotes'];
                 }
-                /** Developer notes won't be an option if we hide the loading progress */
+                // Developer notes won't be an option if we hide the loading progress
                 if (!this.settings.dataLimit.showInfo) {
                     delete instances[0].properties['showCustomVisualNotes'];
                 }
-                /** If we have less than 30K rows in our data set then we don't need to show it */
+                // If we have less than 30K rows in our data set then we don't need to show it
                 if (
                     !this.settings.dataLimit.enabled ||
                     (!this.options.dataViews[0].metadata.segment &&
@@ -647,24 +652,24 @@ export class Visual implements IVisual {
                             .length <= 30000)
                 ) {
                     instances[0] = null;
-                    /** Set back to capability window cap if removed */
+                    // Set back to capability window cap if removed
                     this.settings.dataLimit.override = false;
                 }
                 break;
             }
             case 'about': {
-                /** Version should always show the default */
+                // Version should always show the default
                 instances[0].properties[
                     'version'
                 ] = VisualSettings.getDefault()['about'].version;
-                /** Switch off and hide debug mode if development flag is disabled */
+                // Switch off and hide debug mode if development flag is disabled
                 if (!this.settings.about.development) {
                     delete instances[0].properties['debugMode'];
                     delete instances[0].properties['debugVisualUpdate'];
                     delete instances[0].properties['debugTooltipEvents'];
                     delete instances[0].properties['debugProperties'];
                 }
-                /** Reset the individual flags if debug mode switched off */
+                // Reset the individual flags if debug mode switched off
                 if (!this.settings.about.debugMode) {
                     this.settings.about.debugVisualUpdate = false;
                     this.settings.about.debugTooltipEvents = false;
@@ -676,7 +681,7 @@ export class Visual implements IVisual {
                 break;
             }
             case 'violin': {
-                /** Range validation on stroke width */
+                // Range validation on stroke width
                 instances[0].validValues = instances[0].validValues || {};
                 instances[0].validValues.strokeWidth = {
                     numberRange: {
@@ -684,14 +689,14 @@ export class Visual implements IVisual {
                         max: 5
                     }
                 };
-                /** Range validation on inner padding (0% - 50%) */
+                // Range validation on inner padding (0% - 50%)
                 instances[0].validValues.innerPadding = {
                     numberRange: {
                         min: 0,
                         max: 50
                     }
                 };
-                /** Enable options for different violin types (currently only line) */
+                // Enable options for different violin types (currently only line)
                 if (this.settings.violin.type !== 'line') {
                     delete instances[0].properties['strokeWidth'];
                     delete instances[0].properties['clamp'];
@@ -700,18 +705,18 @@ export class Visual implements IVisual {
                     delete instances[0].properties['specifyBandwidth'];
                 }
 
-                /** If there are no categories, don't offer the option to calculate bandwidth for them */
+                // If there are no categories, don't offer the option to calculate bandwidth for them
                 if (!categories) {
                     delete instances[0].properties['bandwidthByCategory'];
                     this.settings.violin.bandwidthByCategory = false;
                 }
 
-                /** Manual bandwidth toggle */
+                // Manual bandwidth toggle
                 if (!this.settings.violin.specifyBandwidth) {
                     delete instances[0].properties['bandwidth'];
                 }
 
-                /** Add categories if we want to specify individual bandwidth */
+                // Add categories if we want to specify individual bandwidth
                 if (
                     this.settings.violin.bandwidthByCategory &&
                     categories &&
@@ -738,7 +743,7 @@ export class Visual implements IVisual {
                 break;
             }
             case 'dataPoints': {
-                /** Range validation on stroke width */
+                // Range validation on stroke width
                 instances[0].validValues = instances[0].validValues || {};
                 instances[0].validValues.strokeWidth = instances[0].validValues.medianStrokeWidth = instances[0].validValues.meanStrokeWidth = instances[0].validValues.quartile1StrokeWidth = instances[0].validValues.quartile3StrokeWidth = {
                     numberRange: {
@@ -746,7 +751,7 @@ export class Visual implements IVisual {
                         max: 5
                     }
                 };
-                /** Range validation on box plot width */
+                // Range validation on box plot width
                 instances[0].validValues.innerPadding = {
                     numberRange: {
                         min: 0,
@@ -754,17 +759,17 @@ export class Visual implements IVisual {
                     }
                 };
 
-                /** Toggle median */
+                // Toggle median
                 if (!this.settings.dataPoints.showMedian) {
                     delete instances[0].properties['medianFillColour'];
                     delete instances[0].properties['medianStrokeWidth'];
                     delete instances[0].properties['medianStrokeLineStyle'];
                 }
 
-                /** Combo plot-specific behaviour */
+                // Combo plot-specific behaviour
                 switch (this.settings.dataPoints.plotType) {
                     case 'boxPlot': {
-                        /** Remove non-box plot properties */
+                        // Remove non-box plot properties
                         delete instances[0].properties['barColour'];
                         delete instances[0].properties['showQuartiles'];
                         delete instances[0].properties['quartile1FillColour'];
@@ -778,7 +783,7 @@ export class Visual implements IVisual {
                             'quartile3StrokeLineStyle'
                         ];
 
-                        /** Toggle mean */
+                        // Toggle mean
                         if (!this.settings.dataPoints.showMean) {
                             delete instances[0].properties['meanFillColour'];
                             delete instances[0].properties['meanStrokeWidth'];
@@ -791,7 +796,7 @@ export class Visual implements IVisual {
                     }
 
                     case 'barcodePlot': {
-                        /** Remove non-barcode plot properties */
+                        // Remove non-barcode plot properties
                         delete instances[0].properties['transparency'];
                         delete instances[0].properties['boxFillColour'];
                         delete instances[0].properties['showWhiskers'];
@@ -800,7 +805,7 @@ export class Visual implements IVisual {
                         delete instances[0].properties['meanStrokeWidth'];
                         delete instances[0].properties['meanFillColourInner'];
 
-                        /** Toggle quartile properties */
+                        // Toggle quartile properties
                         if (!this.settings.dataPoints.showQuartiles) {
                             delete instances[0].properties[
                                 'quartile1FillColour'
@@ -826,11 +831,11 @@ export class Visual implements IVisual {
                     }
 
                     case 'columnPlot': {
-                        /** Remove non-column plot properties */
+                        // Remove non-column plot properties
                         delete instances[0].properties['showWhiskers'];
                         delete instances[0].properties['barColour'];
 
-                        /** Toggle quartile properties */
+                        // Toggle quartile properties
                         if (!this.settings.dataPoints.showQuartiles) {
                             delete instances[0].properties[
                                 'quartile1FillColour'
@@ -852,7 +857,7 @@ export class Visual implements IVisual {
                             ];
                         }
 
-                        /** Toggle mean */
+                        // Toggle mean
                         if (!this.settings.dataPoints.showMean) {
                             delete instances[0].properties['meanFillColour'];
                             delete instances[0].properties['meanStrokeWidth'];
@@ -866,7 +871,7 @@ export class Visual implements IVisual {
                 break;
             }
             case 'sorting': {
-                /** Disable/hide if not using categories */
+                // Disable/hide if not using categories
                 if (
                     !this.options.dataViews[0].metadata.columns.filter(
                         c => c.roles['category']
@@ -877,7 +882,7 @@ export class Visual implements IVisual {
                 break;
             }
             case 'tooltip': {
-                /** Range validation on precision fields */
+                // Range validation on precision fields
                 instances[0].validValues = instances[0].validValues || {};
                 instances[0].validValues.numberSamplesPrecision = instances[0].validValues.measurePrecision = {
                     numberRange: {
@@ -888,22 +893,22 @@ export class Visual implements IVisual {
                 break;
             }
             case 'dataColours': {
-                /** Assign default theme colour from palette if default fill colour not overridden */
+                // Assign default theme colour from palette if default fill colour not overridden
                 if (!this.settings.dataColours.defaultFillColour) {
                     instances[0].properties[
                         'defaultFillColour'
                     ] = this.defaultColour;
                 }
-                /** If there are no categories, don't offer the option to colour by them */
+                // If there are no categories, don't offer the option to colour by them
                 if (
                     !this.options.dataViews[0].metadata.columns.filter(
                         c => c.roles['category']
                     )[0]
                 ) {
                     delete instances[0].properties['colourByCategory'];
-                    this.settings.dataColours.colourByCategory = false; /** This prevents us losing the default fill if we remove the field afterward */
+                    this.settings.dataColours.colourByCategory = false; // This prevents us losing the default fill if we remove the field afterward
                 }
-                /** Add categories if we want to colour by them */
+                // Add categories if we want to colour by them
                 if (
                     this.settings.dataColours.colourByCategory &&
                     !this.errorState
@@ -931,14 +936,14 @@ export class Visual implements IVisual {
                 break;
             }
             case 'legend': {
-                /** Legend title toggle */
+                // Legend title toggle
                 if (
                     !this.settings.legend.show &&
                     !this.settings.legend.showTitle
                 ) {
                     delete instances[0].properties['titleText'];
                 }
-                /** Statistical indicator handling */
+                // Statistical indicator handling
                 if (!this.settings.legend.showStatisticalPoints) {
                     delete instances[0].properties['medianText'];
                     delete instances[0].properties['dataPointText'];
@@ -948,7 +953,7 @@ export class Visual implements IVisual {
                     delete instances[0].properties['meanText'];
                 }
 
-                /** Hide combo plot-specific items */
+                // Hide combo plot-specific items
                 if (this.settings.dataPoints.plotType === 'boxPlot') {
                     delete instances[0].properties['dataPointText'];
                     delete instances[0].properties['quartileCombinedText'];
@@ -961,7 +966,7 @@ export class Visual implements IVisual {
                 if (this.settings.dataPoints.plotType === 'columnPlot') {
                     delete instances[0].properties['dataPointText'];
                 }
-                /** Reset legend measure value items to default if blanked out */
+                // Reset legend measure value items to default if blanked out
                 if (!this.settings.legend.medianText) {
                     instances[0].properties[
                         'medianText'
@@ -997,26 +1002,26 @@ export class Visual implements IVisual {
                 break;
             }
             case 'xAxis': {
-                /** Label toggle */
+                // Label toggle
                 if (!this.settings.xAxis.showLabels) {
                     delete instances[0].properties['fontColor'];
                     delete instances[0].properties['fontSize'];
                     delete instances[0].properties['fontFamily'];
                 }
-                /** Gridline toggle */
+                // Gridline toggle
                 if (!this.settings.xAxis.gridlines) {
                     delete instances[0].properties['gridlineColor'];
                     delete instances[0].properties['gridlineStrokeWidth'];
                     delete instances[0].properties['gridlineStrokeLineStyle'];
                 }
-                /** Title toggle */
+                //Title toggle
                 if (!this.settings.xAxis.showTitle) {
                     delete instances[0].properties['titleColor'];
                     delete instances[0].properties['titleText'];
                     delete instances[0].properties['titleFontSize'];
                     delete instances[0].properties['titleFontFamily'];
                 }
-                /** Range validation on grid line stroke width */
+                // Range validation on grid line stroke width
                 instances[0].validValues = instances[0].validValues || {};
                 instances[0].validValues.gridlineStrokeWidth = {
                     numberRange: {
@@ -1027,7 +1032,7 @@ export class Visual implements IVisual {
                 break;
             }
             case 'yAxis': {
-                /** Label toggle */
+                // Label toggle
                 if (!this.settings.yAxis.showLabels) {
                     delete instances[0].properties['fontColor'];
                     delete instances[0].properties['fontSize'];
@@ -1035,13 +1040,13 @@ export class Visual implements IVisual {
                     delete instances[0].properties['labelDisplayUnits'];
                     delete instances[0].properties['precision'];
                 }
-                /** Gridline toggle */
+                // Gridline toggle
                 if (!this.settings.yAxis.gridlines) {
                     delete instances[0].properties['gridlineColor'];
                     delete instances[0].properties['gridlineStrokeWidth'];
                     delete instances[0].properties['gridlineStrokeLineStyle'];
                 }
-                /** Title toggle */
+                // Title toggle
                 if (!this.settings.yAxis.showTitle) {
                     delete instances[0].properties['titleStyle'];
                     delete instances[0].properties['titleColor'];
@@ -1049,12 +1054,11 @@ export class Visual implements IVisual {
                     delete instances[0].properties['titleFontSize'];
                     delete instances[0].properties['titleFontFamily'];
                 }
-                /** Title style toggle if units are none */
+                // Title style toggle if units are none
                 if (this.settings.yAxis.labelDisplayUnits === 1) {
-                    instances[0].properties['titleStyle'] =
-                        'title'; /** TODO: Delete entries from list */
+                    instances[0].properties['titleStyle'] = 'title';
                 }
-                /** Range validation on grid line stroke width and precision */
+                // Range validation on grid line stroke width and precision
                 instances[0].validValues = instances[0].validValues || {};
                 instances[0].validValues.precision = {
                     numberRange: {
@@ -1068,7 +1072,7 @@ export class Visual implements IVisual {
                         max: 5
                     }
                 };
-                /** Range validation on start and end values. note that in ES5 we don't have Number.MAX/MIN_SAFE_INTEGER, so we define our own */
+                // Range validation on start and end values. note that in ES5 we don't have Number.MAX/MIN_SAFE_INTEGER, so we define our own
                 let safeMin = -9007199254740991,
                     safeMax = 9007199254740991;
                 instances[0].validValues.start = {
@@ -1093,8 +1097,8 @@ export class Visual implements IVisual {
             }
         }
 
-        /** Output all transformed instance info if we're debugging */
-        instances.map(function(instance) {
+        // Output all transformed instance info if we're debugging
+        instances.map(instance => {
             debug.log(instance.objectName, instance);
         });
         debug.log('Properties fully processed!');

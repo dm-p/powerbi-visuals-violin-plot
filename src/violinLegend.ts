@@ -10,7 +10,7 @@ import positionChartArea = legend.positionChartArea;
 
 import * as d3 from 'd3';
 
-import { VisualDebugger } from './debug';
+import { VisualDebugger } from './visualDebugger';
 import { VisualSettings } from './settings';
 import { IViewModel } from './models';
 
@@ -76,8 +76,8 @@ export class ViolinLegend {
 
         this.debug.log('Creating legend data...');
 
-        /** Instantiate bare-minimum legend data */
-        let legendData = {
+        // Instantiate bare-minimum legend data
+        let legendData: LegendData = {
             title: this.settings.legend.showTitle
                 ? this.settings.legend.titleText
                     ? this.settings.legend.titleText
@@ -88,10 +88,10 @@ export class ViolinLegend {
             fontSize: this.settings.legend.fontSize,
             labelColor: this.settings.legend.fontColor,
             dataPoints: []
-        } as LegendData;
+        };
 
         if (!this.errorState && this.settings.dataPoints.show) {
-            /** If colouring by category, push in the individual values, or group */
+            // If colouring by category, push in the individual values, or group
             if (this.settings.legend.showCategories) {
                 if (measureOnly) {
                     legendData.dataPoints = [
@@ -116,9 +116,9 @@ export class ViolinLegend {
                 }
             }
 
-            /** Add specific items for violin annotations (we'll clean up afterwards) */
+            // Add specific items for violin annotations (we'll clean up afterwards)
 
-            /** Spacer (to allow us to provide a small amount of spacing) */
+            // Spacer (to allow us to provide a small amount of spacing)
             if (
                 this.settings.legend.showCategories &&
                 this.settings.legend.showStatisticalPoints
@@ -136,9 +136,9 @@ export class ViolinLegend {
             }
 
             if (this.settings.legend.showStatisticalPoints) {
-                /** Barcode plot specifics */
+                // Barcode plot specifics
                 if (this.settings.dataPoints.plotType === 'barcodePlot') {
-                    /** Data points */
+                    // Data points
                     legendData.dataPoints.push({
                         label: this.viewModel.legend.dataPointText,
                         color: '#000000',
@@ -151,7 +151,7 @@ export class ViolinLegend {
                     });
                 }
 
-                /** Quartiles */
+                // Quartiles
                 if (
                     this.settings.dataPoints.showQuartiles &&
                     this.settings.dataPoints.plotType !== 'boxPlot'
@@ -199,7 +199,7 @@ export class ViolinLegend {
                     }
                 }
 
-                /** Median */
+                // Median
                 if (this.settings.dataPoints.showMedian) {
                     legendData.dataPoints.push({
                         label: this.viewModel.legend.medianText,
@@ -213,7 +213,7 @@ export class ViolinLegend {
                     });
                 }
 
-                /** Mean */
+                // Mean
                 if (
                     this.settings.dataPoints.plotType !== 'barcodePlot' &&
                     this.settings.dataPoints.showMean
@@ -256,7 +256,7 @@ export class ViolinLegend {
     private fixViewportForLegend() {
         this.debug.log('Checking legend position...');
 
-        /** If this exceeds our limits, then we will hide and re-draw prior to render */
+        // If this exceeds our limits, then we will hide and re-draw prior to render
         let legendBreaksViewport = false;
         switch (this.legend.getOrientation()) {
             case LegendPosition.Left:
@@ -279,7 +279,7 @@ export class ViolinLegend {
                 break;
         }
 
-        /** Adjust viewport (and hide legend) as appropriate */
+        // Adjust viewport (and hide legend) as appropriate
         this.debug.log('Legend dimensions', this.legend.getMargins());
         if (legendBreaksViewport) {
             this.debug.log(
@@ -308,8 +308,6 @@ export class ViolinLegend {
 
     /**
      *  Apply specific formatting to the legend data points for the violin annotations, as the legend utils are a bit limited.
-     *  TODO: Solve for vertical legends
-     *  TODO: Shape/colour transforms
      */
     private fixLegendIcons() {
         this.debug.log('Fixing up legend icons for new shapes...');
@@ -317,7 +315,7 @@ export class ViolinLegend {
 
         d3.selectAll('.customLegendIcon').remove();
         d3.selectAll('.legendItem').each(function(d, i) {
-            /** Element and positioning */
+            // Element and positioning
             let node = d3.select(this),
                 icon = node.select('.legendIcon'),
                 text = node.select('.legendText'),
@@ -465,7 +463,7 @@ export class ViolinLegend {
                     node.append('path')
                         .classed('customLegendIcon', true)
                         .attr({
-                            /** This draws a violin-like shape based on the radius */
+                            // This draws a violin-like shape based on the radius
                             d: `  M${radius},-${radius}\
                                                     C${radius},${radius} -${radius},${radius} ${radius},${radius *
                                 2}\

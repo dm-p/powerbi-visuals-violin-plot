@@ -282,7 +282,7 @@ export interface IDimensions {
  * @property {IDisplayName} displayName                 - The display name and/or tailored name of the category
  * @property {number} objectIndex                       - Position in the category array in the `dataView` in which the metadata
  *                                                          for visual settings or defaults should be stored (first instance)
- *                                                          TODO: we should probably set this all the way through when mapping
+ *                                                          We should probably set this all the way through when mapping
  *                                                          view model and properties to avoid issues with `fetchMoreData()` and
  *                                                          preserving the properties pane - see notes in `visual.ts`
  * @property {powerbi.visuals.ISelectionId} selectionId - Generated `ISelectionID` for category-specific settings in metadata
@@ -397,25 +397,33 @@ export interface IDataPointAggregate {
     values: IStatistics;
 }
 
-/** Used to specify side of the violin we're rendering, in order to reduce repeated code and manage position accordingly */
+/**
+ * Used to specify side of the violin we're rendering, in order to reduce repeated code and manage position accordingly
+ */
 export enum EViolinSide {
     left,
     right
 }
 
-/** Used to specify which whisker we're rendering, in order to reduce repeated code and manage position accordingly */
+/**
+ * Used to specify which whisker we're rendering, in order to reduce repeated code and manage position accordingly
+ */
 export enum EBoxPlotWhisker {
     top,
     bottom
 }
 
-/** Used to specify the type of plot we're working with */
+/**
+ * Used to specify the type of plot we're working with
+ */
 export enum EComboPlotType {
     boxPlot,
     barcodePlot
 }
 
-/** Used to specify the type of feature line we're going to render in our combo plot */
+/**
+ * Used to specify the type of feature line we're going to render in our combo plot
+ */
 export enum EFeatureLineType {
     median,
     quartile1,

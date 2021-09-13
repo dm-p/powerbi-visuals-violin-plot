@@ -12,23 +12,16 @@ import * as d3 from 'd3';
  * @param bandwidth     Desired bandwidth value to apply to our data
  * @param values        Array of values to calculate KDE over
  */
-export function kernelDensityEstimator(
-    kernel,
+export const kernelDensityEstimator = (
+    kernel: any,
     bandwidth: number,
     values: number[]
-) {
-    return sample => {
-        return values.map(function(x) {
-            return {
-                x: x,
-                y: d3.mean(sample, function(v: number) {
-                    return kernel((x - v) / bandwidth);
-                }),
-                remove: false
-            };
-        });
-    };
-}
+) => (sample: number[]) =>
+    values.map(x => ({
+        x: x,
+        y: d3.mean(sample, (v: number) => kernel((x - v) / bandwidth)),
+        remove: false
+    }));
 
 /**
  * If we want to converge a violin, we need to find the point at which to do so. This tries to use the
@@ -38,15 +31,15 @@ export function kernelDensityEstimator(
  * @param bandwidth     Desired bandwidth value to apply to our data
  * @param values        Array of values to calculate KDE over
  */
-export function kernelDensityRoot(kernel, bandwidth: number, values: number[]) {
-    return function(x) {
-        return d3.mean(values, function(v) {
-            return kernel((x - v) / bandwidth);
-        });
-    };
-}
+export const kernelDensityRoot = (
+    kernel: any,
+    bandwidth: number,
+    values: number[]
+) => (x: number) => d3.mean(values, v => kernel((x - v) / bandwidth));
 
-/** Enum specifying which values are acceptable for using limits */
+/**
+ * Enum specifying which values are acceptable for using limits
+ */
 export enum ELimit {
     min,
     max
@@ -67,7 +60,7 @@ export function kernelDensityInterpolator(
 ) {
     let interY = kdeRoot(value),
         interX = value,
-        count = 10; /** Prevent infinite loop */
+        count = 10; // Prevent infinite loop
     while (count > 0 && interY !== 0) {
         switch (limit) {
             case ELimit.max: {
@@ -105,13 +98,13 @@ export interface IKernels {
 export let kernels: IKernels = {
     epanechnikov: {
         factor: 2.3449,
-        window: function(u) {
+        window: u => {
             return Math.abs(u) <= 1 ? 0.75 * (1 - u * u) : 0;
         }
     },
     gaussian: {
         factor: 1.059,
-        window: function(u) {
+        window: u => {
             /** With gaussian, we get a number tending towards zero but never reaching it for some distributions of data,
              *  which can cause the interpolation to go on forever as it will never find a zero value. To mitigate this,
              *  we cap the result at 4 decimal places, which is not great but preserves a representative violin shape.
@@ -125,14 +118,14 @@ export let kernels: IKernels = {
     },
     quartic: {
         factor: 2.7779,
-        window: function(u) {
+        window: u => {
             let t = Math.pow(u, 2);
             return Math.abs(u) <= 1 ? (15 / 16) * Math.pow(1 - t, 2) : 0;
         }
     },
     triweight: {
         factor: 3.1545,
-        window: function(u) {
+        window: u => {
             let t = Math.pow(u, 2);
             return Math.abs(u) <= 1 ? (35 / 32) * Math.pow(1 - t, 3) : 0;
         }

@@ -1,4 +1,4 @@
-import { IProfilerCategory, IVisualProfiler } from "./models";
+import { IProfilerCategory, IVisualProfiler } from './models';
 
 /**
  * Used to handle debugging, if enabled within the visual settings
@@ -12,11 +12,13 @@ export class VisualDebugger {
     constructor(condition: boolean) {
         this.enabled = condition;
         this.profiler = {
-            categories: [],
+            categories: []
         };
     }
 
-    /** Clears the console if debugging is enabled */
+    /**
+     * Clears the console if debugging is enabled
+     */
     clear() {
         if (this.enabled) {
             console.clear();
@@ -35,7 +37,9 @@ export class VisualDebugger {
         }
     }
 
-    /** Create a footer if debugging is enabled, allowing you to demark sections within the console */
+    /**
+     * Create a footer if debugging is enabled, allowing you to demark sections within the console
+     */
     footer() {
         if (this.enabled) {
             console.log(`====================`);
@@ -48,13 +52,13 @@ export class VisualDebugger {
      */
     log(...args: any[]) {
         if (this.enabled) {
-            console.log("|\t", ...args);
+            console.log('|\t', ...args);
         }
     }
 
     profileStart() {
         if (this.enabled) {
-            this.log("Profiling started.");
+            this.log('Profiling started.');
             this.startTime = performance.now();
         }
     }
@@ -77,7 +81,7 @@ export class VisualDebugger {
                 this.lastCheckTime = performance.now();
             } else {
                 this.log(
-                    "Unable to get execution time. Did you start profiling higher up in your code?"
+                    'Unable to get execution time. Did you start profiling higher up in your code?'
                 );
             }
         }
@@ -90,7 +94,7 @@ export class VisualDebugger {
                 name: name,
                 duration: this.lastCheckTime - this.startTime,
                 startTime: this.startTime,
-                endTime: this.lastCheckTime,
+                endTime: this.lastCheckTime
             };
         } else {
             return null;
