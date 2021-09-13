@@ -27,6 +27,8 @@
 import { dataViewObjectsParser } from 'powerbi-visuals-utils-dataviewutils';
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
+import { visual } from '../pbiviz.json';
+
 const defaultFontSize: number = 11,
     defaultFontSizeSmall: number = 8,
     defaultFontFamily: string =
@@ -271,13 +273,12 @@ export class DataLimitSettings {
 
 /** Used to hold about info and manage debugging */
 export class AboutSettings {
-    public visualName: string = 'Violin Plot';
-    public version: string = '1.3.0.4';
-    public debugMode: boolean = true;
-    public debugVisualUpdate: boolean = true;
-    public debugTooltipEvents: boolean = true;
-    public debugProperties: boolean = true;
+    public visualName: string = visual.displayName;
+    public version: string = visual.version;
+    public debugMode: boolean = false;
+    public debugVisualUpdate: boolean = false;
+    public debugTooltipEvents: boolean = false;
+    public debugProperties: boolean = false;
     public development: boolean = false; /** SET TO `false` FOR RELEASE */
-    public usageUrl: string =
-        'https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/wiki/Usage%20and%20Visual%20Properties';
+    public usageUrl: string = visual.supportUrl;
 }
