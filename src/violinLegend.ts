@@ -319,7 +319,7 @@ export class ViolinLegend {
             let node = d3.select(this),
                 icon = node.select('.legendIcon'),
                 text = node.select('.legendText'),
-                radius = Number(icon.attr('r')),
+                radius = 5,
                 hiddenIconAttributes = {
                     visibility: 'hidden'
                 },
