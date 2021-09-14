@@ -13,7 +13,7 @@ import * as d3 from 'd3';
  * @param values        Array of values to calculate KDE over
  */
 export const kernelDensityEstimator = (
-    kernel: any,
+    kernel: (k: number) => number,
     bandwidth: number,
     values: number[]
 ) => (sample: number[]) =>
@@ -32,7 +32,7 @@ export const kernelDensityEstimator = (
  * @param values        Array of values to calculate KDE over
  */
 export const kernelDensityRoot = (
-    kernel: any,
+    kernel: (k: number) => number,
     bandwidth: number,
     values: number[]
 ) => (x: number) => d3.mean(values, v => kernel((x - v) / bandwidth));
@@ -56,7 +56,7 @@ export enum ELimit {
 export function kernelDensityInterpolator(
     value: number,
     limit: ELimit,
-    kdeRoot
+    kdeRoot: (k: number) => number
 ) {
     let interY = kdeRoot(value),
         interX = value,
@@ -85,7 +85,7 @@ export function kernelDensityInterpolator(
 
 export interface IKernel {
     factor: number;
-    window(k: number);
+    window(k: number): number;
 }
 
 export interface IKernels {

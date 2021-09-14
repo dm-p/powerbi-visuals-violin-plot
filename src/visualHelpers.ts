@@ -15,7 +15,7 @@ import {
     IAxisLinear,
     EViolinSide,
     EBoxPlotWhisker,
-    EComboPlotType,
+    TComboPlotType,
     EFeatureLineType
 } from './models';
 import { VisualSettings } from './settings';
@@ -274,6 +274,12 @@ function renderComboPlotRectangle(
         });
 }
 
+const barCodePlotCanRender = (
+    plotWidth: number,
+    strokeWidth: number,
+    comboPlotType: TComboPlotType
+) => comboPlotType === 'barcodePlot' && plotWidth > strokeWidth;
+
 /**
  * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
  *
@@ -285,84 +291,61 @@ export function renderLinePlot(
     seriesContainer: d3.Selection<ICategory>,
     viewModel: IViewModel,
     settings: VisualSettings,
-    comboPlotType: EComboPlotType
+    comboPlotType: TComboPlotType
 ) {
-    /** Whether we can render the chart is going to depend on how it looks, so we'll manage this with a flag before we get into it. We'll also set other
-     *  things we'll need later on here.
-     */
-    let canRender: boolean,
-        xLeft: number,
-        xRight: number,
-        featureXLeft: number,
-        featureXRight: number;
-
-    switch (comboPlotType) {
-        case EComboPlotType.barcodePlot: {
-            (canRender =
-                viewModel.barcodePlot.width > settings.dataPoints.strokeWidth),
-                (xLeft = viewModel.barcodePlot.xLeft),
-                (xRight = viewModel.barcodePlot.xRight),
-                (featureXLeft = viewModel.barcodePlot.featureXLeft),
-                (featureXRight = viewModel.barcodePlot.featureXRight);
-            break;
-        }
-    }
-
-    if (canRender) {
+    if (
+        barCodePlotCanRender(
+            viewModel.barcodePlot.width,
+            settings.dataPoints.strokeWidth,
+            comboPlotType
+        )
+    ) {
+        const xLeft = viewModel.barcodePlot.xLeft,
+            xRight = viewModel.barcodePlot.xRight,
+            featureXLeft = viewModel.barcodePlot.featureXLeft,
+            featureXRight = viewModel.barcodePlot.featureXRight;
         // Add the container
         let comboPlotContainer = seriesContainer
             .append('g')
             .classed('violinPlotComboLinePlotContainer', true)
-            .attr({
-                'shape-rendering': 'geometricPrecision'
-            });
+            .attr('shape-rendering', 'geometricPrecision');
 
         // Add overlay for interactivity - the shape of this is going to depend on the plot
         let overlay = seriesContainer
             .append('rect')
             .classed('violinPlotComboPlotOverlay', true)
-            .attr({
-                width: viewModel[`${EComboPlotType[comboPlotType]}`].width,
-                /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
-                 *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly)
-                 */
-                height: d =>
+            .attr('width', viewModel[comboPlotType].width)
+            /** We adjust by the stroke width to ensure that the overlay covers all rendering of the data points (if we
+             *  hover over an element that isn't bound to an ICategory then we can't display the tooltip properly)
+             */
+            .attr(
+                'height',
+                d =>
                     -(
                         viewModel.yAxis.scale(d.statistics.interpolateMax) -
                         viewModel.yAxis.scale(d.statistics.interpolateMin)
                     ) +
-                    settings.dataPoints.strokeWidth * 2,
-                x: xLeft,
-                y: d =>
+                    settings.dataPoints.strokeWidth * 2
+            )
+            .attr('x', xLeft)
+            .attr(
+                'y',
+                d =>
                     viewModel.yAxis.scale(d.statistics.interpolateMax) -
                     settings.dataPoints.strokeWidth
-            });
+            );
 
         // Line used to represent highlighted data point. Will be moved/hidden on mouse events
         comboPlotContainer
             .append('line')
             .classed('comboPlotToolipDataPoint', true)
-            .attr({
-                'stroke-width': 5,
-                'stroke-opacity': 1,
-                stroke: settings.dataPoints.barColour,
-                x1: d => {
-                    switch (comboPlotType) {
-                        case EComboPlotType.barcodePlot: {
-                            return featureXLeft;
-                        }
-                    }
-                },
-                x2: d => {
-                    switch (comboPlotType) {
-                        case EComboPlotType.barcodePlot: {
-                            return featureXRight;
-                        }
-                    }
-                },
-                y1: 0,
-                y2: 0
-            })
+            .attr('stroke-width', 5)
+            .attr('stroke-opacity', 1)
+            .attr('stroke', settings.dataPoints.barColour)
+            .attr('x1', comboPlotType === 'barcodePlot' && featureXLeft)
+            .attr('x2', comboPlotType === 'barcodePlot' && featureXRight)
+            .attr('y1', 0)
+            .attr('y2', 0)
             .style('display', 'none');
 
         // Plot data points
@@ -378,27 +361,13 @@ export function renderLinePlot(
             .enter()
             .append('line')
             .classed('tooltipDataPoint', true)
-            .attr({
-                x1: d => {
-                    switch (comboPlotType) {
-                        case EComboPlotType.barcodePlot: {
-                            return xLeft;
-                        }
-                    }
-                },
-                x2: d => {
-                    switch (comboPlotType) {
-                        case EComboPlotType.barcodePlot: {
-                            return xRight;
-                        }
-                    }
-                },
-                y1: d => viewModel.yAxis.scale(d.value),
-                y2: d => viewModel.yAxis.scale(d.value),
-                stroke: `${settings.dataPoints.barColour}`,
-                'stroke-width': `${settings.dataPoints.strokeWidth}px`,
-                'stroke-linecap': 'butt'
-            });
+            .attr('x1', comboPlotType === 'barcodePlot' && xLeft)
+            .attr('x2', comboPlotType === 'barcodePlot' && xRight)
+            .attr('y1', d => viewModel.yAxis.scale(d.value))
+            .attr('y2', d => viewModel.yAxis.scale(d.value))
+            .attr('stroke', `${settings.dataPoints.barColour}`)
+            .attr('stroke-width', `${settings.dataPoints.strokeWidth}px`)
+            .attr('stroke-linecap', 'butt');
 
         // Add quartile, mean and median features as appropriate
         if (settings.dataPoints.showMedian) {
@@ -455,7 +424,7 @@ export function renderColumnPlot(
                 viewModel,
                 settings,
                 EFeatureLineType.median,
-                EComboPlotType.boxPlot
+                'boxPlot'
             );
         }
         if (settings.dataPoints.showQuartiles) {
@@ -464,14 +433,14 @@ export function renderColumnPlot(
                 viewModel,
                 settings,
                 EFeatureLineType.quartile1,
-                EComboPlotType.boxPlot
+                'boxPlot'
             );
             renderFeatureLine(
                 boxContainer,
                 viewModel,
                 settings,
                 EFeatureLineType.quartile3,
-                EComboPlotType.boxPlot
+                'boxPlot'
             );
         }
         if (
@@ -525,7 +494,7 @@ export function renderBoxPlot(
                 viewModel,
                 settings,
                 EFeatureLineType.median,
-                EComboPlotType.boxPlot
+                'boxPlot'
             );
         }
         if (
@@ -551,12 +520,10 @@ export function renderFeatureLine(
     viewModel: IViewModel,
     settings: VisualSettings,
     lineType: EFeatureLineType,
-    comboPlotType: EComboPlotType
+    comboPlotType: TComboPlotType
 ) {
-    let featureXLeft: number =
-            viewModel[`${EComboPlotType[comboPlotType]}`].featureXLeft,
-        featureXRight: number =
-            viewModel[`${EComboPlotType[comboPlotType]}`].featureXRight;
+    let featureXLeft: number = viewModel[comboPlotType].featureXLeft,
+        featureXRight: number = viewModel[comboPlotType].featureXRight;
 
     containingElement
         .append('line')

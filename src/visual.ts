@@ -26,7 +26,6 @@ import { VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 
 import { ViewModelHandler } from './viewModelHandler';
-import { ICategory, EComboPlotType } from './models';
 import {
     renderViolin,
     renderBoxPlot,
@@ -36,6 +35,14 @@ import {
     dataLimitLoadingStatus,
     visualCollapsed
 } from './visualHelpers';
+import {
+    plotCanvas,
+    plotCategoryWarning,
+    plotSeriesContainer,
+    plotWatermark,
+    plotXAxis,
+    plotYAxis
+} from './dom';
 import { ViolinLegend } from './violinLegend';
 import { bindSeriesTooltipEvents, bindWarningTooltipEvents } from './tooltip';
 
@@ -271,59 +278,26 @@ export class Visual implements IVisual {
         } else {
             // Add our main SVG
             debug.log('Plotting SVG canvas...');
-            let violinPlotCanvas = this.container
-                .append('svg')
-                .classed('violinPlotCanvas', true)
-                .attr({
-                    width: `${options.viewport.width}`,
-                    height: `${options.viewport.height}`
-                });
+            const violinPlotCanvas = plotCanvas(
+                this.container,
+                options.viewport
+            );
 
             // Watermark for non-production use, if the dev flag is set
-            if (
-                this.settings.about.development ||
-                this.settings.about.version.indexOf('DEV') !== -1
-            ) {
-                let fontSize = 12;
-                violinPlotCanvas
-                    .append('text')
-                    .attr({
-                        transform: `translate(${this.viewModelHandler.viewport
-                            .width / 2}, ${fontSize * 2})`,
-                        'text-anchor': 'middle',
-                        opacity: 0.5
-                    })
-                    .style({
-                        'font-weight': 'bold',
-                        fill: 'red',
-                        'font-size': `${fontSize}px`
-                    })
-                    .append('tspan')
-                    .text(
-                        `${this.settings.about.visualName.toUpperCase()} ${
-                            this.settings.about.version
-                        } - NOT FOR PRODUCTION USE`
-                    )
-                    .attr({
-                        x: 0,
-                        dy: '-1em'
-                    });
-            }
+            plotWatermark(
+                violinPlotCanvas,
+                this.viewModelHandler.viewport,
+                this.settings
+            );
 
             // Handle category reduction, if applied
             if (viewModel.categoriesReduced) {
                 debug.log('Plotting warning icon and interactivity...');
-                let warningElement = violinPlotCanvas
-                    .append('g')
-                    .classed('condensedWarning', true)
-                    .attr({
-                        transform: `translate(${this.viewModelHandler.viewport
-                            .width - 20}, ${20})`,
-                        opacity: '0.6'
-                    })
-                    .append('text')
-                    .html('&#9888;')
-                    .style('display', 'none');
+                const warningElement = plotCategoryWarning(
+                    violinPlotCanvas,
+                    viewModel,
+                    this.viewModelHandler.viewport
+                );
 
                 /** Add mouse events to show/hide warning on mouseover (we don't want it showing all the time,
                  *  but we should inform the user what's going on as this is not part of the dataReductionAlgorithm
@@ -338,172 +312,36 @@ export class Visual implements IVisual {
             }
 
             // Create a Y axis
-            if (this.settings.yAxis.show) {
-                debug.log('Plotting y-axis...');
-                let yAxisContainer = violinPlotCanvas
-                    .append('g')
-                    .classed('yAxisContainer', true)
-                    .style({
-                        'font-size':
-                            viewModel.yAxis.labelTextProperties.fontSize,
-                        'font-family': this.settings.yAxis.fontFamily,
-                        fill: this.settings.yAxis.fontColor
-                    });
-
-                // Add title if required
-                if (
-                    this.settings.yAxis.showTitle &&
-                    viewModel.yAxis.titleDisplayName &&
-                    viewModel.yAxis.titleDimensions.width > 0
-                ) {
-                    debug.log('Plotting y-axis title...');
-                    yAxisContainer
-                        .append('text')
-                        .classed('yAxisTitle', true)
-                        .attr({
-                            transform: 'rotate(-90)',
-                            x: viewModel.yAxis.titleDimensions.x,
-                            y: viewModel.yAxis.titleDimensions.y,
-                            dy: '1em'
-                        })
-                        .style({
-                            'text-anchor': 'middle',
-                            'font-size':
-                                viewModel.yAxis.titleDisplayName.textProperties
-                                    .fontSize,
-                            'font-family': this.settings.yAxis.titleFontFamily,
-                            fill: this.settings.yAxis.titleColor
-                        })
-                        .text(viewModel.yAxis.titleDisplayName.tailoredName);
-                }
-
-                debug.log('Plotting y-axis ticks...');
-                let yAxisTicks = yAxisContainer
-                    .append('g')
-                    .classed({
-                        yAxis: true,
-                        grid: true
-                    })
-                    .attr(
-                        'transform',
-                        `translate(${viewModel.yAxis.dimensions.width}, 0)`
-                    )
-                    .call(viewModel.yAxis.generator);
-
-                // Apply gridline styling
-                debug.log('Applying y-axis gridline styling...');
-                yAxisTicks
-                    .selectAll('line')
-                    .attr({
-                        stroke: this.settings.yAxis.gridlineColor,
-                        'stroke-width': this.settings.yAxis.gridlines
-                            ? this.settings.yAxis.gridlineStrokeWidth
-                            : 0
-                    })
-                    .classed(this.settings.yAxis.gridlineStrokeLineStyle, true);
-            }
+            plotYAxis(violinPlotCanvas, viewModel, this.settings, debug);
 
             // Create an X-axis
-            if (this.settings.xAxis.show) {
-                debug.log('Plotting x-axis...');
-                let xAxisContainer = violinPlotCanvas
-                    .append('g')
-                    .classed('xAxisContainer', true)
-                    .style({
-                        'font-size':
-                            viewModel.xAxis.labelTextProperties.fontSize,
-                        'font-family': this.settings.xAxis.fontFamily,
-                        fill: this.settings.xAxis.fontColor
-                    });
-
-                debug.log('Plotting x-axis ticks...');
-                let xAxisTicks = xAxisContainer
-                    .append('g')
-                    .classed({
-                        xAxis: true,
-                        grid: true
-                    })
-                    .attr(
-                        'transform',
-                        `translate(${
-                            viewModel.yAxis.dimensions.width
-                        }, ${options.viewport.height -
-                            viewModel.xAxis.dimensions.height})`
-                    )
-                    .call(viewModel.xAxis.generator);
-
-                // Apply gridline styling
-                debug.log('Applying x-axis gridline styling...');
-                xAxisTicks
-                    .selectAll('line')
-                    .attr({
-                        stroke: this.settings.xAxis.gridlineColor,
-                        'stroke-width': this.settings.xAxis.gridlines
-                            ? this.settings.xAxis.gridlineStrokeWidth
-                            : 0
-                    })
-                    .classed(this.settings.xAxis.gridlineStrokeLineStyle, true);
-
-                // Add title if required
-                if (
-                    this.settings.xAxis.showTitle &&
-                    viewModel.xAxis.titleDisplayName &&
-                    viewModel.xAxis.titleDimensions.height > 0
-                ) {
-                    debug.log('Plotting x-axis title...');
-                    xAxisContainer
-                        .append('text')
-                        .classed('xAxisTitle', true)
-                        .attr({
-                            x: viewModel.xAxis.titleDimensions.x,
-                            y: viewModel.xAxis.titleDimensions.y,
-                            dy: '1em'
-                        })
-                        .style({
-                            'text-anchor': 'middle',
-                            'font-size':
-                                viewModel.xAxis.titleDisplayName.textProperties
-                                    .fontSize,
-                            'font-family': this.settings.xAxis.titleFontFamily,
-                            fill: this.settings.xAxis.titleColor
-                        })
-                        .text(viewModel.xAxis.titleDisplayName.tailoredName);
-                }
-            }
+            plotXAxis(
+                violinPlotCanvas,
+                viewModel,
+                this.settings,
+                options.viewport,
+                debug
+            );
 
             // Do the rest, if required
 
             // Add series elements
             debug.log('Plotting category elements...');
-            let seriesContainer = violinPlotCanvas
-                .selectAll('.violinPlotCanvas')
-                .data(viewModel.categories)
-                .enter()
-                .append('g')
-                .classed({
-                    violinPlotSeries: true
-                })
-                .attr({
-                    transform: d =>
-                        `translate(${viewModel.xAxis.scale(d.name) +
-                            viewModel.yAxis.dimensions.width}, 0)`,
-                    width: viewModel.xAxis.scale.rangeBand()
-                });
+            const seriesContainer = plotSeriesContainer(
+                violinPlotCanvas,
+                viewModel
+            );
 
             // Tooltips
             debug.log('Adding tooltip events...');
-            const series: d3.Selection<ICategory> = violinPlotCanvas.selectAll(
-                '.violinPlotSeries'
-            );
             bindSeriesTooltipEvents(
-                series,
+                violinPlotCanvas.selectAll('.violinPlotSeries'),
                 this.tooltipService,
                 this.settings,
                 viewModel
             );
-            const warningElem = violinPlotCanvas.select('.condensedWarning');
             bindWarningTooltipEvents(
-                warningElem,
+                violinPlotCanvas.select('.condensedWarning'),
                 this.tooltipService,
                 this.settings
             );
@@ -531,7 +369,7 @@ export class Visual implements IVisual {
                             seriesContainer,
                             viewModel,
                             this.settings,
-                            EComboPlotType.barcodePlot
+                            'barcodePlot'
                         );
                         break;
                     }
