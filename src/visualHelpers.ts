@@ -2,7 +2,6 @@ import powerbi from 'powerbi-visuals-api';
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 import DataViewObject = powerbi.DataViewObject;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { valueFormatter } from 'powerbi-visuals-utils-formattingutils';
 
 import * as d3 from 'd3';
@@ -690,34 +689,4 @@ export function getHighlightedDataPoints(
         ttv = yData - Number(d0.key) > Number(d1.key) - yData ? d1 : d0;
     });
     return ttv;
-}
-
-/**
- *  Return a formatted `VisualTooltipDataItem` based on the supplied parameters
- *
- *  @param displayName      - Display name to apply to tooltip data point
- *  @param measureFormat    - The format string to apply to the value
- *  @param value            - The value to format
- *  @param displayUnits     - Display units to apply to the value
- *  @param precision        - Precision (decimal places) to apply to the value
- *  @param locale           - Regional settings to apply to the number format
- */
-export function formatTooltipValue(
-    displayName: string,
-    measureFormat: string,
-    value: number,
-    displayUnits: number,
-    precision: number,
-    locale: string
-): VisualTooltipDataItem {
-    let formatter = valueFormatter.create({
-        format: measureFormat,
-        value: displayUnits === 0 ? value : displayUnits,
-        precision: precision != null ? precision : null,
-        cultureSelector: locale
-    });
-    return {
-        displayName: displayName,
-        value: formatter.format(value)
-    };
 }

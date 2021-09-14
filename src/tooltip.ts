@@ -1,13 +1,14 @@
 import powerbi from 'powerbi-visuals-api';
 import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import ITooltipService = powerbi.extensibility.ITooltipService;
+import { valueFormatter } from 'powerbi-visuals-utils-formattingutils';
 
 import * as d3 from 'd3';
 
 import { VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
-import { getHighlightedDataPoints, formatTooltipValue } from './visualHelpers';
+import { getHighlightedDataPoints } from './visualHelpers';
 
 export { bindWarningTooltipEvents, bindSeriesTooltipEvents };
 
@@ -374,3 +375,35 @@ const resolveCoordinates = (event: MouseEvent): [number, number] => [
     event.clientX,
     event.clientY
 ];
+
+/**
+ *  Return a formatted `VisualTooltipDataItem` based on the supplied parameters
+ *
+ *  @param displayName      - Display name to apply to tooltip data point
+ *  @param measureFormat    - The format string to apply to the value
+ *  @param value            - The value to format
+ *  @param displayUnits     - Display units to apply to the value
+ *  @param precision        - Precision (decimal places) to apply to the value
+ *  @param locale           - Regional settings to apply to the number format
+ */
+const formatTooltipValue = (
+    displayName: string,
+    measureFormat: string,
+    value: number,
+    displayUnits: number,
+    precision: number,
+    locale: string
+): VisualTooltipDataItem => {
+    let formatter = valueFormatter.create({
+        format: measureFormat,
+        value: displayUnits === 0 ? value : displayUnits,
+        precision: precision != null ? precision : null,
+        cultureSelector: locale
+    });
+    return {
+        displayName: displayName,
+        value: formatter.format(value),
+        color: '#000000',
+        opacity: '0'
+    };
+};
