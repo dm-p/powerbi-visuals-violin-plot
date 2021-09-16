@@ -41,7 +41,8 @@ import {
     plotSeriesContainer,
     plotWatermark,
     plotXAxis,
-    plotYAxis
+    plotYAxis,
+    sizeMainContainer
 } from './dom';
 import { ViolinLegend } from './violinLegend';
 import { bindSeriesTooltipEvents, bindWarningTooltipEvents } from './tooltip';
@@ -133,15 +134,7 @@ export class Visual implements IVisual {
 
         // Clear down existing plot
         this.container.selectAll('*').remove();
-
-        /**
-         *  Size our initial container to match the viewport
-         *  We could potentially compare this on resize and do the appropriate calculations to minimise rework
-         */
-        this.container.attr({
-            width: `${options.viewport.width}`,
-            height: `${options.viewport.height}`
-        });
+        sizeMainContainer(this.container, options.viewport);
 
         // Things that can terminate the update process early
 

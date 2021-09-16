@@ -155,8 +155,6 @@ const getTooltipData = (
             viewModel.locale
         )
     );
-    debug.log('Pushed category and samples');
-
     tts.showMaxMin &&
         tooltips.push(
             formatTooltipValue(
@@ -176,7 +174,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showSpan &&
         tooltips.push(
             formatTooltipValue(
@@ -188,7 +185,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showMedian &&
         tooltips.push(
             formatTooltipValue(
@@ -200,7 +196,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showMean &&
         tooltips.push(
             formatTooltipValue(
@@ -212,7 +207,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showDeviation &&
         tooltips.push(
             formatTooltipValue(
@@ -224,7 +218,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showQuartiles &&
         tooltips.push(
             formatTooltipValue(
@@ -244,7 +237,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showIqr &&
         tooltips.push(
             formatTooltipValue(
@@ -256,7 +248,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showConfidence &&
         tooltips.push(
             formatTooltipValue(
@@ -276,7 +267,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     tts.showBandwidth &&
         settings.violin.specifyBandwidth &&
         tooltips.push(
@@ -302,7 +292,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     highlightedValue &&
         tooltips.push(
             formatTooltipValue(
@@ -322,7 +311,6 @@ const getTooltipData = (
                 viewModel.locale
             )
         );
-
     debug.log('Tooltip Data', tooltips);
     return tooltips;
 };

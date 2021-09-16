@@ -18,6 +18,7 @@ import {
     EFeatureLineType
 } from './models';
 import { VisualSettings } from './settings';
+import { applyDataPointHighlight } from './dom';
 
 /**
  * Gets property value for a particular object in a category.
@@ -300,9 +301,7 @@ export function renderLinePlot(
         )
     ) {
         const xLeft = viewModel.barcodePlot.xLeft,
-            xRight = viewModel.barcodePlot.xRight,
-            featureXLeft = viewModel.barcodePlot.featureXLeft,
-            featureXRight = viewModel.barcodePlot.featureXRight;
+            xRight = viewModel.barcodePlot.xRight;
         // Add the container
         let comboPlotContainer = seriesContainer
             .append('g')
@@ -335,17 +334,8 @@ export function renderLinePlot(
             );
 
         // Line used to represent highlighted data point. Will be moved/hidden on mouse events
-        comboPlotContainer
-            .append('line')
-            .classed('comboPlotToolipDataPoint', true)
-            .attr('stroke-width', 5)
-            .attr('stroke-opacity', 1)
-            .attr('stroke', settings.dataPoints.barColour)
-            .attr('x1', comboPlotType === 'barcodePlot' && featureXLeft)
-            .attr('x2', comboPlotType === 'barcodePlot' && featureXRight)
-            .attr('y1', 0)
-            .attr('y2', 0)
-            .style('display', 'none');
+        comboPlotType === 'barcodePlot' &&
+            applyDataPointHighlight(comboPlotContainer, viewModel, settings);
 
         // Plot data points
         comboPlotContainer

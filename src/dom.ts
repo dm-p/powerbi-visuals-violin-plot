@@ -7,6 +7,15 @@ import { VisualDebugger } from './visualDebugger';
 
 const watermarkFontSize = 12;
 
+/**
+ *  Size our initial container to match the viewport
+ *  We could potentially compare this on resize and do the appropriate calculations to minimise rework
+ */
+export const sizeMainContainer = (
+    container: d3.Selection<{}>,
+    viewport: IViewport
+) => container.attr('width', viewport.width).attr('height', viewport.height);
+
 export const plotCanvas = (container: d3.Selection<{}>, viewport: IViewport) =>
     container
         .append('svg')
@@ -236,3 +245,20 @@ const plotYAxisGrid = (container: d3.Selection<{}>, settings: VisualSettings) =>
                 0
         )
         .classed(settings.yAxis.gridlineStrokeLineStyle, true);
+
+export const applyDataPointHighlight = (
+    container: d3.Selection<{}>,
+    viewModel: IViewModel,
+    settings: VisualSettings
+) =>
+    container
+        .append('line')
+        .classed('comboPlotToolipDataPoint', true)
+        .attr('stroke-width', 5)
+        .attr('stroke-opacity', 1)
+        .attr('stroke', settings.dataPoints.barColour)
+        .attr('x1', viewModel.barcodePlot.featureXLeft)
+        .attr('x2', viewModel.barcodePlot.featureXRight)
+        .attr('y1', 0)
+        .attr('y2', 0)
+        .style('display', 'none');
