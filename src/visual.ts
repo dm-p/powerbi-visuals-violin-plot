@@ -42,10 +42,11 @@ import {
     plotWatermark,
     plotXAxis,
     plotYAxis,
+    renderComboPlot,
     sizeMainContainer
 } from './dom';
 import { ViolinLegend } from './violinLegend';
-import { bindSeriesTooltipEvents, bindWarningTooltipEvents } from './tooltip';
+import { bindSeriesTooltipEvents } from './tooltip';
 
 export class Visual implements IVisual {
     private element: HTMLElement;
@@ -109,13 +110,10 @@ export class Visual implements IVisual {
         this.viewModelHandler.viewport = options.viewport;
 
         // Initial debugging for visual update
+        const { about } = this.settings;
         this.viewModelHandler.debug =
-            this.settings.about.debugMode &&
-            this.settings.about.debugVisualUpdate;
-        let debug = new VisualDebugger(
-            this.settings.about.debugMode &&
-                this.settings.about.debugVisualUpdate
-        );
+            about.debugMode && about.debugVisualUpdate;
+        const debug = new VisualDebugger(this.viewModelHandler.debug);
         debug.clear();
         debug.heading('Visual Update');
         debug.log(`Update type: ${options.type}`);
@@ -139,23 +137,13 @@ export class Visual implements IVisual {
         // Things that can terminate the update process early
 
         // Validation of inputs and display a nice message
-        if (
-            !options.dataViews ||
-            !options.dataViews[0] ||
-            !options.dataViews[0].metadata ||
-            !options.dataViews[0].metadata.columns.filter(
-                c => c.roles['sampling']
-            )[0] ||
-            !options.dataViews[0].categorical.values
-        ) {
+        if (this.dataViewIsValid(options)) {
             this.errorState = true;
             this.renderLegend();
             visualUsage(this.container, this.host, this.settings);
             this.events.renderingFinished(options);
-            if (debug) {
-                debug.log('Update cancelled due to incomplete fields.');
-                debug.footer();
-            }
+            debug.log('Update cancelled due to incomplete fields.');
+            debug.footer();
             return;
         }
 
@@ -165,22 +153,12 @@ export class Visual implements IVisual {
          *
          *  For people viewing the source code, this option is hard-switched off in the settings, as I have observed some issues when
          *  using categories and individual data colours (the property pane breaks), as well as resizing the visual (sometimes it just
-         *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The 1.x API has
-         *  memory leak issues, which don't help with diagnosis. The fecthMoreData() function is also broken in v2.1 and v2.2 of the custom
-         *  visuals API in different ways, so I'm hoping to revist later on. The code is here for posterity in the hope that I can just
-         *  switch it on once I find a suitable API version.
+         *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The fetchMoreData()
+         *  function has been a little sporadic in early versions of API in different ways, so I'm hoping to revist later on.
          */
         if (this.settings.dataLimit.enabled) {
-            if (
-                options.operationKind === VisualDataChangeOperationKind.Create
-            ) {
-                this.canFetchMore = true;
-                this.windowsLoaded = 1;
-            } else {
-                this.windowsLoaded++;
-            }
-
-            let rowCount =
+            this.updateFetchWindowDetails(options);
+            const rowCount =
                 options.dataViews[0].categorical.values[0].values.length;
 
             if (
@@ -189,9 +167,8 @@ export class Visual implements IVisual {
                 this.canFetchMore
             ) {
                 debug.log(
-                    'Not all data loaded. Loading more (if we can...)...'
+                    `Not all data loaded. Loading more (if we can). We have loaded ${this.windowsLoaded} times so far.`
                 );
-                debug.log(`We have loaded ${this.windowsLoaded} times so far.`);
 
                 // Handle rendering of 'help text', if enabled
                 if (this.settings.dataLimit.showInfo) {
@@ -222,6 +199,27 @@ export class Visual implements IVisual {
         }
     }
 
+    private updateFetchWindowDetails(options: VisualUpdateOptions) {
+        if (options.operationKind === VisualDataChangeOperationKind.Create) {
+            this.canFetchMore = true;
+            this.windowsLoaded = 1;
+        } else {
+            this.windowsLoaded++;
+        }
+    }
+
+    private dataViewIsValid(options: VisualUpdateOptions) {
+        return (
+            !options.dataViews ||
+            !options.dataViews[0] ||
+            !options.dataViews[0].metadata ||
+            !options.dataViews[0].metadata.columns.filter(
+                c => c.roles['sampling']
+            )[0] ||
+            !options.dataViews[0].categorical.values
+        );
+    }
+
     /**
      * Decoupling of the chart rendering, just in case we needed to load more data above (which will fire the `update()` method again and
      * it makes no sense to actually render the visual if we're going back to the well...)
@@ -237,7 +235,6 @@ export class Visual implements IVisual {
             case VisualUpdateType.Data:
             case VisualUpdateType.All: {
                 debug.footer();
-
                 this.viewModelHandler.mapDataView(
                     options,
                     this.host,
@@ -285,29 +282,14 @@ export class Visual implements IVisual {
 
             // Handle category reduction, if applied
             if (viewModel.categoriesReduced) {
-                debug.log('Plotting warning icon and interactivity...');
-                const warningElement = plotCategoryWarning(
-                    violinPlotCanvas,
-                    viewModel,
-                    this.viewModelHandler.viewport
+                this.host.displayWarningIcon(
+                    `Categories limited to ${this.settings.dataLimit.categoryLimit} unique values for performance reasons.`,
+                    'Not displaying all data. Filter the data or choose another field.'
                 );
-
-                /** Add mouse events to show/hide warning on mouseover (we don't want it showing all the time,
-                 *  but we should inform the user what's going on as this is not part of the dataReductionAlgorithm
-                 *  stuff)
-                 */
-                violinPlotCanvas.on('mouseover', () => {
-                    warningElement.style('display', null);
-                });
-                violinPlotCanvas.on('mouseout', () => {
-                    warningElement.style('display', 'none');
-                });
             }
 
-            // Create a Y axis
+            // Axes
             plotYAxis(violinPlotCanvas, viewModel, this.settings, debug);
-
-            // Create an X-axis
             plotXAxis(
                 violinPlotCanvas,
                 viewModel,
@@ -315,8 +297,6 @@ export class Visual implements IVisual {
                 options.viewport,
                 debug
             );
-
-            // Do the rest, if required
 
             // Add series elements
             debug.log('Plotting category elements...');
@@ -333,51 +313,12 @@ export class Visual implements IVisual {
                 this.settings,
                 viewModel
             );
-            bindWarningTooltipEvents(
-                violinPlotCanvas.select('.condensedWarning'),
-                this.tooltipService,
-                this.settings
-            );
 
-            // KDE plot
+            // Visual elements
             debug.log('Rendering violins...');
             renderViolin(seriesContainer, viewModel, this.settings);
-
-            // Combo plot
-            if (this.settings.dataPoints.show) {
-                switch (this.settings.dataPoints.plotType) {
-                    case 'boxPlot': {
-                        debug.log('Rendering box plots...');
-                        renderBoxPlot(
-                            seriesContainer,
-                            viewModel,
-                            this.settings
-                        );
-                        break;
-                    }
-
-                    case 'barcodePlot': {
-                        debug.log('Rendering barcode plots...');
-                        renderLinePlot(
-                            seriesContainer,
-                            viewModel,
-                            this.settings,
-                            'barcodePlot'
-                        );
-                        break;
-                    }
-
-                    case 'columnPlot': {
-                        debug.log('Rendering column plots...');
-                        renderColumnPlot(
-                            seriesContainer,
-                            viewModel,
-                            this.settings
-                        );
-                        break;
-                    }
-                }
-            }
+            debug.log('Rendering combo plot...');
+            renderComboPlot(seriesContainer, viewModel, this.settings);
         }
 
         // Success!

@@ -8,9 +8,9 @@ import * as d3 from 'd3';
 import { TooltipSettings, VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
-import { getHighlightedDataPoints, visualCollapsed } from './visualHelpers';
+import { getHighlightedDataPoints } from './visualHelpers';
 
-export { bindWarningTooltipEvents, bindSeriesTooltipEvents };
+export { bindSeriesTooltipEvents };
 
 const isTouchEvent = true;
 
@@ -18,22 +18,6 @@ const tooltipDebugger = (settings: VisualSettings) =>
     new VisualDebugger(
         settings.about.debugMode && settings.about.debugTooltipEvents
     );
-
-const bindWarningTooltipEvents = (
-    element: d3.Selection<{}>,
-    tooltipService: ITooltipService,
-    settings: VisualSettings
-) => {
-    element.on('mouseover', () =>
-        handleWarningTooltip(tooltipService, settings)
-    );
-    element.on('mousemove', () =>
-        handleWarningTooltip(tooltipService, settings)
-    );
-    element.on('mouseout', () =>
-        handleWarningTooltip(tooltipService, settings)
-    );
-};
 
 const bindSeriesTooltipEvents = (
     elements: d3.Selection<ICategory>,
@@ -83,7 +67,7 @@ const handleSeriesTooltip = (
             viewModel.yAxis
         );
         d3.select(target.parentNode)
-            .select('.comboPlotToolipDataPoint')
+            .selectAll('.comboPlotToolipDataPoint')
             .attr({
                 y1: viewModel.yAxis.scale(Number(highlightedValue.key)),
                 y2: viewModel.yAxis.scale(Number(highlightedValue.key))
@@ -114,7 +98,7 @@ const handleSeriesTooltip = (
         }
         default: {
             d3.selectAll('.tooltipDataPoint').attr('stroke-opacity', 1);
-            d3.select('.comboPlotToolipDataPoint').style('display', 'none');
+            d3.selectAll('.comboPlotToolipDataPoint').style('display', 'none');
             hideTooltip(tooltipService);
         }
     }
@@ -275,29 +259,6 @@ const getTooltipData = (
     return tooltips;
 };
 
-const handleWarningTooltip = (
-    tooltipService: ITooltipService,
-    settings: VisualSettings
-) => {
-    const event = getEvent(),
-        coordinates = resolveCoordinates(event);
-    switch (event.type) {
-        case 'mouseover':
-        case 'mousemove': {
-            tooltipService.show({
-                coordinates,
-                isTouchEvent,
-                identities: null,
-                dataItems: getTruncationTooltipData(settings)
-            });
-            break;
-        }
-        default: {
-            hideTooltip(tooltipService);
-        }
-    }
-};
-
 const getTooltipCategory = (v: ICategory) => ({
     displayName: 'Category',
     value: v.displayName.formattedName
@@ -333,19 +294,6 @@ const hideTooltip = (tooltipService: ITooltipService) => {
         isTouchEvent
     });
 };
-
-/** Tooltip to display in the event of too many categories for the visual. As we handle this independently of the dataReductionAlgorithm,
- *  we need to indicate this to the user some other way.
- */
-const getTruncationTooltipData = (
-    settings: VisualSettings
-): VisualTooltipDataItem[] => [
-    {
-        displayName: `Category values limited to ${settings.dataLimit.categoryLimit} unique values for \
-                            performance reasons. Not displaying all data. Filter the data or choose another field.`,
-        value: ''
-    }
-];
 
 const resolveCoordinates = (event: MouseEvent): [number, number] => [
     event.clientX,

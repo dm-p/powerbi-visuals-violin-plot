@@ -1,9 +1,14 @@
 import powerbi from 'powerbi-visuals-api';
 import IViewport = powerbi.IViewport;
 
-import { IViewModel } from './models';
+import { ICategory, IViewModel } from './models';
 import { VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
+import {
+    renderBoxPlot,
+    renderColumnPlot,
+    renderLinePlot
+} from './visualHelpers';
 
 const watermarkFontSize = 12;
 
@@ -262,3 +267,33 @@ export const applyDataPointHighlight = (
         .attr('y1', 0)
         .attr('y2', 0)
         .style('display', 'none');
+
+export const renderComboPlot = (
+    container: d3.Selection<ICategory>,
+    viewModel: IViewModel,
+    settings: VisualSettings
+) => {
+    if (settings.dataPoints.show) {
+        switch (settings.dataPoints.plotType) {
+            case 'boxPlot': {
+                renderBoxPlot(container, viewModel, settings);
+                break;
+            }
+
+            case 'barcodePlot': {
+                renderLinePlot(container, viewModel, settings, 'barcodePlot');
+                break;
+            }
+
+            case 'columnPlot': {
+                renderColumnPlot(
+                    container,
+                    viewModel,
+
+                    settings
+                );
+                break;
+            }
+        }
+    }
+};

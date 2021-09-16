@@ -6,19 +6,21 @@ import ILegend = legendInterfaces.ILegend;
 import LegendPosition = legendInterfaces.LegendPosition;
 import LegendData = legendInterfaces.LegendData;
 import MarkerShape = legendInterfaces.MarkerShape;
+import ISelectionId = powerbi.extensibility.ISelectionId;
 import positionChartArea = legend.positionChartArea;
 
 import * as d3 from 'd3';
 
 import { VisualDebugger } from './visualDebugger';
-import { DataPointSettings, VisualSettings } from './settings';
+import { DataPointSettings, LegendSettings, VisualSettings } from './settings';
 import { IViewModel, ILegend as IVMLegend } from './models';
 import { LegendDataPoint } from 'powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces';
 
 const itemRadius = 5,
     boxStrokeWidth = 1,
     lineStrokeWidth = 2,
-    customIconClass = 'customLegendIcon';
+    customIconClass = 'customLegendIcon',
+    defaultFillColour = '#000000';
 
 export class ViolinLegend {
     public legend: ILegend;
@@ -76,171 +78,112 @@ export class ViolinLegend {
      *  @param host                                     - Visual host
      */
     private constructLegendData() {
-        let measureOnly =
-            !this.viewModel.categoryNames ||
-            !this.settings.dataColours.colourByCategory;
+        const measureOnly =
+                !this.viewModel.categoryNames ||
+                !this.settings.dataColours.colourByCategory,
+            { dataPoints, legend } = this.settings,
+            { showStatisticalPoints } = legend,
+            { quartilesMatch } = this.viewModel.legend,
+            measureId = this.host
+                .createSelectionIdBuilder()
+                .withMeasure(this.viewModel.measure)
+                .createSelectionId();
 
         this.debug.log('Creating legend data...');
 
-        // Instantiate bare-minimum legend data
-        let legendData: LegendData = {
-            title: this.settings.legend.showTitle
-                ? this.settings.legend.titleText
-                    ? this.settings.legend.titleText
-                    : measureOnly
-                    ? null
-                    : this.viewModel.dataViewMetadata.categoryDisplayName
-                : null,
-            fontSize: this.settings.legend.fontSize,
-            labelColor: this.settings.legend.fontColor,
-            dataPoints: []
-        };
-
-        if (!this.errorState && this.settings.dataPoints.show) {
-            // If colouring by category, push in the individual values, or group
-            if (this.settings.legend.showCategories) {
-                if (measureOnly) {
-                    legendData.dataPoints = [
-                        {
-                            label: `${this.viewModel.dataViewMetadata.measureDisplayName}`,
-                            color: this.settings.dataColours.defaultFillColour,
-                            markerShape: MarkerShape.circle,
-                            selected: false,
-                            identity: this.viewModel.categories[0].selectionId
-                        }
-                    ];
-                } else {
-                    legendData.dataPoints = this.viewModel.categories.map(
-                        c => ({
-                            label: c.displayName.formattedName,
-                            color: c.colour,
-                            markerShape: MarkerShape.circle,
-                            selected: false,
-                            identity: c.selectionId
-                        })
-                    );
-                }
-            }
-
-            // Add specific items for violin annotations (we'll clean up afterwards)
-
-            // Spacer (to allow us to provide a small amount of spacing)
-            if (
-                this.settings.legend.showCategories &&
-                this.settings.legend.showStatisticalPoints
-            ) {
-                legendData.dataPoints.push({
-                    label: this.settings.legend.spacerText,
-                    color: '#000000',
-                    markerShape: MarkerShape.circle,
-                    selected: false,
-                    identity: this.host
-                        .createSelectionIdBuilder()
-                        .withMeasure(this.settings.legend.spacerText)
-                        .createSelectionId()
-                });
-            }
-
-            if (this.settings.legend.showStatisticalPoints) {
-                // Barcode plot specifics
-                if (this.settings.dataPoints.plotType === 'barcodePlot') {
-                    // Data points
-                    legendData.dataPoints.push({
-                        label: this.viewModel.legend.dataPointText,
-                        color: '#000000',
-                        markerShape: MarkerShape.circle,
-                        selected: false,
-                        identity: this.host
-                            .createSelectionIdBuilder()
-                            .withMeasure(this.viewModel.legend.dataPointText)
-                            .createSelectionId()
-                    });
-                }
-
-                // Quartiles
-                if (
-                    this.settings.dataPoints.showQuartiles &&
-                    this.settings.dataPoints.plotType !== 'boxPlot'
-                ) {
-                    if (this.viewModel.legend.quartilesMatch) {
-                        legendData.dataPoints.push({
-                            label: this.viewModel.legend.quartileCombinedText,
-                            color: '#000000',
-                            markerShape: MarkerShape.circle,
-                            selected: false,
-                            identity: this.host
-                                .createSelectionIdBuilder()
-                                .withMeasure(
-                                    this.viewModel.legend.quartileCombinedText
+        // Instantiate bare-minimum legend data. This will get cleaned up afterwards.
+        this.data = {
+            title: this.getTitleText(legend, measureOnly),
+            fontSize: legend.fontSize,
+            labelColor: legend.fontColor,
+            dataPoints:
+                (!this.errorState &&
+                    dataPoints.show && [
+                        // Individual category
+                        ...getLegendDataPoint(
+                            legend.showCategories && measureOnly,
+                            this.viewModel.dataViewMetadata.measureDisplayName,
+                            this.viewModel.categories[0].selectionId,
+                            this.settings.dataColours.defaultFillColour
+                        ),
+                        ...(this.viewModel.categories
+                            .map(c =>
+                                getLegendDataPoint(
+                                    !measureOnly,
+                                    c.displayName.formattedName,
+                                    c.selectionId,
+                                    c.colour
                                 )
-                                .createSelectionId()
-                        });
-                    } else {
-                        legendData.dataPoints.push(
-                            {
-                                label: this.viewModel.legend.quartile1Text,
-                                color: '#000000',
-                                markerShape: MarkerShape.circle,
-                                selected: false,
-                                identity: this.host
-                                    .createSelectionIdBuilder()
-                                    .withMeasure(
-                                        this.viewModel.legend.quartile1Text
-                                    )
-                                    .createSelectionId()
-                            },
-                            {
-                                label: this.viewModel.legend.quartile3Text,
-                                color: '#000000',
-                                markerShape: MarkerShape.circle,
-                                selected: false,
-                                identity: this.host
-                                    .createSelectionIdBuilder()
-                                    .withMeasure(
-                                        this.viewModel.legend.quartile3Text
-                                    )
-                                    .createSelectionId()
-                            }
-                        );
-                    }
-                }
-
-                // Median
-                if (this.settings.dataPoints.showMedian) {
-                    legendData.dataPoints.push({
-                        label: this.viewModel.legend.medianText,
-                        color: '#000000',
-                        markerShape: MarkerShape.circle,
-                        selected: false,
-                        identity: this.host
-                            .createSelectionIdBuilder()
-                            .withMeasure(this.viewModel.legend.medianText)
-                            .createSelectionId()
-                    });
-                }
-
-                // Mean
-                if (
-                    this.settings.dataPoints.plotType !== 'barcodePlot' &&
-                    this.settings.dataPoints.showMean
-                ) {
-                    legendData.dataPoints.push({
-                        label: this.viewModel.legend.meanText,
-                        color: '#000000',
-                        markerShape: MarkerShape.circle,
-                        selected: false,
-                        identity: this.host
-                            .createSelectionIdBuilder()
-                            .withMeasure(this.viewModel.legend.meanText)
-                            .createSelectionId()
-                    });
-                }
-            }
-        }
-
+                            )
+                            .flat() || []),
+                        // Spacer
+                        ...getLegendDataPoint(
+                            showStatisticalPoints && legend.showCategories,
+                            this.settings.legend.spacerText,
+                            measureId
+                        ),
+                        // Data points
+                        ...getLegendDataPoint(
+                            showStatisticalPoints &&
+                                dataPoints.plotType === 'barcodePlot',
+                            legend.dataPointText,
+                            measureId
+                        ),
+                        // Combined quartiles
+                        ...getLegendDataPoint(
+                            showStatisticalPoints &&
+                                dataPoints.showQuartiles &&
+                                quartilesMatch &&
+                                dataPoints.plotType !== 'boxPlot',
+                            legend.quartileCombinedText,
+                            measureId
+                        ),
+                        // 1st Quartile (if not matching)
+                        ...getLegendDataPoint(
+                            showStatisticalPoints &&
+                                dataPoints.showQuartiles &&
+                                !quartilesMatch &&
+                                dataPoints.plotType !== 'boxPlot',
+                            legend.quartile1Text,
+                            measureId
+                        ),
+                        // 3rd Quartile (if not matching)
+                        ...getLegendDataPoint(
+                            showStatisticalPoints &&
+                                dataPoints.showQuartiles &&
+                                !quartilesMatch &&
+                                dataPoints.plotType !== 'boxPlot',
+                            legend.quartile3Text,
+                            measureId
+                        ),
+                        // Median
+                        ...getLegendDataPoint(
+                            showStatisticalPoints && dataPoints.showMedian,
+                            legend.medianText,
+                            measureId
+                        ),
+                        // Mean
+                        ...getLegendDataPoint(
+                            showStatisticalPoints &&
+                                dataPoints.showMean &&
+                                dataPoints.plotType !== 'barcodePlot',
+                            legend.meanText,
+                            measureId
+                        )
+                    ]) ||
+                []
+        };
         this.debug.log('Legend data instantiated.');
+    }
 
-        this.data = legendData;
+    private getTitleText(legend: LegendSettings, measureOnly: boolean): string {
+        return legend.showTitle
+            ? legend.titleText
+                ? legend.titleText
+                : measureOnly
+                ? null
+                : this.viewModel.dataViewMetadata.categoryDisplayName
+            : null;
     }
 
     /**
@@ -319,7 +262,7 @@ export class ViolinLegend {
         this.debug.log('Fixing up legend icons for new shapes...');
         let vl = this;
 
-        d3.selectAll(customIconClass).remove();
+        d3.selectAll(`.${customIconClass}`).remove();
         d3.selectAll('.legendItem').each(function(d: LegendDataPoint, i) {
             // Element and positioning
             let node = d3.select(this),
@@ -445,10 +388,27 @@ const getDynamicAttributes = (
             return {
                 className: 'unknown',
                 strokeLineStyle: 'solid',
-                stroke: '#000000'
+                stroke: defaultFillColour
             };
     }
 };
+
+const getLegendDataPoint = (
+    show: boolean,
+    label: string,
+    identity: ISelectionId = null,
+    color: string = defaultFillColour
+): LegendDataPoint[] =>
+    (show && [
+        {
+            label: label,
+            color,
+            markerShape: MarkerShape.circle,
+            selected: false,
+            identity
+        }
+    ]) ||
+    [];
 
 const setHidden = (selection: d3.Selection<LegendDataPoint>) => {
     selection.attr('visibility', 'hidden');

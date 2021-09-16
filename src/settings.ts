@@ -193,7 +193,7 @@ export class DataLimitSettings {
     public showInfo: boolean = true;
     public showCustomVisualNotes: boolean = true;
     // Use to prevent the visual from rendering too many categories and breaking the browser
-    public categoryLimit: number = 10;
+    public categoryLimit: number = 100;
 }
 
 /**
