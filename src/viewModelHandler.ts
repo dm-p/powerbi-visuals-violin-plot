@@ -608,14 +608,7 @@ export class ViewModelHandler {
         };
         if (this.settings.yAxis.showTitle) {
             debug.log('Y-axis title initial setup...');
-
-            this.viewModel.yAxis.titleDisplayName = this.getTailoredDisplayName(
-                this.viewModel.yAxis.titleTextProperties.text,
-                this.viewModel.yAxis.titleTextProperties,
-                this.viewModel.yAxis.dimensions
-                    ? this.viewModel.yAxis.dimensions.height
-                    : this.viewport.height
-            );
+            this.viewModel.yAxis.titleDisplayName = this.yAxisTitleDisplayName();
         }
 
         // Resync if showing the axis at all
@@ -681,23 +674,7 @@ export class ViewModelHandler {
         // Repeat for the X-Axis title
         if (this.settings.xAxis.showTitle) {
             debug.log('X-axis title...');
-            let xAxisTitleFormatted = !this.categoryMetadata
-                ? ''
-                : (!this.settings.xAxis.titleText
-                      ? this.categoryMetadata.displayName
-                      : this.settings.xAxis.titleText
-                  ).trim();
-            this.viewModel.xAxis.titleDisplayName = this.getTailoredDisplayName(
-                xAxisTitleFormatted,
-                {
-                    fontFamily: this.settings.xAxis.titleFontFamily,
-                    fontSize: pixelConverter.toString(
-                        this.settings.xAxis.titleFontSize
-                    ),
-                    text: xAxisTitleFormatted
-                },
-                this.viewModel.xAxis.dimensions.width
-            );
+            this.viewModel.xAxis.titleDisplayName = this.xAxisTitleDisplayName();
         }
 
         // Resync if showing the axis at all
@@ -1506,5 +1483,37 @@ export class ViewModelHandler {
             tailoredWidth: tailoredWidth,
             collapsed: tailoredName === '...'
         };
+    }
+
+    private yAxisTitleDisplayName = () =>
+        this.getTailoredDisplayName(
+            this.viewModel.yAxis.titleTextProperties.text,
+            this.viewModel.yAxis.titleTextProperties,
+            this.viewModel.yAxis.dimensions
+                ? this.viewModel.yAxis.dimensions.height
+                : this.viewport.height
+        );
+
+    private xAxisTitleDisplayName(): IDisplayName {
+        return this.getTailoredDisplayName(
+            this.getXAxisTitleFormatted(),
+            {
+                fontFamily: this.settings.xAxis.titleFontFamily,
+                fontSize: pixelConverter.toString(
+                    this.settings.xAxis.titleFontSize
+                ),
+                text: this.getXAxisTitleFormatted()
+            },
+            this.viewModel.xAxis.dimensions.width
+        );
+    }
+
+    private getXAxisTitleFormatted() {
+        return !this.categoryMetadata
+            ? ''
+            : (!this.settings.xAxis.titleText
+                  ? this.categoryMetadata.displayName
+                  : this.settings.xAxis.titleText
+              ).trim();
     }
 }

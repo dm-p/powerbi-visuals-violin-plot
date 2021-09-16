@@ -11,8 +11,14 @@ import positionChartArea = legend.positionChartArea;
 import * as d3 from 'd3';
 
 import { VisualDebugger } from './visualDebugger';
-import { VisualSettings } from './settings';
-import { IViewModel } from './models';
+import { DataPointSettings, VisualSettings } from './settings';
+import { IViewModel, ILegend as IVMLegend } from './models';
+import { LegendDataPoint } from 'powerbi-visuals-utils-chartutils/lib/legend/legendInterfaces';
+
+const itemRadius = 5,
+    boxStrokeWidth = 1,
+    lineStrokeWidth = 2,
+    customIconClass = 'customLegendIcon';
 
 export class ViolinLegend {
     public legend: ILegend;
@@ -313,27 +319,11 @@ export class ViolinLegend {
         this.debug.log('Fixing up legend icons for new shapes...');
         let vl = this;
 
-        d3.selectAll('.customLegendIcon').remove();
-        d3.selectAll('.legendItem').each(function(d, i) {
+        d3.selectAll(customIconClass).remove();
+        d3.selectAll('.legendItem').each(function(d: LegendDataPoint, i) {
             // Element and positioning
             let node = d3.select(this),
-                icon = node.select('.legendIcon'),
-                text = node.select('.legendText'),
-                radius = 5,
-                hiddenIconAttributes = {
-                    visibility: 'hidden'
-                },
-                boxStrokeWidth = 1,
-                boxAttributes = {
-                    x: d.glyphPosition.x - radius,
-                    y: d.glyphPosition.y - radius,
-                    width: radius * 2,
-                    height: radius * 2,
-                    stroke: vl.viewModel.legend.boxColour,
-                    'stroke-width': `1px`,
-                    fill: vl.viewModel.legend.boxColour,
-                    'fill-opacity': vl.viewModel.legend.boxOpacity
-                };
+                icon = node.select('.legendIcon');
 
             vl.debug.log('Legend point data', d);
             switch (d.tooltip) {
@@ -349,137 +339,183 @@ export class ViolinLegend {
                 case vl.viewModel.legend.quartile3Text:
                     vl.debug.log('Line: doing further checks...');
 
-                    let strokeLineStyle, stroke, className;
+                    const {
+                        strokeLineStyle,
+                        stroke,
+                        className
+                    } = getDynamicAttributes(
+                        d,
+                        vl.viewModel.legend,
+                        vl.settings.dataPoints
+                    );
 
-                    switch (d.tooltip) {
-                        case vl.viewModel.legend.medianText:
-                            vl.debug.log('Median info: re-style');
-                            className = 'median';
-                            strokeLineStyle =
-                                vl.settings.dataPoints[`medianStrokeLineStyle`];
-                            stroke = vl.settings.dataPoints.medianFillColour;
-                            break;
-                        case vl.viewModel.legend.quartileCombinedText:
-                            vl.debug.log('Quartiles (combined): re-style');
-                            className = 'quartilesCombined';
-                            strokeLineStyle =
-                                vl.settings.dataPoints[
-                                    `quartile1StrokeLineStyle`
-                                ];
-                            stroke = vl.settings.dataPoints.quartile1FillColour;
-                            break;
-                        case vl.viewModel.legend.quartile1Text:
-                            vl.debug.log('Quartile 1: re-style');
-                            className = 'quartile1';
-                            strokeLineStyle =
-                                vl.settings.dataPoints[
-                                    `quartile1StrokeLineStyle`
-                                ];
-                            stroke = vl.settings.dataPoints.quartile1FillColour;
-                            break;
-                        case vl.viewModel.legend.quartile3Text:
-                            vl.debug.log('Quartile 3: re-style');
-                            className = 'quartile3';
-                            strokeLineStyle =
-                                vl.settings.dataPoints[
-                                    `quartile3StrokeLineStyle`
-                                ];
-                            stroke = vl.settings.dataPoints.quartile3FillColour;
-                            break;
-                        default:
-                            vl.debug.log(
-                                'Chart line: not catered for yet. Using defaults.'
-                            );
-                            className = 'unknown';
-                            strokeLineStyle = 'solid';
-                            stroke = '#000000';
-                            break;
-                    }
-
-                    icon.attr(hiddenIconAttributes);
-                    node.append('rect')
-                        .classed('customLegendIcon', true)
-                        .attr(boxAttributes);
+                    icon.call(setHidden);
+                    node.append('rect').call(
+                        setBoxAttributes,
+                        vl.viewModel.legend,
+                        itemRadius
+                    );
                     node.append('line')
-                        .classed('customLegendIcon', true)
-                        .classed(className, true)
-                        .classed(strokeLineStyle, true)
-                        .attr({
-                            x1: d.glyphPosition.x - radius + boxStrokeWidth,
-                            x2: d.glyphPosition.x + radius - boxStrokeWidth,
-                            y1: d.glyphPosition.y,
-                            y2: d.glyphPosition.y
-                        })
-                        .style({
-                            stroke: stroke,
-                            'stroke-width': 2
-                        });
+                        .call(setLineAttributes, stroke, className)
+                        .classed(strokeLineStyle, true);
                     break;
 
                 case vl.viewModel.legend.meanText:
                     vl.debug.log('Mean info: re-style');
-                    icon.attr(hiddenIconAttributes);
-                    node.append('rect')
-                        .classed('customLegendIcon', true)
-                        .attr(boxAttributes);
+                    icon.call(setHidden);
+                    node.append('rect').call(
+                        setBoxAttributes,
+                        vl.viewModel.legend,
+                        itemRadius
+                    );
                     node.append('circle')
-                        .classed('customLegendIcon', true)
-                        .attr({
-                            cx: d.glyphPosition.x,
-                            cy: d.glyphPosition.y,
-                            r: radius - boxStrokeWidth * 2
-                        })
                         .style({
                             fill: vl.settings.dataPoints.meanFillColourInner,
                             stroke: vl.settings.dataPoints.meanFillColour,
                             'stroke-width': 2
-                        });
+                        })
+                        .call(setCircleAttributes);
                     break;
 
                 case vl.viewModel.legend.dataPointText:
                     vl.debug.log('Data Point info: re-style');
-                    icon.attr(hiddenIconAttributes);
-                    node.append('rect')
-                        .classed('customLegendIcon', true)
-                        .attr(boxAttributes);
-                    node.append('line')
-                        .classed('customLegendIcon', true)
-                        .classed('dataPoint', true)
-                        .attr({
-                            x1: d.glyphPosition.x - radius + boxStrokeWidth,
-                            x2: d.glyphPosition.x + radius - boxStrokeWidth,
-                            y1: d.glyphPosition.y,
-                            y2: d.glyphPosition.y
-                        })
-                        .style({
-                            stroke: `${vl.settings.dataPoints.barColour}`,
-                            'stroke-width': 2
-                        });
+                    icon.call(setHidden);
+                    node.append('rect').call(
+                        setBoxAttributes,
+                        vl.viewModel.legend,
+                        itemRadius
+                    );
+                    node.append('line').call(
+                        setLineAttributes,
+                        vl.settings.dataPoints.barColour,
+                        'datapoint'
+                    );
                     break;
 
                 default:
                     vl.debug.log('Violin series: re-style');
-                    icon.attr(hiddenIconAttributes);
-                    node.append('path')
-                        .classed('customLegendIcon', true)
-                        .attr({
-                            // This draws a violin-like shape based on the radius
-                            d: `  M${radius},-${radius}\
-                                                    C${radius},${radius} -${radius},${radius} ${radius},${radius *
-                                2}\
-                                                    C${radius *
-                                                        3},${radius} ${radius},${radius} ${radius},-${radius}`,
-                            transform: `translate(${d.glyphPosition.x -
-                                radius}, ${d.glyphPosition.y - radius})`
-                        })
-                        .style({
-                            fill: icon.style('fill'),
-                            'transform-origin': 'top center',
-                            width: '10px',
-                            height: '10px'
-                        });
+                    icon.call(setHidden);
+                    node.append('path').call(
+                        setViolinAttributes,
+                        icon.style('fill')
+                    );
                     break;
             }
         });
     }
 }
+
+interface ICustomLegendDynamicAttributes {
+    className: string;
+    stroke: string;
+    strokeLineStyle: string;
+}
+
+const getDynamicAttributes = (
+    d: LegendDataPoint,
+    legend: IVMLegend,
+    dataPoints: DataPointSettings
+): ICustomLegendDynamicAttributes => {
+    switch (d.tooltip) {
+        case legend.medianText:
+            return {
+                className: 'median',
+                strokeLineStyle: dataPoints[`medianStrokeLineStyle`],
+                stroke: dataPoints.medianFillColour
+            };
+        case legend.quartileCombinedText:
+            return {
+                className: 'quartilesCombined',
+                strokeLineStyle: dataPoints[`quartile1StrokeLineStyle`],
+                stroke: dataPoints.quartile1FillColour
+            };
+        case legend.quartile1Text:
+            return {
+                className: 'quartile1',
+                strokeLineStyle: dataPoints[`quartile1StrokeLineStyle`],
+                stroke: dataPoints.quartile1FillColour
+            };
+        case legend.quartile3Text:
+            return {
+                className: 'quartile3',
+                strokeLineStyle: dataPoints[`quartile3StrokeLineStyle`],
+                stroke: dataPoints.quartile3FillColour
+            };
+        default:
+            return {
+                className: 'unknown',
+                strokeLineStyle: 'solid',
+                stroke: '#000000'
+            };
+    }
+};
+
+const setHidden = (selection: d3.Selection<LegendDataPoint>) => {
+    selection.attr('visibility', 'hidden');
+};
+
+const setBoxAttributes = (
+    selection: d3.Selection<LegendDataPoint>,
+    legend: IVMLegend
+) => {
+    selection
+        .classed(customIconClass, true)
+        .attr('x', d => d.glyphPosition.x - itemRadius)
+        .attr('y', d => d.glyphPosition.y - itemRadius)
+        .attr('width', itemRadius * 2)
+        .attr('height', itemRadius * 2)
+        .attr('stroke', legend.boxColour)
+        .attr('stroke-width', 1)
+        .attr('fill', legend.boxColour)
+        .attr('fill-opacity', legend.boxOpacity);
+};
+
+const setCircleAttributes = (selection: d3.Selection<LegendDataPoint>) => {
+    selection
+        .classed(customIconClass, true)
+        .attr('cx', d => d.glyphPosition.x)
+        .attr('cy', d => d.glyphPosition.y)
+        .attr('r', itemRadius - boxStrokeWidth * 2);
+};
+
+const setLineAttributes = (
+    selection: d3.Selection<LegendDataPoint>,
+    stroke: string,
+    className: string
+) => {
+    selection
+        .classed(customIconClass, true)
+        .classed(className, true)
+        .attr('x1', d => d.glyphPosition.x - itemRadius + boxStrokeWidth)
+        .attr('x2', d => d.glyphPosition.x + itemRadius - boxStrokeWidth)
+        .attr('y1', d => d.glyphPosition.y)
+        .attr('y2', d => d.glyphPosition.y)
+        .attr('stroke', stroke)
+        .attr('stroke-width', lineStrokeWidth);
+};
+
+const setViolinAttributes = (
+    selection: d3.Selection<LegendDataPoint>,
+    fill: string
+) => {
+    selection
+        .classed(customIconClass, true)
+        .attr('d', getViolinSvgPath(itemRadius))
+        .attr(
+            'transform',
+            d =>
+                `translate(${d.glyphPosition.x - itemRadius}, ${d.glyphPosition
+                    .y - itemRadius})`
+        )
+        .attr('fill', fill)
+        .attr('transform-origin', 'top center')
+        .attr('width', 10)
+        .attr('height', 10);
+};
+
+/**
+ * Generates SVG path definition for the legeng violin shape
+ */
+const getViolinSvgPath = (radius: number) =>
+    `M${radius},-${radius} C${radius},${radius} -${radius},${radius} ${radius},${radius *
+        2} C${radius * 3},${radius} ${radius},${radius} ${radius},-${radius}`;

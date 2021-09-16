@@ -5,10 +5,10 @@ import { valueFormatter } from 'powerbi-visuals-utils-formattingutils';
 
 import * as d3 from 'd3';
 
-import { VisualSettings } from './settings';
+import { TooltipSettings, VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
-import { getHighlightedDataPoints } from './visualHelpers';
+import { getHighlightedDataPoints, visualCollapsed } from './visualHelpers';
 
 export { bindWarningTooltipEvents, bindSeriesTooltipEvents };
 
@@ -133,184 +133,144 @@ const getTooltipData = (
     v: ICategory,
     highlightedValue?: IDataPointAggregate
 ): VisualTooltipDataItem[] => {
-    let tooltips: VisualTooltipDataItem[] = [];
     const debug = tooltipDebugger(settings),
-        measureFormat = viewModel.yAxis.labelFormatter.options.format,
-        tts = settings.tooltip;
-
-    tooltips.push(
-        {
-            displayName: 'Category',
-            value: v.displayName.formattedName
-                ? v.displayName.formattedName
-                : 'All Data',
-            color: v.colour
-        },
-        formatTooltipValue(
-            '# Samples',
-            measureFormat,
-            v.statistics.count,
-            tts.numberSamplesDisplayUnits,
-            tts.numberSamplesPrecision,
-            viewModel.locale
-        )
-    );
-    tts.showMaxMin &&
-        tooltips.push(
-            formatTooltipValue(
+        format = viewModel.yAxis.labelFormatter.options.format,
+        tts = settings.tooltip,
+        locale = viewModel.locale,
+        stats = v.statistics,
+        tooltips: VisualTooltipDataItem[] = [
+            getTooltipCategory(v),
+            ...getTooltipValue(
+                true,
+                stats.count,
+                '# Samples',
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showMaxMin,
+                stats.max,
                 'Maximum',
-                measureFormat,
-                v.statistics.max,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
+                tts,
+                locale,
+                format
             ),
-            formatTooltipValue(
+            ...getTooltipValue(
+                tts.showMaxMin,
+                stats.min,
                 'Minimum',
-                measureFormat,
-                v.statistics.min,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showSpan &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showSpan,
+                stats.span,
                 'Span (Min to Max)',
-                measureFormat,
-                v.statistics.span,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showMedian &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showMedian,
+                stats.median,
                 'Median',
-                measureFormat,
-                v.statistics.median,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showMean &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showMean,
+                stats.mean,
                 'Mean',
-                measureFormat,
-                v.statistics.mean,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showDeviation &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showDeviation,
+                stats.deviation,
                 'Standard Deviation',
-                measureFormat,
-                v.statistics.deviation,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showQuartiles &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showQuartiles,
+                stats.quartile3,
                 'Upper Quartile',
-                measureFormat,
-                v.statistics.quartile3,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
+                tts,
+                locale,
+                format
             ),
-            formatTooltipValue(
+            ...getTooltipValue(
+                tts.showQuartiles,
+                stats.quartile1,
                 'Lower Quartile',
-                measureFormat,
-                v.statistics.quartile1,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showIqr &&
-        tooltips.push(
-            formatTooltipValue(
-                'Inter Quartile Range',
-                measureFormat,
-                v.statistics.iqr,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showConfidence &&
-        tooltips.push(
-            formatTooltipValue(
-                'Upper whisker (95%)',
-                measureFormat,
-                v.statistics.confidenceUpper,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
+                tts,
+                locale,
+                format
             ),
-            formatTooltipValue(
-                'Lower whisker (5%)',
-                measureFormat,
-                v.statistics.confidenceLower,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showBandwidth &&
-        settings.violin.specifyBandwidth &&
-        tooltips.push(
-            formatTooltipValue(
+            ...getTooltipValue(
+                tts.showIqr,
+                stats.iqr,
+                'Inter Quartile Range',
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showConfidence,
+                stats.confidenceUpper,
+                'Upper Whisker (95%)',
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showConfidence,
+                stats.confidenceLower,
+                'Lower Whisker (5%)',
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                settings.violin.specifyBandwidth && tts.showBandwidth,
+                stats.bandwidthActual,
                 'Bandwidth (Specified)',
-                measureFormat,
-                v.statistics.bandwidthActual,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    tts.showBandwidth &&
-        tooltips.push(
-            formatTooltipValue(
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                tts.showBandwidth,
+                stats.bandwidthSilverman,
                 `Bandwidth (Estimated${
                     settings.violin.specifyBandwidth ? ', N/A' : ''
                 })`,
-                measureFormat,
-                v.statistics.bandwidthSilverman,
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
-            )
-        );
-    highlightedValue &&
-        tooltips.push(
-            formatTooltipValue(
-                `${viewModel.measure} - Highlighted`,
-                measureFormat,
-                Number(highlightedValue.key),
-                tts.measureDisplayUnits,
-                tts.measurePrecision,
-                viewModel.locale
+                tts,
+                locale,
+                format
             ),
-            formatTooltipValue(
+            ...getTooltipValue(
+                highlightedValue && true,
+                Number(highlightedValue?.key),
+                `${viewModel.measure} - Highlighted`,
+                tts,
+                locale,
+                format
+            ),
+            ...getTooltipValue(
+                highlightedValue && true,
+                highlightedValue?.values?.count,
                 '# Samples with Highlighted Value',
-                measureFormat,
-                highlightedValue.values.count,
-                tts.numberSamplesDisplayUnits,
-                tts.numberSamplesPrecision,
-                viewModel.locale
+                tts,
+                locale,
+                format
             )
-        );
+        ];
     debug.log('Tooltip Data', tooltips);
     return tooltips;
 };
@@ -337,6 +297,34 @@ const handleWarningTooltip = (
         }
     }
 };
+
+const getTooltipCategory = (v: ICategory) => ({
+    displayName: 'Category',
+    value: v.displayName.formattedName
+        ? v.displayName.formattedName
+        : 'All Data',
+    color: v.colour
+});
+
+const getTooltipValue = (
+    show: boolean,
+    value: number,
+    label: string,
+    tts: TooltipSettings,
+    locale: string,
+    format: string
+) =>
+    (show && [
+        formatTooltipValue(
+            label,
+            format,
+            value,
+            tts.measureDisplayUnits,
+            tts.measurePrecision,
+            locale
+        )
+    ]) ||
+    [];
 
 const hideTooltip = (tooltipService: ITooltipService) => {
     const immediately = true;
