@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { IDataPointKde } from './models';
 
 /** Kernel density estimation (KDE) and support functions. Pretty much borrowed from Mike Bostock's and Andrew Sielen's Blocks:
  *      - https://bl.ocks.org/mbostock/4341954
@@ -16,7 +17,7 @@ export const kernelDensityEstimator = (
     kernel: (k: number) => number,
     bandwidth: number,
     values: number[]
-) => (sample: number[]) =>
+) => (sample: number[]): IDataPointKde[] =>
     values.map(x => ({
         x: x,
         y: d3.mean(sample, (v: number) => kernel((x - v) / bandwidth)),

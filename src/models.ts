@@ -397,6 +397,11 @@ export interface IDataPointAggregate {
     values: IStatistics;
 }
 
+export interface IInterpolationExtents {
+    min: number;
+    max: number;
+}
+
 /**
  * Used to specify side of the violin we're rendering, in order to reduce repeated code and manage position accordingly
  */

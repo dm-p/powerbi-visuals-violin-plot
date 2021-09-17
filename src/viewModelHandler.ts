@@ -26,7 +26,9 @@ import {
     IDataPointKde,
     IAxisLinear,
     IAxisCategorical,
-    IDisplayName
+    IDisplayName,
+    IDataPointAggregate,
+    IInterpolationExtents
 } from './models';
 import { getCategoricalObjectValue } from './visualHelpers';
 import { defaultBandwidth, VisualSettings } from './settings';
@@ -39,6 +41,7 @@ import {
     kernelDensityEstimator,
     kernels
 } from './kde';
+import { isNumberTruthy } from './utils';
 
 export class ViewModelHandler {
     viewModel: IViewModel;
@@ -761,7 +764,6 @@ export class ViewModelHandler {
     doKde() {
         // Set up debugging
         let debug = new VisualDebugger(this.debug);
-        debug.log('Starting doKde');
         debug.log('Performing KDE on visual data...');
         debug.profileStart();
 
@@ -772,257 +774,76 @@ export class ViewModelHandler {
             // Keep track of the axis limits so that we can adjust them later if necessary
             let yMin = this.viewModel.yAxis.domain[0],
                 yMax = this.viewModel.yAxis.domain[1];
-
-            debug.reportExecutionTime();
             debug.log('Kernel Density Estimation...');
 
             // Map out KDE for each series (we might be able to do this in-line when we refactor the data mapping)
             this.viewModel.categories.map(c => {
-                // Makes logging a bit less complex when discerning between series
-                let series = c.name ? c.name : 'ALL';
-
-                /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
-                 *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
-                 *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
-                 *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the
-                 *  process sufficiently straightforward for the end-user...
-                 */
-                let kde = kernelDensityEstimator(
-                    this.kernel.window,
-                    c.statistics.bandwidthActual,
-                    this.viewModel.xVaxis.scale.ticks(
-                        parseInt(this.settings.violin.resolution)
-                    )
-                );
+                const series = c.name ? c.name : 'ALL';
 
                 /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out
                  *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
                  */
-                let kdeData = kde(c.dataPoints),
-                    // If not clamping then we'll always cap at the min/max boundaries of the series
-                    interpolateMin = c.statistics.min,
-                    interpolateMax = c.statistics.max;
-                debug.log(
-                    `[${series}] Interpolation checkpoint #1 (min/max) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
-                );
-
+                let kdeData = this.getNewKDE(c.statistics.bandwidthActual)(
+                        c.dataPoints
+                    ),
+                    interpolate = this.getInterpolationStage1(
+                        c.statistics,
+                        series,
+                        debug
+                    );
                 if (!this.settings.violin.clamp) {
-                    // Second phase - we try to converge the chart within the confines of the series min/max
-                    debug.log(
-                        `[${series}] Convergence required on violin plot. Doing further interpolation checks and processing...`
-                    );
-                    (interpolateMin = d3.max(
-                        kdeData.filter(
-                            d => d.x < c.statistics.min && d.y === 0
-                        ),
-                        d => d.x
-                    )),
-                        (interpolateMax = d3.min(
-                            kdeData.filter(
-                                d => d.x > c.statistics.max && d.y === 0
-                            ),
-                            d => d.x
-                        ));
-                    debug.log(
-                        `[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
+                    // Re-calc interpolation
+                    interpolate = this.getRevisedConvergedInterpolation(
+                        kdeData,
+                        c.statistics,
+                        c.dataPoints,
+                        this.kernel,
+                        this.viewModel.statistics.bandwidthActual,
+                        series,
+                        debug
                     );
 
-                    // Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one
-                    if (!interpolateMin || !interpolateMax) {
+                    // If our KDE value exceeds the y-axis domain, then we need to extend it to fit the plot.
+                    if (
+                        isNumberTruthy(interpolate.min) &&
+                        interpolate.min < yMin
+                    ) {
                         debug.log(
-                            `[${series}] Couldn\'t converge following checkpoint #2. Applying further KDE to data to find a suitable point...`
+                            `[${series}] Interpolation exceeds y-axis minimum (currently ${yMin}). Reducing to ${interpolate.min}`
                         );
-                        let kdeRoot = kernelDensityRoot(
-                            this.kernel.window,
-                            this.viewModel.statistics.bandwidthActual,
-                            c.dataPoints
-                        );
-
-                        if (!interpolateMin) {
-                            interpolateMin = kernelDensityInterpolator(
-                                c.statistics.min,
-                                ELimit.min,
-                                kdeRoot
-                            );
-                            debug.log(
-                                `[${series}] Applied KDE to minimum value. New value: ${interpolateMin}`
-                            );
-                        }
-                        if (!interpolateMax) {
-                            interpolateMax = kernelDensityInterpolator(
-                                c.statistics.max,
-                                ELimit.max,
-                                kdeRoot
-                            );
-                            debug.log(
-                                `[${series}] Applied KDE to maximum value. New value: ${interpolateMax}`
-                            );
-                        }
-                        debug.log(
-                            `[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
-                        );
+                        yMin = interpolate.min;
                     }
-
-                    /** If our KDE value exceeds the y-axis domain, then we need to extend it to fit the plot.
-                     *  There are some other adjustments to make as well (detailed in comments below).
-                     */
-                    if (interpolateMin && interpolateMin < yMin) {
+                    if (
+                        isNumberTruthy(interpolate.max) &&
+                        interpolate.max > yMax
+                    ) {
                         debug.log(
-                            `[${series}] Interpolation exceeds y-axis minimum (currently ${yMin}). Reducing to ${interpolateMin}`
+                            `[${series}] Interpolation exceeds y-axis maximum (currently ${yMax}). Extending to ${interpolate.max}`
                         );
-                        yMin = interpolateMin;
+                        yMax = interpolate.max;
                     }
-                    if (interpolateMax && interpolateMax > yMax) {
-                        debug.log(
-                            `[${series}] Interpolation exceeds y-axis maximum (currently ${yMax}). Extending to ${interpolateMax}`
-                        );
-                        yMax = interpolateMax;
-                    }
-
-                    /** Add an array element to the KDE if less than our original test ranges. Otherwise, set our lowest
-                     *  sample to zero to make it converge nicely (this is a bit hacky but prevents us from extending the axis
-                     *  if we don't really need to for these edge cases).
-                     */
-                    if (interpolateMin < kdeData[0].x) {
-                        debug.log(
-                            `[${series}] Interpolation minimum exceeds KDE values. Adding convergence point to start of KDE array.`
-                        );
-                        kdeData.unshift({
-                            x: interpolateMin,
-                            y: 0,
-                            remove: false
-                        });
-                    }
-
-                    /** Highest value is a little different, as it can exist somewhere before the end of the array, so we need
-                     *  to find the correct element in there to apply the convergence point.
-                     */
-                    if (interpolateMax > kdeData[kdeData.length - 1].x) {
-                        debug.log(
-                            `[${series}] Interpolation maximum exceeds KDE values. Adding convergence point to end of KDE array.`
-                        );
-                        kdeData.push({
-                            x: interpolateMax,
-                            y: 0,
-                            remove: false
-                        });
-                    }
-
                     // We'll now re-process the array to ensure that we filter out the correct erroneous KDE values
-                    debug.log(
-                        `[${series}] Finding suitable KDE array min/max convergence points...`
+                    const kdeProcessed = this.getAdjustedKdeData(
+                        kdeData,
+                        interpolate,
+                        series,
+                        debug
                     );
-                    let foundExtentMax = false;
-
-                    kdeData = kdeData.map((d, i) => {
-                        // Grab the current data point; we'll return it unprocessed if no conditions are hit
-                        let kdePoint: IDataPointKde = {
-                            x: d.x,
-                            y: d.y,
-                            remove: false
-                        };
-
-                        // Converge anything outside of the min/max extents
-                        if (d.x <= interpolateMin || d.x >= interpolateMax) {
-                            kdePoint.y = 0;
-                        }
-
-                        // If we hit the minimum extent, then flag anything else that comes ahead of it, as we've already moved past them
-                        if (
-                            d.x < interpolateMin &&
-                            kdeData[i + 1] &&
-                            kdeData[i + 1].x < interpolateMin
-                        ) {
-                            kdePoint.remove = true;
-                        }
-
-                        // Deal with max extent
-                        if (d.x >= interpolateMax) {
-                            if (!foundExtentMax) {
-                                foundExtentMax = true;
-                            } else {
-                                kdePoint.remove = true;
-                            }
-                            kdePoint.y = 0;
-                        }
-
-                        return kdePoint;
-                    });
-
-                    // Filter out the data we don't need after processing it and we are go!
-                    debug.log(
-                        `[${series}] Removing erroneous KDE array elements...`
-                    );
-                    c.dataKde = kdeData.filter(d => d.remove === false);
+                    c.dataKde = kdeProcessed;
                 } else {
-                    // For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders
-                    const minBisect = d3.bisector((d: IDataPointKde) => d.x)
-                        .left;
-                    const maxBisect = d3.bisector((d: IDataPointKde) => d.x)
-                        .right;
-                    let min = minBisect(kdeData, interpolateMin),
-                        max = maxBisect(kdeData, interpolateMax);
-
-                    debug.log(
-                        `Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`
+                    c.dataKde = this.getClampedKdeData(
+                        kdeData,
+                        interpolate,
+                        debug
                     );
-
-                    // Add 2 max elements: the KDE plot value, and a 0 to converge
-                    debug.log('Resolving maximum values...');
-                    kdeData.splice(max, 0, {
-                        x: interpolateMax,
-                        y: kdeData[max > kdeData.length - 1 ? max - 1 : max].y,
-                        remove: false
-                    });
-                    kdeData.splice(max + 1, 0, {
-                        x: interpolateMax,
-                        y: 0,
-                        remove: false
-                    });
-
-                    // Add 2 min elements; similar to above
-                    debug.log('Resolving minimum values...');
-                    kdeData.splice(min, 0, {
-                        x: interpolateMin,
-                        y: kdeData[min === 0 ? 0 : min - 1].y,
-                        remove: false
-                    });
-                    kdeData.splice(min, 0, {
-                        x: interpolateMin,
-                        y: 0,
-                        remove: false
-                    });
-
-                    // Filter out anything outside our interpolation values
-                    debug.log('Filtering extents...');
-                    c.dataKde = kdeData
-                        .filter(d => d.x >= interpolateMin)
-                        .filter(d => d.x <= interpolateMax);
                 }
-
-                // Adjust violin scale to account for inner padding preferences
-                c.yVScale = d3.scale
-                    .linear()
-                    .range([0, this.viewModel.violinPlot.width / 2])
-                    .domain([0, d3.max<IDataPointKde>(c.dataKde, d => d.y)])
-                    .clamp(true);
-
-                // Now we have our scaling, we can generate the functions for each series
-                c.lineGen = d3.svg
-                    .line<IDataPointKde>()
-                    .interpolate(this.settings.violin.lineType)
-                    .x(d => this.viewModel.xVaxis.scale(d.x))
-                    .y(d => c.yVScale(d.y));
-                c.areaGen = d3.svg
-                    .area<IDataPointKde>()
-                    .interpolate(this.settings.violin.lineType)
-                    .x(d => this.viewModel.xVaxis.scale(d.x))
-                    .y0(c.yVScale(0))
-                    .y1(d => c.yVScale(d.y));
-
+                // Adjust violin scale to account for inner padding preferences & generate SVG series functions
+                c.yVScale = this.kdeVScale(c);
+                c.lineGen = this.kdeLineGen(c);
+                c.areaGen = this.kdeAreaGen(c);
                 // Store the min/max interpolation points for use later on
-                c.statistics.interpolateMin = interpolateMin;
-                c.statistics.interpolateMax = interpolateMax;
+                c.statistics.interpolateMin = interpolate.min;
+                c.statistics.interpolateMax = interpolate.max;
             });
 
             /** This adjusts the domain of each axis to match any adjustments we made earlier on.
@@ -1031,11 +852,287 @@ export class ViewModelHandler {
             this.updateYDomain([yMin, yMax], debug);
             this.resyncDimensions();
         }
-
         // We're done!
         debug.log('Finished doKde');
         this.addDebugProfile(debug, 'doKde');
         debug.footer();
+    }
+
+    private getRevisedConvergedInterpolation(
+        kdeData: IDataPointKde[],
+        statistics: IStatistics,
+        dataPoints: number[],
+        kernel: IKernel,
+        bandwidth: number,
+        series: string,
+        debug: VisualDebugger
+    ) {
+        // Second phase - we try to converge the chart within the confines of the series min/max
+        let interpolate = this.getInterpolationStage2(
+            kdeData,
+            statistics,
+            series,
+            debug
+        );
+
+        // Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one
+        if (
+            !isNumberTruthy(interpolate.min) ||
+            !isNumberTruthy(interpolate.max)
+        ) {
+            interpolate = this.getInterpolationStage3(
+                interpolate,
+                statistics,
+                dataPoints,
+                kernel,
+                bandwidth,
+                series,
+                debug
+            );
+        }
+        return interpolate;
+    }
+
+    private getInterpolationStage1(
+        statistics: IStatistics,
+        series: string,
+        debug: VisualDebugger
+    ): IInterpolationExtents {
+        const { min, max } = statistics;
+        debug.log(
+            `[${series}] Interpolation checkpoint #1 (min/max) - iMin: ${min}; sMin: ${min} iMax: ${max}; sMax: ${max}`
+        );
+        return {
+            min,
+            max
+        };
+    }
+
+    private getInterpolationStage2(
+        kdeData: IDataPointKde[],
+        statistics: IStatistics,
+        series: string,
+        debug: VisualDebugger
+    ): IInterpolationExtents {
+        debug.log(
+            `[${series}] Convergence required on violin plot. Doing further interpolation checks and processing...`
+        );
+        const min = d3.max(
+                kdeData.filter(d => d.x < statistics.min && d.y === 0),
+                d => d.x
+            ),
+            max = d3.min(
+                kdeData.filter(d => d.x > statistics.max && d.y === 0),
+                d => d.x
+            );
+        debug.log(
+            `[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${min}; sMin: ${statistics.min} iMax: ${max}; sMax: ${statistics.max}`
+        );
+        return { min, max };
+    }
+
+    private getInterpolationStage3(
+        interpolate: IInterpolationExtents,
+        statistics: IStatistics,
+        dataPoints: number[],
+        kernel: IKernel,
+        bandwidth: number,
+        series: string,
+        debug: VisualDebugger
+    ): IInterpolationExtents {
+        debug.log(
+            `[${series}] Couldn\'t converge following checkpoint #2. Applying further KDE to data to find a suitable point...`
+        );
+        let { min, max } = interpolate,
+            kdeRoot = kernelDensityRoot(kernel.window, bandwidth, dataPoints);
+
+        if (!isNumberTruthy(interpolate.min)) {
+            min = kernelDensityInterpolator(
+                statistics.min,
+                ELimit.min,
+                kdeRoot
+            );
+            debug.log(
+                `[${series}] Applied KDE to minimum value. New value: ${min}`
+            );
+        }
+        if (!isNumberTruthy(interpolate.max)) {
+            max = kernelDensityInterpolator(
+                statistics.max,
+                ELimit.max,
+                kdeRoot
+            );
+            debug.log(
+                `[${series}] Applied KDE to maximum value. New value: ${max}`
+            );
+        }
+        debug.log(
+            `[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${min}; sMin: ${statistics.min} iMax: ${max}; sMax: ${statistics.max}`
+        );
+        return { min, max };
+    }
+
+    private getAdjustedKdeData(
+        kdeData: IDataPointKde[],
+        interpolate: IInterpolationExtents,
+        series: string,
+        debug: VisualDebugger
+    ) {
+        /** Add an array element to the KDE if less than our original test ranges. Otherwise, set our lowest
+         *  sample to zero to make it converge nicely (this is a bit hacky but prevents us from extending the axis
+         *  if we don't really need to for these edge cases).
+         */
+        if (interpolate.min < kdeData[0].x) {
+            debug.log(
+                `[${series}] Interpolation minimum exceeds KDE values. Adding convergence point to start of KDE array.`
+            );
+            kdeData.unshift({
+                x: interpolate.min,
+                y: 0,
+                remove: false
+            });
+        }
+
+        /** Highest value is a little different, as it can exist somewhere before the end of the array, so we need
+         *  to find the correct element in there to apply the convergence point.
+         */
+        if (interpolate.max > kdeData[kdeData.length - 1].x) {
+            debug.log(
+                `[${series}] Interpolation maximum exceeds KDE values. Adding convergence point to end of KDE array.`
+            );
+            kdeData.push({
+                x: interpolate.max,
+                y: 0,
+                remove: false
+            });
+        }
+
+        debug.log(
+            `[${series}] Finding suitable KDE array min/max convergence points...`
+        );
+        let foundExtentMax = false,
+            processedKde: IDataPointKde[] = [];
+
+        kdeData.forEach((d, i) => {
+            // Grab the current data point; we'll return it unprocessed if no conditions are hit
+            let kdePoint: IDataPointKde = { ...d };
+
+            // Converge anything outside of the min/max extents
+            if (d.x <= interpolate.min || d.x >= interpolate.max) {
+                kdePoint.y = 0;
+            }
+
+            // If we hit the minimum extent, then flag anything else that comes ahead of it, as we've already moved past them
+            if (d.x < interpolate.min && kdeData[i + 1]?.x < interpolate.min) {
+                kdePoint.remove = true;
+            }
+
+            // Deal with max extent
+            if (d.x >= interpolate.max) {
+                if (!foundExtentMax) {
+                    foundExtentMax = true;
+                } else {
+                    kdePoint.remove = true;
+                }
+                kdePoint.y = 0;
+            }
+
+            processedKde.push(kdePoint);
+        });
+        // Filter out the data we don't need after processing it and we are go!
+        return processedKde.filter(d => d.remove === false);
+    }
+
+    /**
+     * If we want to clamp the KDE data, we add in a duplicate of the min/max elements with a zero y value for nice borders
+     */
+    private getClampedKdeData(
+        kdeData: IDataPointKde[],
+        interpolate: IInterpolationExtents,
+        debug: VisualDebugger
+    ) {
+        const minBisect = d3.bisector((d: IDataPointKde) => d.x).left,
+            maxBisect = d3.bisector((d: IDataPointKde) => d.x).right;
+        let min = minBisect(kdeData, interpolate.min),
+            max = maxBisect(kdeData, interpolate.max);
+
+        debug.log(
+            `Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`
+        );
+
+        // Add 2 max elements: the KDE plot value, and a 0 to converge
+        debug.log('Resolving maximum values...');
+        kdeData.splice(max, 0, {
+            x: interpolate.max,
+            y: kdeData[max > kdeData.length - 1 ? max - 1 : max].y,
+            remove: false
+        });
+        kdeData.splice(max + 1, 0, {
+            x: interpolate.max,
+            y: 0,
+            remove: false
+        });
+
+        // Add 2 min elements; similar to above
+        debug.log('Resolving minimum values...');
+        kdeData.splice(min, 0, {
+            x: interpolate.min,
+            y: kdeData[min === 0 ? 0 : min - 1].y,
+            remove: false
+        });
+        kdeData.splice(min, 0, {
+            x: interpolate.min,
+            y: 0,
+            remove: false
+        });
+
+        // Filter out anything outside our interpolation values
+        debug.log('Filtering extents...');
+        return kdeData
+            .filter(d => d.x >= interpolate.min)
+            .filter(d => d.x <= interpolate.max);
+    }
+
+    /**
+     *  Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
+     *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
+     *  seem to generate an array suitable enough to 'improve' the resolution of the line within the confines of the
+     *  viewport sufficiently. There may well be a better way to do this, but it will suffice for now and makes the
+     *  process sufficiently straightforward for the end-user...
+     */
+    private getNewKDE(bandwidth: number) {
+        return kernelDensityEstimator(
+            this.kernel.window,
+            bandwidth,
+            this.viewModel.xVaxis.scale.ticks(
+                parseInt(this.settings.violin.resolution)
+            )
+        );
+    }
+
+    private kdeVScale(category: ICategory) {
+        return d3.scale
+            .linear()
+            .range([0, this.viewModel.violinPlot.width / 2])
+            .domain([0, d3.max<IDataPointKde>(category.dataKde, d => d.y)])
+            .clamp(true);
+    }
+
+    private kdeLineGen(category: ICategory) {
+        return d3.svg
+            .line<IDataPointKde>()
+            .interpolate(this.settings.violin.lineType)
+            .x(d => this.viewModel.xVaxis.scale(d.x))
+            .y(d => category.yVScale(d.y));
+    }
+
+    private kdeAreaGen(category: ICategory) {
+        return d3.svg
+            .area<IDataPointKde>()
+            .interpolate(this.settings.violin.lineType)
+            .x(d => this.viewModel.xVaxis.scale(d.x))
+            .y0(category.yVScale(0))
+            .y1(d => category.yVScale(d.y));
     }
 
     /**
