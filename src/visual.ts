@@ -240,10 +240,10 @@ export class Visual implements IVisual {
                     this.host,
                     this.colourPalette
                 );
-                this.viewModelHandler.calculateStatistics();
+                this.viewModelHandler.calculateStatistics(options);
                 this.viewModelHandler.sortAndFilterData();
                 this.renderLegend();
-                this.viewModelHandler.initialiseAxes(options);
+                this.viewModelHandler.initialiseAxes();
                 break;
             }
             default: {
@@ -257,7 +257,7 @@ export class Visual implements IVisual {
 
         // Map the rest of the view model
         this.viewModelHandler.processAxisText();
-        this.viewModelHandler.doKde(options);
+        this.viewModelHandler.doKde();
         let viewModel = this.viewModelHandler.viewModel;
         debug.log('View model', viewModel);
 

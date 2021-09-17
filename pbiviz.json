@@ -4,7 +4,7 @@
         "displayName": "Violin Plot",
         "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D971",
         "visualClassName": "Visual",
-        "version": "1.4.0.14",
+        "version": "1.4.0.15",
         "description": "Use to visualise the distribution of your data.",
         "supportUrl": "https://github.com/dm-p/powerbi-visuals-violin-plot",
         "gitHubUrl": "https://github.com/dm-p/powerbi-visuals-violin-plot"

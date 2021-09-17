@@ -5,6 +5,7 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import ISandboxExtendedColorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 import Fill = powerbi.Fill;
+import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
 import {
     textMeasurementService,
     valueFormatter,
@@ -28,7 +29,7 @@ import {
     IDisplayName
 } from './models';
 import { getCategoricalObjectValue } from './visualHelpers';
-import { VisualSettings } from './settings';
+import { defaultBandwidth, VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 import {
     IKernel,
@@ -351,39 +352,33 @@ export class ViewModelHandler {
     /**
      * For the data that we have, calculate all necessary statistics we will need for drawing the plot
      */
-    calculateStatistics() {
+    calculateStatistics(options: VisualUpdateOptions) {
         // Set up debugging
-        let debug = new VisualDebugger(this.debug);
+        const debug = new VisualDebugger(this.debug);
         debug.log('Starting calculateStatistics');
         debug.log('Calculating statistics over view model data...');
         debug.profileStart();
 
+        // Allocate the selected kernel from the properties pane
+        debug.log(`Using ${this.settings.violin.kernel} kernel`);
+        this.kernel = kernels[this.settings.violin.kernel];
+
         // All data points
         debug.log('All data points...');
-        this.viewModel.statistics.count = this.allDataPoints.length;
-        this.viewModel.statistics.max = d3.max(this.allDataPoints);
-        this.viewModel.statistics.min = d3.min(this.allDataPoints);
-        this.viewModel.statistics.deviation = d3.deviation(this.allDataPoints);
-        this.viewModel.statistics.quartile1 = d3.quantile(
-            this.allDataPoints,
-            0.25
-        );
-        this.viewModel.statistics.quartile3 = d3.quantile(
-            this.allDataPoints,
-            0.75
-        );
-        this.viewModel.statistics.iqr =
-            this.viewModel.statistics.quartile3 -
-            this.viewModel.statistics.quartile1;
-        this.viewModel.statistics.span =
-            this.viewModel.statistics.max - this.viewModel.statistics.min;
+        const statistics = this.getStatistics(this.allDataPoints);
+        this.viewModel.statistics = {
+            ...statistics,
+            ...this.getBandwidthAllData(statistics, this.allDataPoints)
+        };
 
-        /** Process the remainder of the view model by category
-         *  #44: For no categories, we can re-use the min/max/iqr/deviation/span/quartiles withough going back to the d3.js well.
-         *          For those with categories, we'll calculate all data points once and re-use where we can to avoid unnecessary
-         *          array processing operations.
-         */
+        // Process the remainder of the view model by category
         debug.log('Updating categories...');
+        const dataViews = options.dataViews,
+            metadata = dataViews[0].metadata,
+            category = metadata.columns.filter(c => c.roles['category'])[0]
+                ? dataViews[0].categorical.categories[0]
+                : null;
+
         this.viewModel.categories.map((c, i) => {
             c.dataPoints.sort(d3.ascending).filter(v => v !== null);
 
@@ -404,68 +399,140 @@ export class ViewModelHandler {
                     .entries(c.dataPoints)
                     .sort((x, y) => d3.ascending(Number(x.key), Number(y.key)));
             }
-
-            c.statistics = <IStatistics>{
-                count: c.dataPoints.length,
-                min: d3.min(c.dataPoints),
-                max: d3.max(c.dataPoints),
-                deviation: d3.deviation(c.dataPoints),
-                quartile1: d3.quantile(c.dataPoints, 0.25),
-                quartile3: d3.quantile(c.dataPoints, 0.75),
-                confidenceLower: d3.quantile(c.dataPoints, 0.05),
-                median: d3.median(c.dataPoints),
-                mean: d3.mean(c.dataPoints),
-                confidenceUpper: d3.quantile(c.dataPoints, 0.95)
+            const statistics = this.getStatistics(c.dataPoints);
+            debug.log('Assigning category statistics...');
+            c.statistics = {
+                ...statistics,
+                ...this.getBandwidthByCategory(
+                    statistics,
+                    c.dataPoints,
+                    c.objectIndex,
+                    category
+                )
             };
-
-            c.statistics.iqr = c.statistics.quartile3 - c.statistics.quartile1;
-            c.statistics.span = c.statistics.max - c.statistics.min;
         });
-
-        /** Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now,
-         *  as it produces some very different ranges for individual series (which kind of makes sense when you're looking
-         *  at potentially different sub-ranges of data in groups). Also, if we wish to apply a manual override for bandwidth,
-         *  then the custom viz framework doesn't let us tailor this per series very easily.
-         *
-         *  Sources:
-         *      - https://core.ac.uk/download/pdf/6591111.pdf
-         *      - https://www.bauer.uh.edu/rsusmel/phd/ec1-26.pdf
-         *      - https://en.wikipedia.org/wiki/Kernel_density_estimation#A_rule-of-thumb_bandwidth_estimator
-         *      - https://stats.stackexchange.com/a/6671
-         *      - https://www.ssc.wisc.edu/~bhansen/718/NonParametrics1.pdf
-         */
-        if (this.settings.violin.type === 'line') {
-            debug.log('Instantiating KDE kernel and bandwidth settings...');
-
-            // Sigma function to account for outliers
-            let bwSigma = Math.min(
-                this.viewModel.statistics.deviation,
-                this.viewModel.statistics.iqr / 1.349
-            );
-
-            // Allocate the selected kernel from the properties pane
-            debug.log(`Using ${this.settings.violin.kernel} kernel`);
-            this.kernel = kernels[this.settings.violin.kernel];
-
-            /** Because bandwidth is subjective, we use Silverman's rule-of-thumb to try and predict the bandwidth based on the spread of data.
-             *  The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
-             *  to obtain from the tooltip, should they wish to.
-             */
-            this.viewModel.statistics.bandwidthSilverman =
-                this.kernel.factor *
-                bwSigma *
-                Math.pow(this.allDataPoints.length, -1 / 5);
-            this.viewModel.statistics.bandwidthActual =
-                this.settings.violin.specifyBandwidth &&
-                this.settings.violin.bandwidth
-                    ? this.settings.violin.bandwidth
-                    : this.viewModel.statistics.bandwidthSilverman;
-        }
 
         // We're done!
         debug.log('Finished calculateStatistics');
         this.addDebugProfile(debug, 'calculateStatistics');
         debug.footer();
+    }
+
+    /**
+     * Derive bandwidth based on Silverman's rule-of-thumb. We'll do this across all data points for now, as it produces some very
+     * different ranges for individual series (which kind of makes sense when you're looking at potentially different sub-ranges of
+     * data in groups). However, someone may wish to change that, and we will also calculate for individual categories elsewhere.
+     *
+     * Sources:
+     *      - https://core.ac.uk/download/pdf/6591111.pdf
+     *      - https://www.bauer.uh.edu/rsusmel/phd/ec1-26.pdf
+     *      - https://en.wikipedia.org/wiki/Kernel_density_estimation#A_rule-of-thumb_bandwidth_estimator
+     *      - https://stats.stackexchange.com/a/6671
+     *      - https://www.ssc.wisc.edu/~bhansen/718/NonParametrics1.pdf
+     *
+     * Because bandwidth is subjective, we use Silverman's rule-of-thumb to try and predict the bandwidth based on the spread of data.
+     * The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
+     * to obtain from the tooltip, should they wish to.
+     */
+    private getBandwidthAllData(
+        statistics: IStatistics,
+        dataPoints: number[]
+    ): Partial<IStatistics> {
+        const bandwidthSilverman = this.calculateSilverman(
+                statistics,
+                dataPoints
+            ),
+            bandwidthActual =
+                this.settings.violin.specifyBandwidth &&
+                this.settings.violin.bandwidth
+                    ? this.settings.violin.bandwidth
+                    : bandwidthSilverman;
+        return {
+            bandwidthSilverman,
+            bandwidthActual
+        };
+    }
+
+    /**
+     *  Derive category bandwidths based on settings:
+     *   - If calculating bandwidth by category, calculate this based on data points
+     *   - If using same bandwidth, just sub this in for KDE
+     */
+    private getBandwidthByCategory(
+        statistics: IStatistics,
+        dataPoints: number[],
+        index: number,
+        metadata: DataViewCategoryColumn
+    ): Partial<IStatistics> {
+        if (
+            this.viewModel.categoryNames &&
+            this.settings.violin.bandwidthByCategory
+        ) {
+            const catDefaultBw = this.settings.violin.bandwidth
+                    ? this.settings.violin.bandwidth
+                    : defaultBandwidth,
+                bandwidthSilverman = this.calculateSilverman(
+                    statistics,
+                    dataPoints
+                );
+            return (
+                (this.settings.violin.specifyBandwidth && {
+                    bandwidthSilverman,
+                    bandwidthActual:
+                        (this.settings.violin.bandwidthByCategory &&
+                            getCategoricalObjectValue(
+                                metadata,
+                                index,
+                                'violin',
+                                'categoryBandwidth',
+                                catDefaultBw
+                            )) ||
+                        catDefaultBw
+                }) || {
+                    bandwidthSilverman,
+                    bandwidthActual: bandwidthSilverman
+                }
+            );
+        }
+        return {
+            bandwidthSilverman: this.viewModel.statistics.bandwidthSilverman,
+            bandwidthActual: this.viewModel.statistics.bandwidthActual
+        };
+    }
+
+    /**
+     * Calculate the Silverman value for the supplied data.
+     */
+    private calculateSilverman(statistics: IStatistics, dataPoints: number[]) {
+        return (
+            this.kernel.factor *
+            Math.min(statistics.deviation, statistics.iqr / 1.349) * // Sigma function to account for outliers
+            Math.pow(dataPoints.length, -1 / 5)
+        );
+    }
+
+    /**
+     * For provided data points, calculate summary statistics from them.
+     */
+    private getStatistics(dataPoints: number[]) {
+        const min = d3.min(dataPoints),
+            max = d3.max(dataPoints),
+            quartile1 = d3.quantile(dataPoints, 0.25),
+            quartile3 = d3.quantile(dataPoints, 0.75);
+        return <IStatistics>{
+            count: dataPoints.length,
+            min,
+            max,
+            deviation: d3.deviation(dataPoints),
+            quartile1,
+            quartile3,
+            iqr: quartile3 - quartile1,
+            span: max - min,
+            confidenceLower: d3.quantile(dataPoints, 0.05),
+            median: d3.median(dataPoints),
+            mean: d3.mean(dataPoints),
+            confidenceUpper: d3.quantile(dataPoints, 0.95)
+        };
     }
 
     /**
@@ -521,7 +588,7 @@ export class ViewModelHandler {
      *
      * @param options                                   - visual update options
      */
-    initialiseAxes(options: VisualUpdateOptions) {
+    initialiseAxes() {
         // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting initialiseAxes');
@@ -691,18 +758,12 @@ export class ViewModelHandler {
     /**
      * Do Kernel Density Estimator on the vertical X-axis, if we want to render a line for violin.
      */
-    doKde(options: VisualUpdateOptions) {
+    doKde() {
         // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting doKde');
         debug.log('Performing KDE on visual data...');
         debug.profileStart();
-
-        let dataViews = options.dataViews,
-            metadata = dataViews[0].metadata,
-            category = metadata.columns.filter(c => c.roles['category'])[0]
-                ? dataViews[0].categorical.categories[0]
-                : null;
 
         if (
             this.settings.violin.type === 'line' &&
@@ -716,48 +777,9 @@ export class ViewModelHandler {
             debug.log('Kernel Density Estimation...');
 
             // Map out KDE for each series (we might be able to do this in-line when we refactor the data mapping)
-            this.viewModel.categories.map(v => {
+            this.viewModel.categories.map(c => {
                 // Makes logging a bit less complex when discerning between series
-                let series = v.name ? v.name : 'ALL';
-
-                /** Derive category bandwidths based on settings:
-                 *   - If calculating bandwidth by category, calculate this based on data points
-                 *   - If using same bandwidth, just sub this in for KDE
-                 */
-                if (
-                    this.viewModel.categoryNames &&
-                    this.settings.violin.bandwidthByCategory
-                ) {
-                    let bwSigma = Math.min(
-                            v.statistics.deviation,
-                            v.statistics.iqr / 1.349
-                        ),
-                        defaultBandwidth = this.settings.violin.bandwidth
-                            ? this.settings.violin.bandwidth
-                            : 10;
-                    v.statistics.bandwidthSilverman =
-                        this.kernel.factor *
-                        bwSigma *
-                        Math.pow(v.dataPoints.length, -1 / 5);
-                    if (this.settings.violin.specifyBandwidth) {
-                        v.statistics.bandwidthActual = this.settings.violin
-                            .bandwidthByCategory
-                            ? getCategoricalObjectValue(
-                                  category,
-                                  v.objectIndex,
-                                  'violin',
-                                  'categoryBandwidth',
-                                  defaultBandwidth
-                              )
-                            : defaultBandwidth;
-                    } else {
-                        v.statistics.bandwidthActual =
-                            v.statistics.bandwidthSilverman;
-                    }
-                } else {
-                    v.statistics.bandwidthActual = this.viewModel.statistics.bandwidthActual;
-                    v.statistics.bandwidthSilverman = this.viewModel.statistics.bandwidthSilverman;
-                }
+                let series = c.name ? c.name : 'ALL';
 
                 /** Through analysis, we can apply a scaling to the line based on the axis ticks, and a factor supplied by
                  *  the resolution enum. Through some profiling with a few different sets of test data, the values in the enum
@@ -767,7 +789,7 @@ export class ViewModelHandler {
                  */
                 let kde = kernelDensityEstimator(
                     this.kernel.window,
-                    v.statistics.bandwidthActual,
+                    c.statistics.bandwidthActual,
                     this.viewModel.xVaxis.scale.ticks(
                         parseInt(this.settings.violin.resolution)
                     )
@@ -776,12 +798,12 @@ export class ViewModelHandler {
                 /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out
                  *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
                  */
-                let kdeData = kde(v.dataPoints),
+                let kdeData = kde(c.dataPoints),
                     // If not clamping then we'll always cap at the min/max boundaries of the series
-                    interpolateMin = v.statistics.min,
-                    interpolateMax = v.statistics.max;
+                    interpolateMin = c.statistics.min,
+                    interpolateMax = c.statistics.max;
                 debug.log(
-                    `[${series}] Interpolation checkpoint #1 (min/max) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`
+                    `[${series}] Interpolation checkpoint #1 (min/max) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
                 );
 
                 if (!this.settings.violin.clamp) {
@@ -791,18 +813,18 @@ export class ViewModelHandler {
                     );
                     (interpolateMin = d3.max(
                         kdeData.filter(
-                            d => d.x < v.statistics.min && d.y === 0
+                            d => d.x < c.statistics.min && d.y === 0
                         ),
                         d => d.x
                     )),
                         (interpolateMax = d3.min(
                             kdeData.filter(
-                                d => d.x > v.statistics.max && d.y === 0
+                                d => d.x > c.statistics.max && d.y === 0
                             ),
                             d => d.x
                         ));
                     debug.log(
-                        `[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`
+                        `[${series}] Interpolation checkpoint #2 (filtering) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
                     );
 
                     // Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one
@@ -813,12 +835,12 @@ export class ViewModelHandler {
                         let kdeRoot = kernelDensityRoot(
                             this.kernel.window,
                             this.viewModel.statistics.bandwidthActual,
-                            v.dataPoints
+                            c.dataPoints
                         );
 
                         if (!interpolateMin) {
                             interpolateMin = kernelDensityInterpolator(
-                                v.statistics.min,
+                                c.statistics.min,
                                 ELimit.min,
                                 kdeRoot
                             );
@@ -828,7 +850,7 @@ export class ViewModelHandler {
                         }
                         if (!interpolateMax) {
                             interpolateMax = kernelDensityInterpolator(
-                                v.statistics.max,
+                                c.statistics.max,
                                 ELimit.max,
                                 kdeRoot
                             );
@@ -837,7 +859,7 @@ export class ViewModelHandler {
                             );
                         }
                         debug.log(
-                            `[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${interpolateMin}; sMin: ${v.statistics.min} iMax: ${interpolateMax}; sMax: ${v.statistics.max}`
+                            `[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${interpolateMin}; sMin: ${c.statistics.min} iMax: ${interpolateMax}; sMax: ${c.statistics.max}`
                         );
                     }
 
@@ -931,7 +953,7 @@ export class ViewModelHandler {
                     debug.log(
                         `[${series}] Removing erroneous KDE array elements...`
                     );
-                    v.dataKde = kdeData.filter(d => d.remove === false);
+                    c.dataKde = kdeData.filter(d => d.remove === false);
                 } else {
                     // For clamping, we need to add in a duplicate of the min/max elements with a zero y value for nice borders
                     const minBisect = d3.bisector((d: IDataPointKde) => d.x)
@@ -973,34 +995,34 @@ export class ViewModelHandler {
 
                     // Filter out anything outside our interpolation values
                     debug.log('Filtering extents...');
-                    v.dataKde = kdeData
+                    c.dataKde = kdeData
                         .filter(d => d.x >= interpolateMin)
                         .filter(d => d.x <= interpolateMax);
                 }
 
                 // Adjust violin scale to account for inner padding preferences
-                v.yVScale = d3.scale
+                c.yVScale = d3.scale
                     .linear()
                     .range([0, this.viewModel.violinPlot.width / 2])
-                    .domain([0, d3.max<IDataPointKde>(v.dataKde, d => d.y)])
+                    .domain([0, d3.max<IDataPointKde>(c.dataKde, d => d.y)])
                     .clamp(true);
 
                 // Now we have our scaling, we can generate the functions for each series
-                v.lineGen = d3.svg
+                c.lineGen = d3.svg
                     .line<IDataPointKde>()
                     .interpolate(this.settings.violin.lineType)
                     .x(d => this.viewModel.xVaxis.scale(d.x))
-                    .y(d => v.yVScale(d.y));
-                v.areaGen = d3.svg
+                    .y(d => c.yVScale(d.y));
+                c.areaGen = d3.svg
                     .area<IDataPointKde>()
                     .interpolate(this.settings.violin.lineType)
                     .x(d => this.viewModel.xVaxis.scale(d.x))
-                    .y0(v.yVScale(0))
-                    .y1(d => v.yVScale(d.y));
+                    .y0(c.yVScale(0))
+                    .y1(d => c.yVScale(d.y));
 
                 // Store the min/max interpolation points for use later on
-                v.statistics.interpolateMin = interpolateMin;
-                v.statistics.interpolateMax = interpolateMax;
+                c.statistics.interpolateMin = interpolateMin;
+                c.statistics.interpolateMax = interpolateMax;
             });
 
             /** This adjusts the domain of each axis to match any adjustments we made earlier on.

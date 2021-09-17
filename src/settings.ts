@@ -14,6 +14,7 @@ const defaultFontSize: number = 11,
     defaultBoxDataColour: string = '#FFFFFF',
     defaultLineStyle: string = 'solid',
     defaultStrokeWidth: number = 2;
+export const defaultBandwidth = 10;
 
 export class VisualSettings extends DataViewObjectsParser {
     public yAxis: YAxisSettings = new YAxisSettings();
@@ -89,7 +90,7 @@ export class ViolinSettings {
     public resolution: string = '25';
     public kernel: string = 'epanechnikov';
     public specifyBandwidth: boolean = false;
-    public bandwidth: number = 10;
+    public bandwidth: number = defaultBandwidth;
     public bandwidthByCategory: boolean = false;
 }
 
