@@ -105,9 +105,10 @@ const getTooltipData = (
         tts = settings.tooltip,
         locale = viewModel.locale,
         stats = v.statistics,
+        { categoryDisplayName } = viewModel.dataViewMetadata,
         { specifyBandwidth } = settings.violin,
         tooltips: VisualTooltipDataItem[] = [
-            getTooltipCategory(v),
+            getTooltipCategory(v, categoryDisplayName),
             ...getTooltipValue(true, stats.count, '# Samples', tts, locale, format),
             ...getTooltipValue(tts.showMaxMin, stats.max, 'Maximum', tts, locale, format),
             ...getTooltipValue(tts.showMaxMin, stats.min, 'Minimum', tts, locale, format),
@@ -157,8 +158,8 @@ const getTooltipData = (
     return tooltips;
 };
 
-const getTooltipCategory = (v: ICategory) => ({
-    displayName: 'Category',
+const getTooltipCategory = (v: ICategory, displayName: string) => ({
+    displayName,
     value: v.displayName.formattedName ? v.displayName.formattedName : 'All Data',
     color: v.colour
 });
