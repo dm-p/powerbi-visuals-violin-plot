@@ -10,7 +10,7 @@ import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
 import { getHighlightedDataPoints } from './visualHelpers';
 
-export { bindSeriesTooltipEvents };
+export { bindSeriesTooltipEvents, getTooltipData };
 
 const isTouchEvent = true;
 

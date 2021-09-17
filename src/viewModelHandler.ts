@@ -128,20 +128,16 @@ export class ViewModelHandler {
             debug.log('Conditions not met. Returning bare-minimum view model.');
             this.viewModel = viewModel;
         }
-
         // Otherwise, let's get that data!
         debug.log('Proceeding with view model transform.');
-        const values = dataViews[0].categorical.values,
+        const values = <number[]>dataViews[0].categorical.values?.[0].values,
             metadata = dataViews[0].metadata;
         this.categoryMetadata = getMetadataByRole(metadata, 'category');
         this.measureMetadata = getMetadataByRole(metadata, 'measure');
         const category =
             (this.categoryMetadata && dataViews[0].categorical.categories[0]) ||
             null;
-        this.categoryTextProperties = {
-            fontFamily: this.settings.xAxis.fontFamily,
-            fontSize: pixelConverter.toString(this.settings.xAxis.fontSize)
-        };
+        this.categoryTextProperties = this.setCategoryTextProperties();
         viewModel.measure = this.measureMetadata.displayName;
         viewModel.locale = host.locale;
         viewModel.categories = [];
@@ -153,34 +149,25 @@ export class ViewModelHandler {
 
         if (!category) {
             debug.log('Setting up single category for all data points...');
-            this.allDataPoints = (<number[]>values[0].values).sort(
-                d3.ascending
-            );
+            this.allDataPoints = values.sort(d3.ascending);
             viewModel.categoryNames = false;
             viewModel.categories.push(this.getEmptyCategory(host));
         } else {
-            /** Get unique category values and data points
-             *
-             *  #44: We used an `Array.prototype.reduce()` here previously but this would take ages to iterate over and check for duplicates
-             *  when we had put a high-cardinality field in the Category well and we couldn't break out. The `for` loop is less elegant but
-             *  performs much better and allows us to break out when we hit our prescribed limit.
-             */
+            // Get unique category values and data points
             debug.log('Getting unique category values...');
-            let distinctCategories: ICategory[] = [],
-                distinctCategoriesFound = 0,
-                distinctCategoryLimit = this.settings.dataLimit.categoryLimit;
+            let distinctCat: ICategory[] = [],
+                distinctCatFound = 0,
+                distinctCatLimit = this.settings.dataLimit.categoryLimit;
             for (let i = 0; i < category.values.length; i++) {
                 let categoryName = category.values[i].toString(),
-                    value = <number>values[0].values[i];
-                if (
-                    !distinctCategories.find(c => c.name === `${categoryName}`)
-                ) {
-                    if (distinctCategoriesFound === distinctCategoryLimit) {
-                        debug.log(`Limit of ${distinctCategoryLimit} reached.`);
+                    value = values[i];
+                if (!distinctCat.find(c => c.name === `${categoryName}`)) {
+                    if (distinctCatFound === distinctCatLimit) {
+                        debug.log(`Limit of ${distinctCatLimit} reached.`);
                         this.viewModel.categoriesReduced = true;
                         break;
                     }
-                    distinctCategoriesFound++;
+                    distinctCatFound++;
                     // We need the colour palette default for this category, if it has not been explicitly set by the user
                     let defaultColour: Fill = {
                         solid: {
@@ -196,11 +183,11 @@ export class ViewModelHandler {
                             categoryName,
                         this.categoryMetadata.format
                     );
-                    distinctCategories.push(
+                    distinctCat.push(
                         this.getDistinctCategory(
                             categoryName,
                             formattedName,
-                            distinctCategoriesFound,
+                            distinctCatFound,
                             host,
                             category,
                             i,
@@ -209,16 +196,14 @@ export class ViewModelHandler {
                     );
                 }
                 // Add the value, to save us doing one iteration of a potentially large value array later on
-                distinctCategories[distinctCategoriesFound - 1].dataPoints.push(
-                    value
-                );
+                distinctCat[distinctCatFound - 1].dataPoints.push(value);
                 this.allDataPoints.push(value);
             }
             viewModel.categoryNames = true;
             // Create view model template
-            debug.log(`${distinctCategoriesFound} categories.`);
+            debug.log(`${distinctCatFound} categories.`);
             debug.log('Mapping distinct categories into view model...');
-            viewModel.categories = distinctCategories;
+            viewModel.categories = distinctCat;
         }
         // Add in the legend override properties now that we have the categories mapped
         viewModel.legend = this.getLegendData();
@@ -227,6 +212,13 @@ export class ViewModelHandler {
         debug.log('Finished mapDataView');
         this.addDebugProfile(debug, 'mapDataView');
         debug.footer();
+    }
+
+    private setCategoryTextProperties(): interfaces.TextProperties {
+        return {
+            fontFamily: this.settings.xAxis.fontFamily,
+            fontSize: pixelConverter.toString(this.settings.xAxis.fontSize)
+        };
     }
 
     private setDataViewMetadata(): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDataViewMetadata {

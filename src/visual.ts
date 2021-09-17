@@ -406,476 +406,471 @@ export class Visual implements IVisual {
              *  to see where I got to with it as a feature.
              */
             case 'dataLimit': {
-                // If not overriding then we don't need to show the additional info options
-                if (!this.settings.dataLimit.override) {
-                    delete instances[0].properties['showInfo'];
-                    delete instances[0].properties['showCustomVisualNotes'];
-                }
-                // Developer notes won't be an option if we hide the loading progress
-                if (!this.settings.dataLimit.showInfo) {
-                    delete instances[0].properties['showCustomVisualNotes'];
-                }
-                // If we have less than 30K rows in our data set then we don't need to show it
-                if (
-                    !this.settings.dataLimit.enabled ||
-                    (!this.options.dataViews[0].metadata.segment &&
-                        this.options.dataViews[0].categorical.values &&
-                        this.options.dataViews[0].categorical.values[0].values
-                            .length <= 30000)
-                ) {
-                    instances[0] = null;
-                    // Set back to capability window cap if removed
-                    this.settings.dataLimit.override = false;
-                }
+                this.resolveDataLimitOptions(instances);
                 break;
             }
             case 'about': {
-                // Version should always show the default
-                instances[0].properties[
-                    'version'
-                ] = VisualSettings.getDefault()['about'].version;
-                // Switch off and hide debug mode if development flag is disabled
-                if (!this.settings.about.development) {
-                    delete instances[0].properties['debugMode'];
-                    delete instances[0].properties['debugVisualUpdate'];
-                    delete instances[0].properties['debugTooltipEvents'];
-                    delete instances[0].properties['debugProperties'];
-                }
-                // Reset the individual flags if debug mode switched off
-                if (!this.settings.about.debugMode) {
-                    this.settings.about.debugVisualUpdate = false;
-                    this.settings.about.debugTooltipEvents = false;
-                    this.settings.about.debugProperties = false;
-                    delete instances[0].properties['debugVisualUpdate'];
-                    delete instances[0].properties['debugTooltipEvents'];
-                    delete instances[0].properties['debugProperties'];
-                }
+                this.resolveAboutOptions(instances);
                 break;
             }
             case 'violin': {
-                // Range validation on stroke width
-                instances[0].validValues = instances[0].validValues || {};
-                instances[0].validValues.strokeWidth = {
-                    numberRange: {
-                        min: 0,
-                        max: 5
-                    }
-                };
-                // Range validation on inner padding (0% - 50%)
-                instances[0].validValues.innerPadding = {
-                    numberRange: {
-                        min: 0,
-                        max: 50
-                    }
-                };
-                // Enable options for different violin types (currently only line)
-                if (this.settings.violin.type !== 'line') {
-                    delete instances[0].properties['strokeWidth'];
-                    delete instances[0].properties['clamp'];
-                    delete instances[0].properties['resolution'];
-                    delete instances[0].properties['kernel'];
-                    delete instances[0].properties['specifyBandwidth'];
-                }
-
-                // If there are no categories, don't offer the option to calculate bandwidth for them
-                if (!categories) {
-                    delete instances[0].properties['bandwidthByCategory'];
-                    this.settings.violin.bandwidthByCategory = false;
-                }
-
-                // Manual bandwidth toggle
-                if (!this.settings.violin.specifyBandwidth) {
-                    delete instances[0].properties['bandwidth'];
-                }
-
-                // Add categories if we want to specify individual bandwidth
-                if (
-                    this.settings.violin.bandwidthByCategory &&
-                    categories &&
-                    this.settings.violin.specifyBandwidth &&
-                    !this.errorState
-                ) {
-                    for (let category of this.viewModelHandler.viewModel
-                        .categories) {
-                        if (!category) {
-                            continue;
-                        }
-                        instances.push({
-                            objectName: objectName,
-                            displayName: category.displayName.formattedName,
-                            properties: {
-                                categoryBandwidth:
-                                    category.statistics.bandwidthActual
-                            },
-                            selector: category.selectionId.getSelector()
-                        });
-                    }
-                }
-
+                this.resolveViolinProperties(instances, objectName, categories);
                 break;
             }
             case 'dataPoints': {
-                // Range validation on stroke width
-                instances[0].validValues = instances[0].validValues || {};
-                instances[0].validValues.strokeWidth = instances[0].validValues.medianStrokeWidth = instances[0].validValues.meanStrokeWidth = instances[0].validValues.quartile1StrokeWidth = instances[0].validValues.quartile3StrokeWidth = {
-                    numberRange: {
-                        min: 1,
-                        max: 5
-                    }
-                };
-                // Range validation on box plot width
-                instances[0].validValues.innerPadding = {
-                    numberRange: {
-                        min: 0,
-                        max: 90
-                    }
-                };
-
-                // Toggle median
-                if (!this.settings.dataPoints.showMedian) {
-                    delete instances[0].properties['medianFillColour'];
-                    delete instances[0].properties['medianStrokeWidth'];
-                    delete instances[0].properties['medianStrokeLineStyle'];
-                }
-
-                // Combo plot-specific behaviour
-                switch (this.settings.dataPoints.plotType) {
-                    case 'boxPlot': {
-                        // Remove non-box plot properties
-                        delete instances[0].properties['barColour'];
-                        delete instances[0].properties['showQuartiles'];
-                        delete instances[0].properties['quartile1FillColour'];
-                        delete instances[0].properties['quartile1StrokeWidth'];
-                        delete instances[0].properties[
-                            'quartile1StrokeLineStyle'
-                        ];
-                        delete instances[0].properties['quartile3FillColour'];
-                        delete instances[0].properties['quartile3StrokeWidth'];
-                        delete instances[0].properties[
-                            'quartile3StrokeLineStyle'
-                        ];
-
-                        // Toggle mean
-                        if (!this.settings.dataPoints.showMean) {
-                            delete instances[0].properties['meanFillColour'];
-                            delete instances[0].properties['meanStrokeWidth'];
-                            delete instances[0].properties[
-                                'meanFillColourInner'
-                            ];
-                        }
-
-                        break;
-                    }
-
-                    case 'barcodePlot': {
-                        // Remove non-barcode plot properties
-                        delete instances[0].properties['transparency'];
-                        delete instances[0].properties['boxFillColour'];
-                        delete instances[0].properties['showWhiskers'];
-                        delete instances[0].properties['showMean'];
-                        delete instances[0].properties['meanFillColour'];
-                        delete instances[0].properties['meanStrokeWidth'];
-                        delete instances[0].properties['meanFillColourInner'];
-
-                        // Toggle quartile properties
-                        if (!this.settings.dataPoints.showQuartiles) {
-                            delete instances[0].properties[
-                                'quartile1FillColour'
-                            ];
-                            delete instances[0].properties[
-                                'quartile1StrokeWidth'
-                            ];
-                            delete instances[0].properties[
-                                'quartile1StrokeLineStyle'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3FillColour'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3StrokeWidth'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3StrokeLineStyle'
-                            ];
-                        }
-
-                        break;
-                    }
-
-                    case 'columnPlot': {
-                        // Remove non-column plot properties
-                        delete instances[0].properties['showWhiskers'];
-                        delete instances[0].properties['barColour'];
-
-                        // Toggle quartile properties
-                        if (!this.settings.dataPoints.showQuartiles) {
-                            delete instances[0].properties[
-                                'quartile1FillColour'
-                            ];
-                            delete instances[0].properties[
-                                'quartile1StrokeWidth'
-                            ];
-                            delete instances[0].properties[
-                                'quartile1StrokeLineStyle'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3FillColour'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3StrokeWidth'
-                            ];
-                            delete instances[0].properties[
-                                'quartile3StrokeLineStyle'
-                            ];
-                        }
-
-                        // Toggle mean
-                        if (!this.settings.dataPoints.showMean) {
-                            delete instances[0].properties['meanFillColour'];
-                            delete instances[0].properties['meanStrokeWidth'];
-                            delete instances[0].properties[
-                                'meanFillColourInner'
-                            ];
-                        }
-                    }
-                }
-
+                this.resolveComboPlotProperties(instances);
                 break;
             }
             case 'sorting': {
-                // Disable/hide if not using categories
-                if (
-                    !this.options.dataViews[0].metadata.columns.filter(
-                        c => c.roles['category']
-                    )[0]
-                ) {
-                    instances[0] = null;
-                }
+                this.resolveSortingProperties(instances);
                 break;
             }
             case 'tooltip': {
-                // Range validation on precision fields
-                instances[0].validValues = instances[0].validValues || {};
-                instances[0].validValues.numberSamplesPrecision = instances[0].validValues.measurePrecision = {
-                    numberRange: {
-                        min: 0,
-                        max: 10
-                    }
-                };
+                this.resolveTooltipProperties(instances);
                 break;
             }
             case 'dataColours': {
-                // Assign default theme colour from palette if default fill colour not overridden
-                if (!this.settings.dataColours.defaultFillColour) {
-                    instances[0].properties[
-                        'defaultFillColour'
-                    ] = this.defaultColour;
-                }
-                // If there are no categories, don't offer the option to colour by them
-                if (
-                    !this.options.dataViews[0].metadata.columns.filter(
-                        c => c.roles['category']
-                    )[0]
-                ) {
-                    delete instances[0].properties['colourByCategory'];
-                    this.settings.dataColours.colourByCategory = false; // This prevents us losing the default fill if we remove the field afterward
-                }
-                // Add categories if we want to colour by them
-                if (
-                    this.settings.dataColours.colourByCategory &&
-                    !this.errorState
-                ) {
-                    delete instances[0].properties['defaultFillColour'];
-                    for (let category of this.viewModelHandler.viewModel
-                        .categories) {
-                        if (!category) {
-                            continue;
-                        }
-                        instances.push({
-                            objectName: objectName,
-                            displayName: category.displayName.formattedName,
-                            properties: {
-                                categoryFillColour: {
-                                    solid: {
-                                        color: category.colour
-                                    }
-                                }
-                            },
-                            selector: category.selectionId.getSelector()
-                        });
-                    }
-                }
+                this.resolveDataColourProperties(instances, objectName);
                 break;
             }
             case 'legend': {
-                // Legend title toggle
-                if (
-                    !this.settings.legend.show &&
-                    !this.settings.legend.showTitle
-                ) {
-                    delete instances[0].properties['titleText'];
-                }
-                // Statistical indicator handling
-                if (!this.settings.legend.showStatisticalPoints) {
-                    delete instances[0].properties['medianText'];
-                    delete instances[0].properties['dataPointText'];
-                    delete instances[0].properties['quartileCombinedText'];
-                    delete instances[0].properties['quartile1Text'];
-                    delete instances[0].properties['quartile3Text'];
-                    delete instances[0].properties['meanText'];
-                }
-
-                // Hide combo plot-specific items
-                if (this.settings.dataPoints.plotType === 'boxPlot') {
-                    delete instances[0].properties['dataPointText'];
-                    delete instances[0].properties['quartileCombinedText'];
-                    delete instances[0].properties['quartile1Text'];
-                    delete instances[0].properties['quartile3Text'];
-                }
-                if (this.settings.dataPoints.plotType === 'barcodePlot') {
-                    delete instances[0].properties['meanText'];
-                }
-                if (this.settings.dataPoints.plotType === 'columnPlot') {
-                    delete instances[0].properties['dataPointText'];
-                }
-                // Reset legend measure value items to default if blanked out
-                if (!this.settings.legend.medianText) {
-                    instances[0].properties[
-                        'medianText'
-                    ] = VisualSettings.getDefault()['legend'].medianText;
-                }
-                if (!this.settings.legend.meanText) {
-                    instances[0].properties[
-                        'meanText'
-                    ] = VisualSettings.getDefault()['legend'].meanText;
-                }
-                if (!this.settings.legend.dataPointText) {
-                    instances[0].properties[
-                        'dataPointText'
-                    ] = VisualSettings.getDefault()['legend'].dataPointText;
-                }
-                if (!this.settings.legend.quartileCombinedText) {
-                    instances[0].properties[
-                        'quartileCombinedText'
-                    ] = VisualSettings.getDefault()[
-                        'legend'
-                    ].quartileCombinedText;
-                }
-                if (!this.settings.legend.quartile1Text) {
-                    instances[0].properties[
-                        'quartile1Text'
-                    ] = VisualSettings.getDefault()['legend'].quartile1Text;
-                }
-                if (!this.settings.legend.quartile3Text) {
-                    instances[0].properties[
-                        'quartile3Text'
-                    ] = VisualSettings.getDefault()['legend'].quartile3Text;
-                }
+                this.resolveLegendProperties(instances);
                 break;
             }
             case 'xAxis': {
-                // Label toggle
-                if (!this.settings.xAxis.showLabels) {
-                    delete instances[0].properties['fontColor'];
-                    delete instances[0].properties['fontSize'];
-                    delete instances[0].properties['fontFamily'];
-                }
-                // Gridline toggle
-                if (!this.settings.xAxis.gridlines) {
-                    delete instances[0].properties['gridlineColor'];
-                    delete instances[0].properties['gridlineStrokeWidth'];
-                    delete instances[0].properties['gridlineStrokeLineStyle'];
-                }
-                //Title toggle
-                if (!this.settings.xAxis.showTitle) {
-                    delete instances[0].properties['titleColor'];
-                    delete instances[0].properties['titleText'];
-                    delete instances[0].properties['titleFontSize'];
-                    delete instances[0].properties['titleFontFamily'];
-                }
-                // Range validation on grid line stroke width
-                instances[0].validValues = instances[0].validValues || {};
-                instances[0].validValues.gridlineStrokeWidth = {
-                    numberRange: {
-                        min: 1,
-                        max: 5
-                    }
-                };
+                this.resolveXAxisProperties(instances);
                 break;
             }
             case 'yAxis': {
-                // Label toggle
-                if (!this.settings.yAxis.showLabels) {
-                    delete instances[0].properties['fontColor'];
-                    delete instances[0].properties['fontSize'];
-                    delete instances[0].properties['fontFamily'];
-                    delete instances[0].properties['labelDisplayUnits'];
-                    delete instances[0].properties['precision'];
-                }
-                // Gridline toggle
-                if (!this.settings.yAxis.gridlines) {
-                    delete instances[0].properties['gridlineColor'];
-                    delete instances[0].properties['gridlineStrokeWidth'];
-                    delete instances[0].properties['gridlineStrokeLineStyle'];
-                }
-                // Title toggle
-                if (!this.settings.yAxis.showTitle) {
-                    delete instances[0].properties['titleStyle'];
-                    delete instances[0].properties['titleColor'];
-                    delete instances[0].properties['titleText'];
-                    delete instances[0].properties['titleFontSize'];
-                    delete instances[0].properties['titleFontFamily'];
-                }
-                // Title style toggle if units are none
-                if (this.settings.yAxis.labelDisplayUnits === 1) {
-                    instances[0].properties['titleStyle'] = 'title';
-                }
-                // Range validation on grid line stroke width and precision
-                instances[0].validValues = instances[0].validValues || {};
-                instances[0].validValues.precision = {
-                    numberRange: {
-                        min: 0,
-                        max: 10
-                    }
-                };
-                instances[0].validValues.gridlineStrokeWidth = {
-                    numberRange: {
-                        min: 1,
-                        max: 5
-                    }
-                };
-                // Range validation on start and end values. note that in ES5 we don't have Number.MAX/MIN_SAFE_INTEGER, so we define our own
-                let safeMin = -9007199254740991,
-                    safeMax = 9007199254740991;
-                instances[0].validValues.start = {
-                    numberRange: {
-                        min: safeMin,
-                        max:
-                            this.settings.yAxis.end === 0
-                                ? 0
-                                : this.settings.yAxis.end || safeMax
-                    }
-                };
-                instances[0].validValues.end = {
-                    numberRange: {
-                        min:
-                            this.settings.yAxis.start === 0
-                                ? 0
-                                : this.settings.yAxis.start || safeMin,
-                        max: safeMax
-                    }
-                };
+                this.resolveYAxisProperties(instances);
                 break;
             }
         }
-
         // Output all transformed instance info if we're debugging
         instances.map(instance => {
             debug.log(instance.objectName, instance);
         });
         debug.log('Properties fully processed!');
         debug.footer();
-
         return instances;
+    }
+
+    private resolveDataLimitOptions(instances: powerbi.VisualObjectInstance[]) {
+        // If not overriding then we don't need to show the additional info options
+        if (!this.settings.dataLimit.override) {
+            delete instances[0].properties['showInfo'];
+            delete instances[0].properties['showCustomVisualNotes'];
+        }
+        // Developer notes won't be an option if we hide the loading progress
+        if (!this.settings.dataLimit.showInfo) {
+            delete instances[0].properties['showCustomVisualNotes'];
+        }
+        // If we have less than 30K rows in our data set then we don't need to show it
+        if (
+            !this.settings.dataLimit.enabled ||
+            (!this.options.dataViews[0].metadata.segment &&
+                this.options.dataViews[0].categorical.values &&
+                this.options.dataViews[0].categorical.values[0].values.length <=
+                    30000)
+        ) {
+            instances[0] = null;
+            // Set back to capability window cap if removed
+            this.settings.dataLimit.override = false;
+        }
+    }
+
+    private resolveAboutOptions(instances: powerbi.VisualObjectInstance[]) {
+        // Version should always show the default
+        instances[0].properties['version'] = VisualSettings.getDefault()[
+            'about'
+        ].version;
+        // Switch off and hide debug mode if development flag is disabled
+        if (!this.settings.about.development) {
+            delete instances[0].properties['debugMode'];
+            delete instances[0].properties['debugVisualUpdate'];
+            delete instances[0].properties['debugTooltipEvents'];
+            delete instances[0].properties['debugProperties'];
+        }
+        // Reset the individual flags if debug mode switched off
+        if (!this.settings.about.debugMode) {
+            this.settings.about.debugVisualUpdate = false;
+            this.settings.about.debugTooltipEvents = false;
+            this.settings.about.debugProperties = false;
+            delete instances[0].properties['debugVisualUpdate'];
+            delete instances[0].properties['debugTooltipEvents'];
+            delete instances[0].properties['debugProperties'];
+        }
+    }
+
+    private resolveViolinProperties(
+        instances: powerbi.VisualObjectInstance[],
+        objectName: string,
+        categories: boolean
+    ) {
+        // Range validation on stroke width
+        instances[0].validValues = instances[0].validValues || {};
+        instances[0].validValues.strokeWidth = {
+            numberRange: {
+                min: 0,
+                max: 5
+            }
+        };
+        // Range validation on inner padding (0% - 50%)
+        instances[0].validValues.innerPadding = {
+            numberRange: {
+                min: 0,
+                max: 50
+            }
+        };
+        // Enable options for different violin types (currently only line)
+        if (this.settings.violin.type !== 'line') {
+            delete instances[0].properties['strokeWidth'];
+            delete instances[0].properties['clamp'];
+            delete instances[0].properties['resolution'];
+            delete instances[0].properties['kernel'];
+            delete instances[0].properties['specifyBandwidth'];
+        }
+
+        // If there are no categories, don't offer the option to calculate bandwidth for them
+        if (!categories) {
+            delete instances[0].properties['bandwidthByCategory'];
+            this.settings.violin.bandwidthByCategory = false;
+        }
+
+        // Manual bandwidth toggle
+        if (!this.settings.violin.specifyBandwidth) {
+            delete instances[0].properties['bandwidth'];
+        }
+
+        // Add categories if we want to specify individual bandwidth
+        if (
+            this.settings.violin.bandwidthByCategory &&
+            categories &&
+            this.settings.violin.specifyBandwidth &&
+            !this.errorState
+        ) {
+            for (let category of this.viewModelHandler.viewModel.categories) {
+                if (!category) {
+                    continue;
+                }
+                instances.push({
+                    objectName: objectName,
+                    displayName: category.displayName.formattedName,
+                    properties: {
+                        categoryBandwidth: category.statistics.bandwidthActual
+                    },
+                    selector: category.selectionId.getSelector()
+                });
+            }
+        }
+    }
+
+    private resolveDataColourProperties(
+        instances: powerbi.VisualObjectInstance[],
+        objectName: string
+    ) {
+        // Assign default theme colour from palette if default fill colour not overridden
+        if (!this.settings.dataColours.defaultFillColour) {
+            instances[0].properties['defaultFillColour'] = this.defaultColour;
+        }
+        // If there are no categories, don't offer the option to colour by them
+        if (
+            !this.options.dataViews[0].metadata.columns.filter(
+                c => c.roles['category']
+            )[0]
+        ) {
+            delete instances[0].properties['colourByCategory'];
+            this.settings.dataColours.colourByCategory = false; // This prevents us losing the default fill if we remove the field afterward
+        }
+        // Add categories if we want to colour by them
+        if (this.settings.dataColours.colourByCategory && !this.errorState) {
+            delete instances[0].properties['defaultFillColour'];
+            for (let category of this.viewModelHandler.viewModel.categories) {
+                if (!category) {
+                    continue;
+                }
+                instances.push({
+                    objectName: objectName,
+                    displayName: category.displayName.formattedName,
+                    properties: {
+                        categoryFillColour: {
+                            solid: {
+                                color: category.colour
+                            }
+                        }
+                    },
+                    selector: category.selectionId.getSelector()
+                });
+            }
+        }
+    }
+
+    private resolveTooltipProperties(
+        instances: powerbi.VisualObjectInstance[]
+    ) {
+        // Range validation on precision fields
+        instances[0].validValues = instances[0].validValues || {};
+        instances[0].validValues.numberSamplesPrecision = instances[0].validValues.measurePrecision = {
+            numberRange: {
+                min: 0,
+                max: 10
+            }
+        };
+    }
+
+    private resolveSortingProperties(
+        instances: powerbi.VisualObjectInstance[]
+    ) {
+        // Disable/hide if not using categories
+        if (
+            !this.options.dataViews[0].metadata.columns.filter(
+                c => c.roles['category']
+            )[0]
+        ) {
+            instances[0] = null;
+        }
+    }
+
+    private resolveLegendProperties(instances: powerbi.VisualObjectInstance[]) {
+        // Legend title toggle
+        if (!this.settings.legend.show && !this.settings.legend.showTitle) {
+            delete instances[0].properties['titleText'];
+        }
+        // Statistical indicator handling
+        if (!this.settings.legend.showStatisticalPoints) {
+            delete instances[0].properties['medianText'];
+            delete instances[0].properties['dataPointText'];
+            delete instances[0].properties['quartileCombinedText'];
+            delete instances[0].properties['quartile1Text'];
+            delete instances[0].properties['quartile3Text'];
+            delete instances[0].properties['meanText'];
+        }
+
+        // Hide combo plot-specific items
+        if (this.settings.dataPoints.plotType === 'boxPlot') {
+            delete instances[0].properties['dataPointText'];
+            delete instances[0].properties['quartileCombinedText'];
+            delete instances[0].properties['quartile1Text'];
+            delete instances[0].properties['quartile3Text'];
+        }
+        if (this.settings.dataPoints.plotType === 'barcodePlot') {
+            delete instances[0].properties['meanText'];
+        }
+        if (this.settings.dataPoints.plotType === 'columnPlot') {
+            delete instances[0].properties['dataPointText'];
+        }
+        // Reset legend measure value items to default if blanked out
+        if (!this.settings.legend.medianText) {
+            instances[0].properties['medianText'] = VisualSettings.getDefault()[
+                'legend'
+            ].medianText;
+        }
+        if (!this.settings.legend.meanText) {
+            instances[0].properties['meanText'] = VisualSettings.getDefault()[
+                'legend'
+            ].meanText;
+        }
+        if (!this.settings.legend.dataPointText) {
+            instances[0].properties[
+                'dataPointText'
+            ] = VisualSettings.getDefault()['legend'].dataPointText;
+        }
+        if (!this.settings.legend.quartileCombinedText) {
+            instances[0].properties[
+                'quartileCombinedText'
+            ] = VisualSettings.getDefault()['legend'].quartileCombinedText;
+        }
+        if (!this.settings.legend.quartile1Text) {
+            instances[0].properties[
+                'quartile1Text'
+            ] = VisualSettings.getDefault()['legend'].quartile1Text;
+        }
+        if (!this.settings.legend.quartile3Text) {
+            instances[0].properties[
+                'quartile3Text'
+            ] = VisualSettings.getDefault()['legend'].quartile3Text;
+        }
+    }
+
+    private resolveXAxisProperties(instances: powerbi.VisualObjectInstance[]) {
+        // Label toggle
+        if (!this.settings.xAxis.showLabels) {
+            delete instances[0].properties['fontColor'];
+            delete instances[0].properties['fontSize'];
+            delete instances[0].properties['fontFamily'];
+        }
+        // Gridline toggle
+        if (!this.settings.xAxis.gridlines) {
+            delete instances[0].properties['gridlineColor'];
+            delete instances[0].properties['gridlineStrokeWidth'];
+            delete instances[0].properties['gridlineStrokeLineStyle'];
+        }
+        //Title toggle
+        if (!this.settings.xAxis.showTitle) {
+            delete instances[0].properties['titleColor'];
+            delete instances[0].properties['titleText'];
+            delete instances[0].properties['titleFontSize'];
+            delete instances[0].properties['titleFontFamily'];
+        }
+        // Range validation on grid line stroke width
+        instances[0].validValues = instances[0].validValues || {};
+        instances[0].validValues.gridlineStrokeWidth = {
+            numberRange: {
+                min: 1,
+                max: 5
+            }
+        };
+    }
+
+    private resolveYAxisProperties(instances: powerbi.VisualObjectInstance[]) {
+        // Label toggle
+        if (!this.settings.yAxis.showLabels) {
+            delete instances[0].properties['fontColor'];
+            delete instances[0].properties['fontSize'];
+            delete instances[0].properties['fontFamily'];
+            delete instances[0].properties['labelDisplayUnits'];
+            delete instances[0].properties['precision'];
+        }
+        // Gridline toggle
+        if (!this.settings.yAxis.gridlines) {
+            delete instances[0].properties['gridlineColor'];
+            delete instances[0].properties['gridlineStrokeWidth'];
+            delete instances[0].properties['gridlineStrokeLineStyle'];
+        }
+        // Title toggle
+        if (!this.settings.yAxis.showTitle) {
+            delete instances[0].properties['titleStyle'];
+            delete instances[0].properties['titleColor'];
+            delete instances[0].properties['titleText'];
+            delete instances[0].properties['titleFontSize'];
+            delete instances[0].properties['titleFontFamily'];
+        }
+        // Title style toggle if units are none
+        if (this.settings.yAxis.labelDisplayUnits === 1) {
+            instances[0].properties['titleStyle'] = 'title';
+        }
+        // Range validation on grid line stroke width and precision
+        instances[0].validValues = instances[0].validValues || {};
+        instances[0].validValues.precision = {
+            numberRange: {
+                min: 0,
+                max: 10
+            }
+        };
+        instances[0].validValues.gridlineStrokeWidth = {
+            numberRange: {
+                min: 1,
+                max: 5
+            }
+        };
+        // Range validation on start and end values. note that in ES5 we don't have Number.MAX/MIN_SAFE_INTEGER, so we define our own
+        let safeMin = -9007199254740991,
+            safeMax = 9007199254740991;
+        instances[0].validValues.start = {
+            numberRange: {
+                min: safeMin,
+                max:
+                    this.settings.yAxis.end === 0
+                        ? 0
+                        : this.settings.yAxis.end || safeMax
+            }
+        };
+        instances[0].validValues.end = {
+            numberRange: {
+                min:
+                    this.settings.yAxis.start === 0
+                        ? 0
+                        : this.settings.yAxis.start || safeMin,
+                max: safeMax
+            }
+        };
+    }
+
+    private resolveComboPlotProperties(
+        instances: powerbi.VisualObjectInstance[]
+    ) {
+        // Range validation on stroke width
+        instances[0].validValues = instances[0].validValues || {};
+        instances[0].validValues.strokeWidth = instances[0].validValues.medianStrokeWidth = instances[0].validValues.meanStrokeWidth = instances[0].validValues.quartile1StrokeWidth = instances[0].validValues.quartile3StrokeWidth = {
+            numberRange: {
+                min: 1,
+                max: 5
+            }
+        };
+        // Range validation on box plot width
+        instances[0].validValues.innerPadding = {
+            numberRange: {
+                min: 0,
+                max: 90
+            }
+        };
+
+        // Toggle median
+        if (!this.settings.dataPoints.showMedian) {
+            delete instances[0].properties['medianFillColour'];
+            delete instances[0].properties['medianStrokeWidth'];
+            delete instances[0].properties['medianStrokeLineStyle'];
+        }
+        // Combo plot-specific behaviour
+        switch (this.settings.dataPoints.plotType) {
+            case 'boxPlot': {
+                // Remove non-box plot properties
+                delete instances[0].properties['barColour'];
+                delete instances[0].properties['showQuartiles'];
+                delete instances[0].properties['quartile1FillColour'];
+                delete instances[0].properties['quartile1StrokeWidth'];
+                delete instances[0].properties['quartile1StrokeLineStyle'];
+                delete instances[0].properties['quartile3FillColour'];
+                delete instances[0].properties['quartile3StrokeWidth'];
+                delete instances[0].properties['quartile3StrokeLineStyle'];
+                // Toggle mean
+                if (!this.settings.dataPoints.showMean) {
+                    delete instances[0].properties['meanFillColour'];
+                    delete instances[0].properties['meanStrokeWidth'];
+                    delete instances[0].properties['meanFillColourInner'];
+                }
+                break;
+            }
+            case 'barcodePlot': {
+                // Remove non-barcode plot properties
+                delete instances[0].properties['transparency'];
+                delete instances[0].properties['boxFillColour'];
+                delete instances[0].properties['showWhiskers'];
+                delete instances[0].properties['showMean'];
+                delete instances[0].properties['meanFillColour'];
+                delete instances[0].properties['meanStrokeWidth'];
+                delete instances[0].properties['meanFillColourInner'];
+                // Toggle quartile properties
+                if (!this.settings.dataPoints.showQuartiles) {
+                    delete instances[0].properties['quartile1FillColour'];
+                    delete instances[0].properties['quartile1StrokeWidth'];
+                    delete instances[0].properties['quartile1StrokeLineStyle'];
+                    delete instances[0].properties['quartile3FillColour'];
+                    delete instances[0].properties['quartile3StrokeWidth'];
+                    delete instances[0].properties['quartile3StrokeLineStyle'];
+                }
+                break;
+            }
+            case 'columnPlot': {
+                // Remove non-column plot properties
+                delete instances[0].properties['showWhiskers'];
+                delete instances[0].properties['barColour'];
+                // Toggle quartile properties
+                if (!this.settings.dataPoints.showQuartiles) {
+                    delete instances[0].properties['quartile1FillColour'];
+                    delete instances[0].properties['quartile1StrokeWidth'];
+                    delete instances[0].properties['quartile1StrokeLineStyle'];
+                    delete instances[0].properties['quartile3FillColour'];
+                    delete instances[0].properties['quartile3StrokeWidth'];
+                    delete instances[0].properties['quartile3StrokeLineStyle'];
+                }
+                // Toggle mean
+                if (!this.settings.dataPoints.showMean) {
+                    delete instances[0].properties['meanFillColour'];
+                    delete instances[0].properties['meanStrokeWidth'];
+                    delete instances[0].properties['meanFillColourInner'];
+                }
+            }
+        }
     }
 }
