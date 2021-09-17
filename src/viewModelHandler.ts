@@ -27,7 +27,7 @@ import {
     IAxisLinear,
     IAxisCategorical,
     IDisplayName,
-    IDataPointAggregate,
+    ILegend,
     IInterpolationExtents
 } from './models';
 import { getCategoricalObjectValue } from './visualHelpers';
@@ -41,7 +41,7 @@ import {
     kernelDensityEstimator,
     kernels
 } from './kde';
-import { isNumberTruthy } from './utils';
+import { getMetadataByRole, isNumberTruthy, shouldNotMapData } from './utils';
 
 export class ViewModelHandler {
     viewModel: IViewModel;
@@ -73,6 +73,41 @@ export class ViewModelHandler {
      * @param options                                   - visual update options
      * @param host                                      - visual host
      * @param colourPalette                             - visual colour palette object (for colour assignment to categories)
+     *
+     *  WHY ARE WE USING A CATEGORICAL DATA VIEW MAPPING IN THIS WAY?
+     *
+     *  Using a matrix, table or categorical mapping with grouping makes more sense, but as our sampling value is typically unique to each
+     *  row, this means that Power BI needs to calculate and retrieve an aggregate for every combination of sampling and category. This will
+     *  mean that of the data that comes back, it will be mostly `null` values, for each category, with the actual values in there somewhere.
+     *  This creates a lot of data to transfer over HTTP and a lot of memory to process and organise when we get it.
+     *
+     *  By doing it this way, we get sinlge-dimension arrays for all category/sampling combinations, and then values, so at most this gives us
+     *  a 30K row limit (until we can implement `fetchmoreData` successfully). We trade-off a bit of WTF this side as a result. Maybe I'll
+     *  revisit when I'm a bit wiser.
+     *
+     *  We also have an issue in that the user could conceivably add a high-cardinality-field to the category, when they actually
+     *  meant to put it in the sampling field and vice-versa. This would cause us to render up to 30K categories, with a single data
+     *  point in them, which is also incredibly costly from a KDE perspective.
+     *
+     *  This actually cause the visual to fail validation due to the MS tester trying this out. I was a little too close to the project
+     *  and made sure that the "happy path" was working well, but hadn't considered this scenario. It is entirely possible and should be
+     *  mitigated.
+     *
+     *  In this scenario, we'd normally use the `dataReductionAlgorithm` setting in the `capabilities.json` file to manage this
+     *  but the sacrifices we made to the data view mapping (see notes in `mapDataView`), we don't get the flexibility we need to
+     *  prevent a user from killing their own browser.
+     *
+     *  So, we leverage the `categoryLimit` setting in the `dataLimitSettings` class to place an arbitrary restriction on this that we
+     *  may be able to relax in a user setting later on, should it be successful, or we can better manage with the `capabilities.json'
+     *  file if yours truly gets a bit smarter further down the track.
+     *
+     *  We filter down the array here, as we need to calculate stats for all categories obtained from the data model so that we can do the
+     *  requisite sorting on them. The stats calculation is pretty negligible in terms of processing time for large datasets (< 200ms
+     *  on average).
+     *
+     *  By doing this we can also avoid unnecessary KDE operations, which outside of rendering are the biggest cost by far.
+     *
+     *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.
      */
     mapDataView(
         options: VisualUpdateOptions,
@@ -85,40 +120,24 @@ export class ViewModelHandler {
         debug.log('Mapping data view to view model...');
         debug.profileStart();
 
-        let dataViews = options.dataViews;
-
+        const dataViews = options.dataViews;
         // Create bare-minimum view model
         let viewModel = this.viewModel;
-
         // Return this bare-minimum model if the conditions for our data view are not satisfied (basically don't draw the chart)
-        if (
-            !dataViews ||
-            !dataViews[0] ||
-            !dataViews[0].categorical ||
-            !dataViews[0].categorical.values ||
-            !dataViews[0].metadata
-        ) {
-            debug.log(
-                'Data mapping conditions not met. Returning bare-minimum view model.'
-            );
+        if (shouldNotMapData(dataViews)) {
+            debug.log('Conditions not met. Returning bare-minimum view model.');
             this.viewModel = viewModel;
         }
 
         // Otherwise, let's get that data!
-        debug.log(
-            'Data mapping conditions met. Proceeding with view model transform.'
-        );
-        let values = dataViews[0].categorical.values,
-            metadata = dataViews[0].metadata,
-            category = metadata.columns.filter(c => c.roles['category'])[0]
-                ? dataViews[0].categorical.categories[0]
-                : null;
-        this.categoryMetadata = metadata.columns.filter(
-            c => c.roles['category']
-        )[0];
-        this.measureMetadata = metadata.columns.filter(
-            c => c.roles['measure']
-        )[0];
+        debug.log('Proceeding with view model transform.');
+        const values = dataViews[0].categorical.values,
+            metadata = dataViews[0].metadata;
+        this.categoryMetadata = getMetadataByRole(metadata, 'category');
+        this.measureMetadata = getMetadataByRole(metadata, 'measure');
+        const category =
+            (this.categoryMetadata && dataViews[0].categorical.categories[0]) ||
+            null;
         this.categoryTextProperties = {
             fontFamily: this.settings.xAxis.fontFamily,
             fontSize: pixelConverter.toString(this.settings.xAxis.fontSize)
@@ -126,79 +145,19 @@ export class ViewModelHandler {
         viewModel.measure = this.measureMetadata.displayName;
         viewModel.locale = host.locale;
         viewModel.categories = [];
-        viewModel.dataViewMetadata = {
-            categoryDisplayName: this.categoryMetadata
-                ? this.categoryMetadata.displayName
-                : null,
-            measureDisplayName: this.measureMetadata.displayName
-                ? this.measureMetadata.displayName
-                : null
-        };
-
-        /** Assign initial category data to view model. This will depend on whether we have a category grouping or not, so set up accordingly.
-         *
-         *  WHY ARE WE USING A CATEGORICAL DATA VIEW MAPPING IN THIS WAY?
-         *
-         *  Using a matrix, table or categorical mapping with grouping makes more sense, but as our sampling value is typically unique to each
-         *  row, this means that Power BI needs to calculate and retrieve an aggregate for every combination of sampling and category. This will
-         *  mean that of the data that comes back, it will be mostly `null` values, for each category, with the actual values in there somewhere.
-         *  This creates a lot of data to transfer over HTTP and a lot of memory to process and organise when we get it.
-         *
-         *  By doing it this way, we get sinlge-dimension arrays for all category/sampling combinations, and then values, so at most this gives us
-         *  a 30K row limit (until we can implement `fetchmoreData` successfully). We trade-off a bit of WTF this side as a result. Maybe I'll
-         *  revisit when I'm a bit wiser.
-         *
-         *  We also have an issue in that the user could conceivably add a high-cardinality-field to the category, when they actually
-         *  meant to put it in the sampling field and vice-versa. This would cause us to render up to 30K categories, with a single data
-         *  point in them, which is also incredibly costly from a KDE perspective.
-         *
-         *  This actually cause the visual to fail validation due to the MS tester trying this out. I was a little too close to the project
-         *  and made sure that the "happy path" was working well, but hadn't considered this scenario. It is entirely possible and should be
-         *  mitigated.
-         *
-         *  In this scenario, we'd normally use the `dataReductionAlgorithm` setting in the `capabilities.json` file to manage this
-         *  but the sacrifices we made to the data view mapping (see notes in `mapDataView`), we don't get the flexibility we need to
-         *  prevent a user from killing their own browser.
-         *
-         *  So, we leverage the `categoryLimit` setting in the `dataLimitSettings` class to place an arbitrary restriction on this that we
-         *  may be able to relax in a user setting later on, should it be successful, or we can better manage with the `capabilities.json'
-         *  file if yours truly gets a bit smarter further down the track.
-         *
-         *  We filter down the array here, as we need to calculate stats for all categories obtained from the data model so that we can do the
-         *  requisite sorting on them. The stats calculation is pretty negligible in terms of processing time for large datasets (< 200ms
-         *  on average).
-         *
-         *  By doing this we can also avoid unnecessary KDE operations, which outside of rendering are the biggest cost by far.
-         *
-         *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.
-         */
+        viewModel.dataViewMetadata = this.setDataViewMetadata();
 
         /** Create our allDatapoints array for later (as we only want to include datapoints that are in the final set after
          *  category reduction, if applicable) */
         this.allDataPoints = [];
 
         if (!category) {
-            debug.log(
-                'No categories specified. Setting up single category for all data points...'
-            );
+            debug.log('Setting up single category for all data points...');
             this.allDataPoints = (<number[]>values[0].values).sort(
                 d3.ascending
             );
             viewModel.categoryNames = false;
-            viewModel.categories.push(<ICategory>{
-                name: '',
-                displayName: {
-                    formattedName: '',
-                    textProperties: this.categoryTextProperties,
-                    formattedWidth: 0
-                },
-                colour: this.settings.dataColours.defaultFillColour,
-                selectionId: host
-                    .createSelectionIdBuilder()
-                    .withMeasure(this.measureMetadata.queryName)
-                    .createSelectionId(),
-                dataPoints: this.allDataPoints
-            });
+            viewModel.categories.push(this.getEmptyCategory(host));
         } else {
             /** Get unique category values and data points
              *
@@ -210,91 +169,130 @@ export class ViewModelHandler {
             let distinctCategories: ICategory[] = [],
                 distinctCategoriesFound = 0,
                 distinctCategoryLimit = this.settings.dataLimit.categoryLimit;
-
             for (let i = 0; i < category.values.length; i++) {
                 let categoryName = category.values[i].toString(),
                     value = <number>values[0].values[i];
-
                 if (
-                    !distinctCategories.filter(
-                        c => c.name === `${categoryName}`
-                    )[0]
+                    !distinctCategories.find(c => c.name === `${categoryName}`)
                 ) {
                     if (distinctCategoriesFound === distinctCategoryLimit) {
-                        debug.log(
-                            `Category limit of ${distinctCategoryLimit} reached. Ending category resolution to avoid performance issues.`
-                        );
+                        debug.log(`Limit of ${distinctCategoryLimit} reached.`);
                         this.viewModel.categoriesReduced = true;
                         break;
                     }
-
                     distinctCategoriesFound++;
-
                     // We need the colour palette default for this category, if it has not been explicitly set by the user
                     let defaultColour: Fill = {
                         solid: {
                             color: colourPalette.getColor(categoryName).value
                         }
                     };
-
                     // Create the initial display name here, so that we can use it in legends and later on when we do the tailoring
-                    let formattedName = categoryName;
-                    if (this.categoryMetadata.type.dateTime) {
-                        formattedName = valueFormatter.format(
-                            new Date(categoryName),
-                            this.categoryMetadata.format
-                        );
-                    }
-                    if (this.categoryMetadata.type.numeric) {
-                        formattedName = valueFormatter.format(
-                            Number(categoryName),
-                            this.categoryMetadata.format
-                        );
-                    }
-
-                    distinctCategories.push(<ICategory>{
-                        name: categoryName,
-                        displayName: {
-                            formattedName: formattedName
-                        },
-                        sortOrder: distinctCategoriesFound,
-                        selectionId: host
-                            .createSelectionIdBuilder()
-                            .withCategory(category, i)
-                            .createSelectionId(),
-                        objectIndex: i,
-                        dataPoints: [],
-                        colour: this.settings.dataColours.colourByCategory
-                            ? getCategoricalObjectValue<Fill>(
-                                  category,
-                                  i,
-                                  'dataColours',
-                                  'categoryFillColour',
-                                  defaultColour
-                              ).solid.color
-                            : this.settings.dataColours.defaultFillColour
-                    });
+                    const formattedName = valueFormatter.format(
+                        (this.categoryMetadata.type.dateTime &&
+                            new Date(categoryName)) ||
+                            (this.categoryMetadata.type.numeric &&
+                                Number(categoryName)) ||
+                            categoryName,
+                        this.categoryMetadata.format
+                    );
+                    distinctCategories.push(
+                        this.getDistinctCategory(
+                            categoryName,
+                            formattedName,
+                            distinctCategoriesFound,
+                            host,
+                            category,
+                            i,
+                            defaultColour
+                        )
+                    );
                 }
-
                 // Add the value, to save us doing one iteration of a potentially large value array later on
                 distinctCategories[distinctCategoriesFound - 1].dataPoints.push(
                     value
                 );
                 this.allDataPoints.push(value);
             }
-
             viewModel.categoryNames = true;
-
             // Create view model template
-            debug.log(
-                `${distinctCategoriesFound} distinct categories found (or capped).`
-            );
+            debug.log(`${distinctCategoriesFound} categories.`);
             debug.log('Mapping distinct categories into view model...');
             viewModel.categories = distinctCategories;
         }
-
         // Add in the legend override properties now that we have the categories mapped
-        viewModel.legend = {
+        viewModel.legend = this.getLegendData();
+        // We're done!
+        this.viewModel = viewModel;
+        debug.log('Finished mapDataView');
+        this.addDebugProfile(debug, 'mapDataView');
+        debug.footer();
+    }
+
+    private setDataViewMetadata(): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDataViewMetadata {
+        return {
+            categoryDisplayName:
+                (this.categoryMetadata && this.categoryMetadata.displayName) ||
+                null,
+            measureDisplayName:
+                (this.measureMetadata.displayName &&
+                    this.measureMetadata.displayName) ||
+                null
+        };
+    }
+
+    private getDistinctCategory(
+        categoryName: string,
+        formattedName: string,
+        distinctCategoriesFound: number,
+        host: IVisualHost,
+        category: powerbi.DataViewCategoryColumn,
+        i: number,
+        defaultColour: powerbi.Fill
+    ): ICategory {
+        return <ICategory>{
+            name: categoryName,
+            displayName: {
+                formattedName: formattedName
+            },
+            sortOrder: distinctCategoriesFound,
+            selectionId: host
+                .createSelectionIdBuilder()
+                .withCategory(category, i)
+                .createSelectionId(),
+            objectIndex: i,
+            dataPoints: [],
+            colour: this.settings.dataColours.colourByCategory
+                ? getCategoricalObjectValue<Fill>(
+                      category,
+                      i,
+                      'dataColours',
+                      'categoryFillColour',
+                      defaultColour
+                  ).solid.color
+                : this.settings.dataColours.defaultFillColour
+        };
+    }
+
+    private getEmptyCategory(host: IVisualHost): ICategory {
+        return <ICategory>{
+            name: '',
+            displayName: {
+                formattedName: '',
+                textProperties: this.categoryTextProperties,
+                formattedWidth: 0
+            },
+            colour: this.settings.dataColours.defaultFillColour,
+            selectionId: host
+                .createSelectionIdBuilder()
+                .withMeasure(this.measureMetadata.queryName)
+                .createSelectionId(),
+            dataPoints: this.allDataPoints
+        };
+    }
+
+    private getLegendData(): ILegend {
+        return {
             boxColour:
                 this.settings.dataPoints.plotType === 'barcodePlot'
                     ? this.viewModel.categories[0].colour
@@ -334,12 +332,6 @@ export class ViewModelHandler {
                     ? VisualSettings.getDefault()['legend'].medianText
                     : this.settings.legend.medianText
         };
-
-        // We're done!
-        this.viewModel = viewModel;
-        debug.log('Finished mapDataView');
-        this.addDebugProfile(debug, 'mapDataView');
-        debug.footer();
     }
 
     /**
@@ -1159,48 +1151,11 @@ export class ViewModelHandler {
 
         // X-axis height
         debug.log('X-axis vertical space...');
-        xAxis.titleDimensions = {
-            height:
-                this.settings.xAxis.show &&
-                this.settings.xAxis.showTitle &&
-                xAxis.titleDisplayName &&
-                !xAxis.titleDisplayName.collapsed &&
-                xAxis.titleDisplayName.tailoredName !== '' &&
-                !xAxis.collapsed
-                    ? textMeasurementService.measureSvgTextHeight({
-                          fontSize:
-                              xAxis.titleDisplayName.textProperties.fontSize,
-                          fontFamily:
-                              xAxis.titleDisplayName.textProperties.fontFamily,
-                          text: xAxis.titleDisplayName.tailoredName
-                      })
-                    : 0
-        };
+        xAxis.titleDimensions = this.getXAxisTitleDimensions(xAxis);
         debug.log(`X-axis title height: ${xAxis.titleDimensions.height}`);
-        xAxis.labelDimensions = {
-            height:
-                this.settings.xAxis.show &&
-                this.viewModel.categoryNames &&
-                this.settings.xAxis.showLabels &&
-                !this.viewModel.categoriesAllCollapsed &&
-                !xAxis.collapsed
-                    ? textMeasurementService.measureSvgTextHeight(
-                          xAxis.labelTextProperties
-                      )
-                    : 0
-        };
+        xAxis.labelDimensions = this.getXAxisLabelDimensions(xAxis);
         debug.log(`X-axis label height: ${xAxis.labelDimensions.height}`);
-        xAxis.dimensions = {
-            height:
-                xAxis.titleDimensions.height +
-                xAxis.labelDimensions.height +
-                (this.settings.xAxis.show &&
-                this.viewModel.categoryNames &&
-                this.settings.xAxis.showLabels &&
-                !this.viewModel.categoriesAllCollapsed
-                    ? xAxis.padding.top
-                    : 0)
-        };
+        xAxis.dimensions = this.getXAxisDimensions(xAxis);
         debug.log(`X-axis total height: ${xAxis.dimensions.height}`);
 
         // Figure out how much vertical space we have for the y-axis and assign what we know currently
@@ -1235,93 +1190,70 @@ export class ViewModelHandler {
             !yAxis.collapsed
         ) {
             debug.log('Re-checking and adjusting Y-axis title...');
-            yAxis.titleDisplayName = this.getTailoredDisplayName(
-                yAxis.titleDisplayName.formattedName,
-                yAxis.titleDisplayName.textProperties,
-                yHeight
-            );
+            yAxis.titleDisplayName = this.getYAxisTitleName(yAxis, yHeight);
         }
 
-        // Providing that we managed to keep the Y-axis...
+        this.handeVisibleElementProperties(
+            yAxis,
+            yHeight,
+            yPadVert,
+            debug,
+            xAxis
+        );
+
+        // Transfer variables to view model
+        if (this.viewModel && this.viewModel.yAxis) {
+            this.viewModel.yAxis = yAxis;
+        }
+        if (this.viewModel && this.viewModel.xAxis) {
+            this.viewModel.xAxis = xAxis;
+        }
+
+        debug.log('visualTransform complete');
+        this.addDebugProfile(debug, 'resyncDimensions');
+    }
+
+    /**
+     * Providing that we managed to keep the Y-axis, setup everything that we need to show the chart correctly
+     */
+    private handeVisibleElementProperties(
+        yAxis: IAxisLinear,
+        yHeight: number,
+        yPadVert: number,
+        debug: VisualDebugger,
+        xAxis: IAxisCategorical
+    ) {
         if (!yAxis.collapsed) {
             yAxis.dimensions = {
                 height: yHeight,
                 y: yPadVert
             };
-
             yAxis.range = [yAxis.dimensions.height, yAxis.dimensions.y];
-
             debug.log('Y-Axis ticks and scale...');
             yAxis.ticks = axis.getRecommendedNumberOfTicksForYAxis(
                 yAxis.dimensions.height
             );
-            yAxis.scale = d3.scale
-                .linear()
-                .domain(yAxis.domain)
-                .range(yAxis.range)
-                .clamp(true);
+            yAxis.scale = this.setYAxisScale(yAxis);
             if (!(this.settings.yAxis.start || this.settings.yAxis.end)) {
                 yAxis.scale.nice(yAxis.ticks);
             }
-            yAxis.ticksFormatted = yAxis.scale
-                .ticks()
-                .map(v =>
-                    this.settings.yAxis.showLabels
-                        ? yAxis.labelFormatter.format(v)
-                        : ''
-                );
-
+            yAxis.ticksFormatted = this.getYAxisFormattedTicks(yAxis);
             // Resolve the title dimensions
             debug.log('Y-Axis title sizing...');
-            yAxis.titleDimensions = {
-                width:
-                    this.settings.yAxis.show &&
-                    this.settings.yAxis.showTitle &&
-                    yAxis.titleDisplayName &&
-                    !yAxis.titleDisplayName.collapsed &&
-                    yAxis.titleDisplayName.tailoredName !== '' &&
-                    !yAxis.collapsed
-                        ? textMeasurementService.measureSvgTextHeight(
-                              yAxis.titleDisplayName.textProperties
-                          )
-                        : 0,
-                height: yHeight,
-                x: -yHeight / 2,
-                y: 0
-            };
+            yAxis.titleDimensions = this.getYAxisTitleDimensions(
+                yAxis,
+                yHeight
+            );
             debug.log(`Y-axis title width: ${yAxis.titleDimensions.width}`);
-
             // Find the widest label and use that for our Y-axis width overall
             debug.log('Y-Axis label sizing...');
-            yAxis.labelDimensions = {
-                width:
-                    this.settings.yAxis.show &&
-                    this.settings.yAxis.showLabels &&
-                    !yAxis.collapsed
-                        ? Math.max(
-                              textMeasurementService.measureSvgTextWidth(
-                                  yAxis.labelTextProperties,
-                                  yAxis.ticksFormatted[0]
-                              ),
-                              textMeasurementService.measureSvgTextWidth(
-                                  yAxis.labelTextProperties,
-                                  yAxis.ticksFormatted[
-                                      yAxis.ticksFormatted.length - 1
-                                  ]
-                              )
-                          ) + yAxis.padding.left
-                        : 0
-            };
+            yAxis.labelDimensions = this.getYAxisLabelDimensions(yAxis);
             debug.log(`Y-axis label width: ${yAxis.labelDimensions.width}`);
-
             // Total Y-axis width
             yAxis.dimensions.width =
                 yAxis.labelDimensions.width + yAxis.titleDimensions.width;
             debug.log(`Y-axis total width: ${yAxis.dimensions.width}`);
-
-            /** Make adjustments to the width to compensate for smaller viewports
-             *  Very similar to x-axis code above; we can probably turn this into a function
-             */
+            // Make adjustments to the width to compensate for smaller viewports
             let xWidth = this.viewport.width - yAxis.dimensions.width;
             if (xWidth < xAxis.widthLimit) {
                 if (yAxis.titleDimensions.width > 0) {
@@ -1355,145 +1287,299 @@ export class ViewModelHandler {
                     xWidth
                 );
             }
-
             // Solve the remaining axis dimensions
-            yAxis.dimensions.x = yAxis.titleDimensions.width;
-            xAxis.dimensions.width = xWidth;
-            xAxis.titleDimensions.x =
-                yAxis.dimensions.width + xAxis.dimensions.width / 2;
-            xAxis.titleDimensions.y =
-                this.viewport.height - xAxis.titleDimensions.height;
-
+            this.setFinalAxisDimensions(yAxis, xAxis, xWidth);
             // Revise Y-axis properties as necessary
             debug.log('Y-Axis generator functions...');
             if (!yAxis.generator) {
                 yAxis.generator = d3.svg.axis();
             }
-            yAxis.generator
-                .scale(yAxis.scale)
-                .orient('left')
-                .ticks(yAxis.ticks)
-                .tickSize(-this.viewport.width + yAxis.dimensions.width)
-                .tickFormat(d =>
-                    this.settings.yAxis.showLabels &&
-                    yAxis.labelDimensions.width > 0
-                        ? yAxis.labelFormatter.format(d)
-                        : ''
-                );
-
+            this.setYAxisGenerator(yAxis);
             // Now we have y-axis width, do remaining x-axis width stuff
             debug.log('X-Axis ticks and scale...');
             xAxis.range = [0, xAxis.dimensions.width];
-            xAxis.scale = d3.scale
-                .ordinal()
-                .domain(xAxis.domain)
-                .rangeRoundBands(xAxis.range);
-
+            this.setXAxisScale(xAxis);
             if (!xAxis.generator) {
                 xAxis.generator = d3.svg.axis();
             }
-            xAxis.generator
-                .scale(xAxis.scale)
-                .orient('bottom')
-                .tickSize(-yAxis.dimensions.height);
-
-            // Violin plot specifics
+            this.setXAxisGenerator(xAxis, yAxis);
             debug.log('Violin dimensions...');
-            this.viewModel.violinPlot = <IViolinPlot>{
-                categoryWidth: xAxis.scale.rangeBand(),
-                width:
-                    xAxis.scale.rangeBand() -
-                    xAxis.scale.rangeBand() *
-                        (this.settings.violin.innerPadding / 100)
-            };
-
-            // Box plot specifics
+            this.setViolinDimensions(xAxis);
             debug.log('Box plot dimensions...');
-            this.viewModel.boxPlot = <IBoxPlot>{
-                width:
-                    this.viewModel.violinPlot.width -
-                    this.viewModel.violinPlot.width *
-                        (this.settings.dataPoints.innerPadding / 100),
-                maxMeanRadius: 3
-            };
-            this.viewModel.boxPlot.maxMeanDiameter =
-                this.viewModel.boxPlot.maxMeanRadius * 2;
-            this.viewModel.boxPlot.scaledMeanRadius =
-                this.viewModel.boxPlot.width / 5;
-            this.viewModel.boxPlot.scaledMeanDiameter =
-                this.viewModel.boxPlot.scaledMeanRadius * 2;
-
-            if (
-                Math.min(
-                    this.viewModel.boxPlot.scaledMeanDiameter,
-                    this.viewModel.boxPlot.maxMeanDiameter
-                ) >= this.viewModel.boxPlot.width
-            ) {
-                this.viewModel.boxPlot.actualMeanDiameter = 0;
-            } else {
-                this.viewModel.boxPlot.actualMeanDiameter =
-                    this.viewModel.boxPlot.scaledMeanDiameter >
-                    this.viewModel.boxPlot.maxMeanDiameter
-                        ? this.viewModel.boxPlot.maxMeanDiameter
-                        : this.viewModel.boxPlot.scaledMeanDiameter;
-            }
-            this.viewModel.boxPlot.actualMeanRadius =
-                this.viewModel.boxPlot.actualMeanDiameter / 2;
-            this.viewModel.boxPlot.xLeft =
-                this.viewModel.violinPlot.categoryWidth / 2 -
-                this.viewModel.boxPlot.width / 2;
-            this.viewModel.boxPlot.xRight =
-                this.viewModel.violinPlot.categoryWidth / 2 +
-                this.viewModel.boxPlot.width / 2;
-            this.viewModel.boxPlot.featureXLeft =
-                this.viewModel.boxPlot.xLeft +
-                this.settings.dataPoints.strokeWidth / 2;
-            this.viewModel.boxPlot.featureXRight =
-                this.viewModel.boxPlot.xRight -
-                this.settings.dataPoints.strokeWidth / 2;
-
-            // Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to use min/max rather than quartiles
+            this.setBoxPlotDimensions();
             debug.log('Ranged column plot dimensions...');
-            this.viewModel.columnPlot = this.viewModel.boxPlot;
-
-            // Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for debugging purposes
+            this.setColumnPlotDimensions();
             debug.log('Barcode plot dimensions...');
-            this.viewModel.barcodePlot = {
-                width: this.viewModel.boxPlot.width,
-                xLeft: this.viewModel.boxPlot.xLeft,
-                xRight: this.viewModel.boxPlot.xRight,
-                tooltipWidth: this.viewModel.boxPlot.width * 1.4,
-                featureXLeft:
-                    this.viewModel.violinPlot.categoryWidth / 2 -
-                    (this.viewModel.boxPlot.width * 1.4) / 2,
-                featureXRight:
-                    this.viewModel.violinPlot.categoryWidth / 2 +
-                    (this.viewModel.boxPlot.width * 1.4) / 2
-            };
-
+            this.setBarcodePlotDimensions();
             if (
                 this.viewModel.xVaxis &&
                 this.viewModel.xAxis.domain &&
                 this.viewModel.xVaxis.scale
             ) {
                 debug.log('Assigning xVaxis scale...');
-                this.viewModel.xVaxis.scale
-                    .domain(this.viewModel.xVaxis.domain)
-                    .nice()
-                    .clamp(true);
+                this.setXVAxisScale();
             }
         }
+    }
 
-        // Transfer variables to view model
-        if (this.viewModel && this.viewModel.yAxis) {
-            this.viewModel.yAxis = yAxis;
-        }
-        if (this.viewModel && this.viewModel.xAxis) {
-            this.viewModel.xAxis = xAxis;
-        }
+    private setFinalAxisDimensions(
+        yAxis: IAxisLinear,
+        xAxis: IAxisCategorical,
+        xWidth: number
+    ) {
+        yAxis.dimensions.x = yAxis.titleDimensions.width;
+        xAxis.dimensions.width = xWidth;
+        xAxis.titleDimensions.x =
+            yAxis.dimensions.width + xAxis.dimensions.width / 2;
+        xAxis.titleDimensions.y =
+            this.viewport.height - xAxis.titleDimensions.height;
+    }
 
-        debug.log('visualTransform complete');
-        this.addDebugProfile(debug, 'resyncDimensions');
+    private getYAxisFormattedTicks(yAxis: IAxisLinear): string[] {
+        return yAxis.scale
+            .ticks()
+            .map(v =>
+                this.settings.yAxis.showLabels
+                    ? yAxis.labelFormatter.format(v)
+                    : ''
+            );
+    }
+
+    private setYAxisScale(yAxis: IAxisLinear): d3.scale.Linear<number, number> {
+        return d3.scale
+            .linear()
+            .domain(yAxis.domain)
+            .range(yAxis.range)
+            .clamp(true);
+    }
+
+    private setXAxisScale(xAxis: IAxisCategorical) {
+        xAxis.scale = d3.scale
+            .ordinal()
+            .domain(xAxis.domain)
+            .rangeRoundBands(xAxis.range);
+    }
+
+    private setXAxisGenerator(xAxis: IAxisCategorical, yAxis: IAxisLinear) {
+        xAxis.generator
+            .scale(xAxis.scale)
+            .orient('bottom')
+            .tickSize(-yAxis.dimensions.height);
+    }
+
+    private setYAxisGenerator(yAxis: IAxisLinear) {
+        yAxis.generator
+            .scale(yAxis.scale)
+            .orient('left')
+            .ticks(yAxis.ticks)
+            .tickSize(-this.viewport.width + yAxis.dimensions.width)
+            .tickFormat(d =>
+                this.settings.yAxis.showLabels &&
+                yAxis.labelDimensions.width > 0
+                    ? yAxis.labelFormatter.format(d)
+                    : ''
+            );
+    }
+
+    /**
+     * Ranged column plot specifics - for now they are a copy of the box plot, as we're just changing the size to
+     * use min/max rather than quartiles
+     */
+    private setColumnPlotDimensions() {
+        this.viewModel.columnPlot = this.viewModel.boxPlot;
+    }
+
+    private setViolinDimensions(xAxis: IAxisCategorical) {
+        this.viewModel.violinPlot = <IViolinPlot>{
+            categoryWidth: xAxis.scale.rangeBand(),
+            width:
+                xAxis.scale.rangeBand() -
+                xAxis.scale.rangeBand() *
+                    (this.settings.violin.innerPadding / 100)
+        };
+    }
+
+    private setXVAxisScale() {
+        this.viewModel.xVaxis.scale
+            .domain(this.viewModel.xVaxis.domain)
+            .nice()
+            .clamp(true);
+    }
+
+    /**
+     * Barcode plot specifics - a number of data points are similar to above but for now we'll keep separate for
+     * debugging purposes
+     */
+    private setBarcodePlotDimensions() {
+        this.viewModel.barcodePlot = {
+            width: this.viewModel.boxPlot.width,
+            xLeft: this.viewModel.boxPlot.xLeft,
+            xRight: this.viewModel.boxPlot.xRight,
+            tooltipWidth: this.viewModel.boxPlot.width * 1.4,
+            featureXLeft:
+                this.viewModel.violinPlot.categoryWidth / 2 -
+                (this.viewModel.boxPlot.width * 1.4) / 2,
+            featureXRight:
+                this.viewModel.violinPlot.categoryWidth / 2 +
+                (this.viewModel.boxPlot.width * 1.4) / 2
+        };
+    }
+
+    private setBoxPlotDimensions() {
+        this.viewModel.boxPlot = <IBoxPlot>{
+            width:
+                this.viewModel.violinPlot.width -
+                this.viewModel.violinPlot.width *
+                    (this.settings.dataPoints.innerPadding / 100),
+            maxMeanRadius: 3
+        };
+        this.viewModel.boxPlot.maxMeanDiameter =
+            this.viewModel.boxPlot.maxMeanRadius * 2;
+        this.viewModel.boxPlot.scaledMeanRadius =
+            this.viewModel.boxPlot.width / 5;
+        this.viewModel.boxPlot.scaledMeanDiameter =
+            this.viewModel.boxPlot.scaledMeanRadius * 2;
+
+        if (
+            Math.min(
+                this.viewModel.boxPlot.scaledMeanDiameter,
+                this.viewModel.boxPlot.maxMeanDiameter
+            ) >= this.viewModel.boxPlot.width
+        ) {
+            this.viewModel.boxPlot.actualMeanDiameter = 0;
+        } else {
+            this.viewModel.boxPlot.actualMeanDiameter =
+                this.viewModel.boxPlot.scaledMeanDiameter >
+                this.viewModel.boxPlot.maxMeanDiameter
+                    ? this.viewModel.boxPlot.maxMeanDiameter
+                    : this.viewModel.boxPlot.scaledMeanDiameter;
+        }
+        this.viewModel.boxPlot.actualMeanRadius =
+            this.viewModel.boxPlot.actualMeanDiameter / 2;
+        this.viewModel.boxPlot.xLeft =
+            this.viewModel.violinPlot.categoryWidth / 2 -
+            this.viewModel.boxPlot.width / 2;
+        this.viewModel.boxPlot.xRight =
+            this.viewModel.violinPlot.categoryWidth / 2 +
+            this.viewModel.boxPlot.width / 2;
+        this.viewModel.boxPlot.featureXLeft =
+            this.viewModel.boxPlot.xLeft +
+            this.settings.dataPoints.strokeWidth / 2;
+        this.viewModel.boxPlot.featureXRight =
+            this.viewModel.boxPlot.xRight -
+            this.settings.dataPoints.strokeWidth / 2;
+    }
+
+    private getYAxisTitleName(
+        yAxis: IAxisLinear,
+        yHeight: number
+    ): IDisplayName {
+        return this.getTailoredDisplayName(
+            yAxis.titleDisplayName.formattedName,
+            yAxis.titleDisplayName.textProperties,
+            yHeight
+        );
+    }
+
+    private getYAxisLabelDimensions(
+        yAxis: IAxisLinear
+    ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
+        return {
+            width:
+                this.settings.yAxis.show &&
+                this.settings.yAxis.showLabels &&
+                !yAxis.collapsed
+                    ? Math.max(
+                          textMeasurementService.measureSvgTextWidth(
+                              yAxis.labelTextProperties,
+                              yAxis.ticksFormatted[0]
+                          ),
+                          textMeasurementService.measureSvgTextWidth(
+                              yAxis.labelTextProperties,
+                              yAxis.ticksFormatted[
+                                  yAxis.ticksFormatted.length - 1
+                              ]
+                          )
+                      ) + yAxis.padding.left
+                    : 0
+        };
+    }
+
+    private getYAxisTitleDimensions(
+        yAxis: IAxisLinear,
+        yHeight: number
+    ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
+        return {
+            width:
+                this.settings.yAxis.show &&
+                this.settings.yAxis.showTitle &&
+                yAxis.titleDisplayName &&
+                !yAxis.titleDisplayName.collapsed &&
+                yAxis.titleDisplayName.tailoredName !== '' &&
+                !yAxis.collapsed
+                    ? textMeasurementService.measureSvgTextHeight(
+                          yAxis.titleDisplayName.textProperties
+                      )
+                    : 0,
+            height: yHeight,
+            x: -yHeight / 2,
+            y: 0
+        };
+    }
+
+    private getXAxisDimensions(
+        xAxis: IAxisCategorical
+    ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
+        return {
+            height:
+                xAxis.titleDimensions.height +
+                xAxis.labelDimensions.height +
+                (this.settings.xAxis.show &&
+                this.viewModel.categoryNames &&
+                this.settings.xAxis.showLabels &&
+                !this.viewModel.categoriesAllCollapsed
+                    ? xAxis.padding.top
+                    : 0)
+        };
+    }
+
+    private getXAxisLabelDimensions(
+        xAxis: IAxisCategorical
+    ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
+        return {
+            height:
+                this.settings.xAxis.show &&
+                this.viewModel.categoryNames &&
+                this.settings.xAxis.showLabels &&
+                !this.viewModel.categoriesAllCollapsed &&
+                !xAxis.collapsed
+                    ? textMeasurementService.measureSvgTextHeight(
+                          xAxis.labelTextProperties
+                      )
+                    : 0
+        };
+    }
+
+    private getXAxisTitleDimensions(
+        xAxis: IAxisCategorical
+    ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
+        return {
+            height:
+                this.settings.xAxis.show &&
+                this.settings.xAxis.showTitle &&
+                xAxis.titleDisplayName &&
+                !xAxis.titleDisplayName.collapsed &&
+                xAxis.titleDisplayName.tailoredName !== '' &&
+                !xAxis.collapsed
+                    ? textMeasurementService.measureSvgTextHeight({
+                          fontSize:
+                              xAxis.titleDisplayName.textProperties.fontSize,
+                          fontFamily:
+                              xAxis.titleDisplayName.textProperties.fontFamily,
+                          text: xAxis.titleDisplayName.tailoredName
+                      })
+                    : 0
+        };
     }
 
     /**
