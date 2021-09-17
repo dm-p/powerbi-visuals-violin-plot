@@ -5,8 +5,7 @@ import { visual } from '../pbiviz.json';
 
 const defaultFontSize: number = 11,
     defaultFontSizeSmall: number = 8,
-    defaultFontFamily: string =
-        '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
+    defaultFontFamily: string = '"Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif',
     defaultFontColor: string = '#777777',
     defaultAxisFontColor: string = '#777777',
     defaultAxisGridlineColor: string = '#EAEAEA',

@@ -1,9 +1,6 @@
 import powerbi from 'powerbi-visuals-api';
 import ISelectionId = powerbi.visuals.ISelectionId;
-import {
-    valueFormatter,
-    interfaces
-} from 'powerbi-visuals-utils-formattingutils';
+import { valueFormatter, interfaces } from 'powerbi-visuals-utils-formattingutils';
 import TextProperties = interfaces.TextProperties;
 import IValueFormatter = valueFormatter.IValueFormatter;
 

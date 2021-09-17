@@ -31,9 +31,7 @@ export class VisualDebugger {
      */
     heading(heading: string) {
         if (this.enabled) {
-            console.log(
-                `\n====================\n${heading}\n====================`
-            );
+            console.log(`\n====================\n${heading}\n====================`);
         }
     }
 
@@ -68,9 +66,7 @@ export class VisualDebugger {
             if (this.startTime) {
                 if (this.lastCheckTime) {
                     this.log(
-                        `${(
-                            performance.now() - this.lastCheckTime
-                        ).toLocaleString()} ms elapsed since last report`
+                        `${(performance.now() - this.lastCheckTime).toLocaleString()} ms elapsed since last report`
                     );
                 }
                 this.log(
@@ -80,9 +76,7 @@ export class VisualDebugger {
                 );
                 this.lastCheckTime = performance.now();
             } else {
-                this.log(
-                    'Unable to get execution time. Did you start profiling higher up in your code?'
-                );
+                this.log('Unable to get execution time. Did you start profiling higher up in your code?');
             }
         }
     }

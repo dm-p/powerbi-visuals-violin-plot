@@ -6,11 +6,7 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import ISandboxExtendedColorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 import Fill = powerbi.Fill;
 import DataViewCategoryColumn = powerbi.DataViewCategoryColumn;
-import {
-    textMeasurementService,
-    valueFormatter,
-    interfaces
-} from 'powerbi-visuals-utils-formattingutils';
+import { textMeasurementService, valueFormatter, interfaces } from 'powerbi-visuals-utils-formattingutils';
 import TextProperties = interfaces.TextProperties;
 import { pixelConverter } from 'powerbi-visuals-utils-typeutils';
 import { axis } from 'powerbi-visuals-utils-chartutils';
@@ -33,14 +29,7 @@ import {
 import { getCategoricalObjectValue } from './visualHelpers';
 import { defaultBandwidth, VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
-import {
-    IKernel,
-    ELimit,
-    kernelDensityInterpolator,
-    kernelDensityRoot,
-    kernelDensityEstimator,
-    kernels
-} from './kde';
+import { IKernel, ELimit, kernelDensityInterpolator, kernelDensityRoot, kernelDensityEstimator, kernels } from './kde';
 import { getMetadataByRole, isNumberTruthy, shouldNotMapData } from './utils';
 
 export class ViewModelHandler {
@@ -109,11 +98,7 @@ export class ViewModelHandler {
      *
      *  If the array is filtered down to the `categoryLimit` value, we'll set a flag in the view model to alert the user.
      */
-    mapDataView(
-        options: VisualUpdateOptions,
-        host: IVisualHost,
-        colourPalette: ISandboxExtendedColorPalette
-    ) {
+    mapDataView(options: VisualUpdateOptions, host: IVisualHost, colourPalette: ISandboxExtendedColorPalette) {
         // Set up debugging
         let debug = new VisualDebugger(this.debug);
         debug.log('Starting mapDataView');
@@ -134,9 +119,7 @@ export class ViewModelHandler {
             metadata = dataViews[0].metadata;
         this.categoryMetadata = getMetadataByRole(metadata, 'category');
         this.measureMetadata = getMetadataByRole(metadata, 'measure');
-        const category =
-            (this.categoryMetadata && dataViews[0].categorical.categories[0]) ||
-            null;
+        const category = (this.categoryMetadata && dataViews[0].categorical.categories[0]) || null;
         this.categoryTextProperties = this.setCategoryTextProperties();
         viewModel.measure = this.measureMetadata.displayName;
         viewModel.locale = host.locale;
@@ -176,10 +159,8 @@ export class ViewModelHandler {
                     };
                     // Create the initial display name here, so that we can use it in legends and later on when we do the tailoring
                     const formattedName = valueFormatter.format(
-                        (this.categoryMetadata.type.dateTime &&
-                            new Date(categoryName)) ||
-                            (this.categoryMetadata.type.numeric &&
-                                Number(categoryName)) ||
+                        (this.categoryMetadata.type.dateTime && new Date(categoryName)) ||
+                            (this.categoryMetadata.type.numeric && Number(categoryName)) ||
                             categoryName,
                         this.categoryMetadata.format
                     );
@@ -223,13 +204,8 @@ export class ViewModelHandler {
 
     private setDataViewMetadata(): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDataViewMetadata {
         return {
-            categoryDisplayName:
-                (this.categoryMetadata && this.categoryMetadata.displayName) ||
-                null,
-            measureDisplayName:
-                (this.measureMetadata.displayName &&
-                    this.measureMetadata.displayName) ||
-                null
+            categoryDisplayName: (this.categoryMetadata && this.categoryMetadata.displayName) || null,
+            measureDisplayName: (this.measureMetadata.displayName && this.measureMetadata.displayName) || null
         };
     }
 
@@ -255,13 +231,8 @@ export class ViewModelHandler {
             objectIndex: i,
             dataPoints: [],
             colour: this.settings.dataColours.colourByCategory
-                ? getCategoricalObjectValue<Fill>(
-                      category,
-                      i,
-                      'dataColours',
-                      'categoryFillColour',
-                      defaultColour
-                  ).solid.color
+                ? getCategoricalObjectValue<Fill>(category, i, 'dataColours', 'categoryFillColour', defaultColour).solid
+                      .color
                 : this.settings.dataColours.defaultFillColour
         };
     }
@@ -297,8 +268,7 @@ export class ViewModelHandler {
                 this.settings.dataPoints.showQuartiles &&
                 this.settings.dataPoints.quartile1StrokeLineStyle ===
                     this.settings.dataPoints.quartile3StrokeLineStyle &&
-                this.settings.dataPoints.quartile1FillColour ===
-                    this.settings.dataPoints.quartile3FillColour,
+                this.settings.dataPoints.quartile1FillColour === this.settings.dataPoints.quartile3FillColour,
             quartileCombinedText:
                 this.settings.legend.quartileCombinedText === ''
                     ? VisualSettings.getDefault()['legend'].quartileCombinedText
@@ -390,12 +360,7 @@ export class ViewModelHandler {
             debug.log('Assigning category statistics...');
             c.statistics = {
                 ...statistics,
-                ...this.getBandwidthByCategory(
-                    statistics,
-                    c.dataPoints,
-                    c.objectIndex,
-                    category
-                )
+                ...this.getBandwidthByCategory(statistics, c.dataPoints, c.objectIndex, category)
             };
         });
 
@@ -421,17 +386,10 @@ export class ViewModelHandler {
      * The use may wish to override this, so substitute for this if supplied. We'll keep the derived Silverman bandwidth for the user
      * to obtain from the tooltip, should they wish to.
      */
-    private getBandwidthAllData(
-        statistics: IStatistics,
-        dataPoints: number[]
-    ): Partial<IStatistics> {
-        const bandwidthSilverman = this.calculateSilverman(
-                statistics,
-                dataPoints
-            ),
+    private getBandwidthAllData(statistics: IStatistics, dataPoints: number[]): Partial<IStatistics> {
+        const bandwidthSilverman = this.calculateSilverman(statistics, dataPoints),
             bandwidthActual =
-                this.settings.violin.specifyBandwidth &&
-                this.settings.violin.bandwidth
+                this.settings.violin.specifyBandwidth && this.settings.violin.bandwidth
                     ? this.settings.violin.bandwidth
                     : bandwidthSilverman;
         return {
@@ -451,29 +409,15 @@ export class ViewModelHandler {
         index: number,
         metadata: DataViewCategoryColumn
     ): Partial<IStatistics> {
-        if (
-            this.viewModel.categoryNames &&
-            this.settings.violin.bandwidthByCategory
-        ) {
-            const catDefaultBw = this.settings.violin.bandwidth
-                    ? this.settings.violin.bandwidth
-                    : defaultBandwidth,
-                bandwidthSilverman = this.calculateSilverman(
-                    statistics,
-                    dataPoints
-                );
+        if (this.viewModel.categoryNames && this.settings.violin.bandwidthByCategory) {
+            const catDefaultBw = this.settings.violin.bandwidth ? this.settings.violin.bandwidth : defaultBandwidth,
+                bandwidthSilverman = this.calculateSilverman(statistics, dataPoints);
             return (
                 (this.settings.violin.specifyBandwidth && {
                     bandwidthSilverman,
                     bandwidthActual:
                         (this.settings.violin.bandwidthByCategory &&
-                            getCategoricalObjectValue(
-                                metadata,
-                                index,
-                                'violin',
-                                'categoryBandwidth',
-                                catDefaultBw
-                            )) ||
+                            getCategoricalObjectValue(metadata, index, 'violin', 'categoryBandwidth', catDefaultBw)) ||
                         catDefaultBw
                 }) || {
                     bandwidthSilverman,
@@ -538,16 +482,10 @@ export class ViewModelHandler {
             this.viewModel.categories.sort((x, y) => {
                 switch (this.settings.sorting.by) {
                     case 'category': {
-                        return d3[`${this.settings.sorting.order}`](
-                            x.sortOrder,
-                            y.sortOrder
-                        );
+                        return d3[`${this.settings.sorting.order}`](x.sortOrder, y.sortOrder);
                     }
                     case 'samples': {
-                        return d3[`${this.settings.sorting.order}`](
-                            x.dataPoints.length,
-                            y.dataPoints.length
-                        );
+                        return d3[`${this.settings.sorting.order}`](x.dataPoints.length, y.dataPoints.length);
                     }
                     case 'median':
                     case 'mean':
@@ -600,19 +538,13 @@ export class ViewModelHandler {
                     this.settings.yAxis.labelDisplayUnits === 0
                         ? this.viewModel.statistics.max
                         : this.settings.yAxis.labelDisplayUnits,
-                precision:
-                    this.settings.yAxis.precision != null
-                        ? this.settings.yAxis.precision
-                        : null,
+                precision: this.settings.yAxis.precision != null ? this.settings.yAxis.precision : null,
                 cultureSelector: this.viewModel.locale
             })
         };
 
         // Initial domain based on view model statistics
-        this.updateYDomain(
-            [this.viewModel.statistics.min, this.viewModel.statistics.max],
-            debug
-        );
+        this.updateYDomain([this.viewModel.statistics.min, this.viewModel.statistics.max], debug);
 
         // X-Axis (initial)
         debug.log('Initial X-Axis setup...');
@@ -655,9 +587,7 @@ export class ViewModelHandler {
         // Y-axis title
         this.viewModel.yAxis.titleTextProperties = {
             fontFamily: this.settings.yAxis.titleFontFamily,
-            fontSize: pixelConverter.toString(
-                this.settings.yAxis.titleFontSize
-            ),
+            fontSize: pixelConverter.toString(this.settings.yAxis.titleFontSize),
             text: this.formatYAxistitle(debug)
         };
         if (this.settings.yAxis.showTitle) {
@@ -705,16 +635,12 @@ export class ViewModelHandler {
                 xTickMapper[`${c.name}`] = c.displayName.tailoredName;
             });
 
-            this.viewModel.categoriesAllCollapsed =
-                collapsedCount === this.viewModel.categories.length;
+            this.viewModel.categoriesAllCollapsed = collapsedCount === this.viewModel.categories.length;
 
             if (this.viewModel.xAxis.generator) {
                 this.viewModel.xAxis.generator.tickFormat(d => {
                     // If all our ticks got collapsed, we might as well not have them...
-                    if (
-                        this.viewModel.categoriesAllCollapsed ||
-                        !this.settings.xAxis.showLabels
-                    ) {
+                    if (this.viewModel.categoriesAllCollapsed || !this.settings.xAxis.showLabels) {
                         return '';
                     } else {
                         return xTickMapper[d];
@@ -751,10 +677,7 @@ export class ViewModelHandler {
         debug.log('Performing KDE on visual data...');
         debug.profileStart();
 
-        if (
-            this.settings.violin.type === 'line' &&
-            !this.viewModel.yAxis.collapsed
-        ) {
+        if (this.settings.violin.type === 'line' && !this.viewModel.yAxis.collapsed) {
             // Keep track of the axis limits so that we can adjust them later if necessary
             let yMin = this.viewModel.yAxis.domain[0],
                 yMax = this.viewModel.yAxis.domain[1];
@@ -767,14 +690,8 @@ export class ViewModelHandler {
                 /** We'll need to return slightly different results based on whether we wish to clamp the data or converge it, so let's sort that out
                  *  Many thanks to Andrew Sielen's Block for inspiration on this (http://bl.ocks.org/asielen/92929960988a8935d907e39e60ea8417)
                  */
-                let kdeData = this.getNewKDE(c.statistics.bandwidthActual)(
-                        c.dataPoints
-                    ),
-                    interpolate = this.getInterpolationStage1(
-                        c.statistics,
-                        series,
-                        debug
-                    );
+                let kdeData = this.getNewKDE(c.statistics.bandwidthActual)(c.dataPoints),
+                    interpolate = this.getInterpolationStage1(c.statistics, series, debug);
                 if (!this.settings.violin.clamp) {
                     // Re-calc interpolation
                     interpolate = this.getRevisedConvergedInterpolation(
@@ -788,38 +705,23 @@ export class ViewModelHandler {
                     );
 
                     // If our KDE value exceeds the y-axis domain, then we need to extend it to fit the plot.
-                    if (
-                        isNumberTruthy(interpolate.min) &&
-                        interpolate.min < yMin
-                    ) {
+                    if (isNumberTruthy(interpolate.min) && interpolate.min < yMin) {
                         debug.log(
                             `[${series}] Interpolation exceeds y-axis minimum (currently ${yMin}). Reducing to ${interpolate.min}`
                         );
                         yMin = interpolate.min;
                     }
-                    if (
-                        isNumberTruthy(interpolate.max) &&
-                        interpolate.max > yMax
-                    ) {
+                    if (isNumberTruthy(interpolate.max) && interpolate.max > yMax) {
                         debug.log(
                             `[${series}] Interpolation exceeds y-axis maximum (currently ${yMax}). Extending to ${interpolate.max}`
                         );
                         yMax = interpolate.max;
                     }
                     // We'll now re-process the array to ensure that we filter out the correct erroneous KDE values
-                    const kdeProcessed = this.getAdjustedKdeData(
-                        kdeData,
-                        interpolate,
-                        series,
-                        debug
-                    );
+                    const kdeProcessed = this.getAdjustedKdeData(kdeData, interpolate, series, debug);
                     c.dataKde = kdeProcessed;
                 } else {
-                    c.dataKde = this.getClampedKdeData(
-                        kdeData,
-                        interpolate,
-                        debug
-                    );
+                    c.dataKde = this.getClampedKdeData(kdeData, interpolate, debug);
                 }
                 // Adjust violin scale to account for inner padding preferences & generate SVG series functions
                 c.yVScale = this.kdeVScale(c);
@@ -852,18 +754,10 @@ export class ViewModelHandler {
         debug: VisualDebugger
     ) {
         // Second phase - we try to converge the chart within the confines of the series min/max
-        let interpolate = this.getInterpolationStage2(
-            kdeData,
-            statistics,
-            series,
-            debug
-        );
+        let interpolate = this.getInterpolationStage2(kdeData, statistics, series, debug);
 
         // Third phase - if either interpolation data point is still undefined then we run KDE over it until we find one, or run out of road and set one
-        if (
-            !isNumberTruthy(interpolate.min) ||
-            !isNumberTruthy(interpolate.max)
-        ) {
+        if (!isNumberTruthy(interpolate.min) || !isNumberTruthy(interpolate.max)) {
             interpolate = this.getInterpolationStage3(
                 interpolate,
                 statistics,
@@ -931,24 +825,12 @@ export class ViewModelHandler {
             kdeRoot = kernelDensityRoot(kernel.window, bandwidth, dataPoints);
 
         if (!isNumberTruthy(interpolate.min)) {
-            min = kernelDensityInterpolator(
-                statistics.min,
-                ELimit.min,
-                kdeRoot
-            );
-            debug.log(
-                `[${series}] Applied KDE to minimum value. New value: ${min}`
-            );
+            min = kernelDensityInterpolator(statistics.min, ELimit.min, kdeRoot);
+            debug.log(`[${series}] Applied KDE to minimum value. New value: ${min}`);
         }
         if (!isNumberTruthy(interpolate.max)) {
-            max = kernelDensityInterpolator(
-                statistics.max,
-                ELimit.max,
-                kdeRoot
-            );
-            debug.log(
-                `[${series}] Applied KDE to maximum value. New value: ${max}`
-            );
+            max = kernelDensityInterpolator(statistics.max, ELimit.max, kdeRoot);
+            debug.log(`[${series}] Applied KDE to maximum value. New value: ${max}`);
         }
         debug.log(
             `[${series}] Interpolation checkpoint #3 (KDE) - iMin: ${min}; sMin: ${statistics.min} iMax: ${max}; sMax: ${statistics.max}`
@@ -991,9 +873,7 @@ export class ViewModelHandler {
             });
         }
 
-        debug.log(
-            `[${series}] Finding suitable KDE array min/max convergence points...`
-        );
+        debug.log(`[${series}] Finding suitable KDE array min/max convergence points...`);
         let foundExtentMax = false,
             processedKde: IDataPointKde[] = [];
 
@@ -1030,19 +910,13 @@ export class ViewModelHandler {
     /**
      * If we want to clamp the KDE data, we add in a duplicate of the min/max elements with a zero y value for nice borders
      */
-    private getClampedKdeData(
-        kdeData: IDataPointKde[],
-        interpolate: IInterpolationExtents,
-        debug: VisualDebugger
-    ) {
+    private getClampedKdeData(kdeData: IDataPointKde[], interpolate: IInterpolationExtents, debug: VisualDebugger) {
         const minBisect = d3.bisector((d: IDataPointKde) => d.x).left,
             maxBisect = d3.bisector((d: IDataPointKde) => d.x).right;
         let min = minBisect(kdeData, interpolate.min),
             max = maxBisect(kdeData, interpolate.max);
 
-        debug.log(
-            `Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`
-        );
+        debug.log(`Clamp splicing: min index = ${min}, max index = ${max}, total KDE bins = ${kdeData.length}`);
 
         // Add 2 max elements: the KDE plot value, and a 0 to converge
         debug.log('Resolving maximum values...');
@@ -1072,9 +946,7 @@ export class ViewModelHandler {
 
         // Filter out anything outside our interpolation values
         debug.log('Filtering extents...');
-        return kdeData
-            .filter(d => d.x >= interpolate.min)
-            .filter(d => d.x <= interpolate.max);
+        return kdeData.filter(d => d.x >= interpolate.min).filter(d => d.x <= interpolate.max);
     }
 
     /**
@@ -1088,9 +960,7 @@ export class ViewModelHandler {
         return kernelDensityEstimator(
             this.kernel.window,
             bandwidth,
-            this.viewModel.xVaxis.scale.ticks(
-                parseInt(this.settings.violin.resolution)
-            )
+            this.viewModel.xVaxis.scale.ticks(parseInt(this.settings.violin.resolution))
         );
     }
 
@@ -1176,22 +1046,12 @@ export class ViewModelHandler {
             debug.log('Y-axis too short to render properly!');
             this.viewModel.yAxis.collapsed = true;
         }
-        if (
-            this.settings.yAxis.showTitle &&
-            yAxis.titleDisplayName &&
-            !yAxis.collapsed
-        ) {
+        if (this.settings.yAxis.showTitle && yAxis.titleDisplayName && !yAxis.collapsed) {
             debug.log('Re-checking and adjusting Y-axis title...');
             yAxis.titleDisplayName = this.getYAxisTitleName(yAxis, yHeight);
         }
 
-        this.handeVisibleElementProperties(
-            yAxis,
-            yHeight,
-            yPadVert,
-            debug,
-            xAxis
-        );
+        this.handeVisibleElementProperties(yAxis, yHeight, yPadVert, debug, xAxis);
 
         // Transfer variables to view model
         if (this.viewModel && this.viewModel.yAxis) {
@@ -1222,9 +1082,7 @@ export class ViewModelHandler {
             };
             yAxis.range = [yAxis.dimensions.height, yAxis.dimensions.y];
             debug.log('Y-Axis ticks and scale...');
-            yAxis.ticks = axis.getRecommendedNumberOfTicksForYAxis(
-                yAxis.dimensions.height
-            );
+            yAxis.ticks = axis.getRecommendedNumberOfTicksForYAxis(yAxis.dimensions.height);
             yAxis.scale = this.setYAxisScale(yAxis);
             if (!(this.settings.yAxis.start || this.settings.yAxis.end)) {
                 yAxis.scale.nice(yAxis.ticks);
@@ -1232,35 +1090,26 @@ export class ViewModelHandler {
             yAxis.ticksFormatted = this.getYAxisFormattedTicks(yAxis);
             // Resolve the title dimensions
             debug.log('Y-Axis title sizing...');
-            yAxis.titleDimensions = this.getYAxisTitleDimensions(
-                yAxis,
-                yHeight
-            );
+            yAxis.titleDimensions = this.getYAxisTitleDimensions(yAxis, yHeight);
             debug.log(`Y-axis title width: ${yAxis.titleDimensions.width}`);
             // Find the widest label and use that for our Y-axis width overall
             debug.log('Y-Axis label sizing...');
             yAxis.labelDimensions = this.getYAxisLabelDimensions(yAxis);
             debug.log(`Y-axis label width: ${yAxis.labelDimensions.width}`);
             // Total Y-axis width
-            yAxis.dimensions.width =
-                yAxis.labelDimensions.width + yAxis.titleDimensions.width;
+            yAxis.dimensions.width = yAxis.labelDimensions.width + yAxis.titleDimensions.width;
             debug.log(`Y-axis total width: ${yAxis.dimensions.width}`);
             // Make adjustments to the width to compensate for smaller viewports
             let xWidth = this.viewport.width - yAxis.dimensions.width;
             if (xWidth < xAxis.widthLimit) {
                 if (yAxis.titleDimensions.width > 0) {
-                    debug.log(
-                        'Reducing X-axis title to make room for Y-axis...'
-                    );
+                    debug.log('Reducing X-axis title to make room for Y-axis...');
                     xWidth += yAxis.titleDimensions.width;
                     yAxis.dimensions.width -= yAxis.titleDimensions.width;
                     yAxis.titleDimensions.width = 0;
                 }
             }
-            if (
-                xWidth < xAxis.widthLimit &&
-                yAxis.titleDimensions.width === 0
-            ) {
+            if (xWidth < xAxis.widthLimit && yAxis.titleDimensions.width === 0) {
                 debug.log('Reducing Y-axis labels to make room for X-axis...');
                 xWidth += yAxis.labelDimensions.width;
                 yAxis.labelDimensions.width = yAxis.dimensions.width = 0;
@@ -1303,38 +1152,22 @@ export class ViewModelHandler {
             this.setColumnPlotDimensions();
             debug.log('Barcode plot dimensions...');
             this.setBarcodePlotDimensions();
-            if (
-                this.viewModel.xVaxis &&
-                this.viewModel.xAxis.domain &&
-                this.viewModel.xVaxis.scale
-            ) {
+            if (this.viewModel.xVaxis && this.viewModel.xAxis.domain && this.viewModel.xVaxis.scale) {
                 debug.log('Assigning xVaxis scale...');
                 this.setXVAxisScale();
             }
         }
     }
 
-    private setFinalAxisDimensions(
-        yAxis: IAxisLinear,
-        xAxis: IAxisCategorical,
-        xWidth: number
-    ) {
+    private setFinalAxisDimensions(yAxis: IAxisLinear, xAxis: IAxisCategorical, xWidth: number) {
         yAxis.dimensions.x = yAxis.titleDimensions.width;
         xAxis.dimensions.width = xWidth;
-        xAxis.titleDimensions.x =
-            yAxis.dimensions.width + xAxis.dimensions.width / 2;
-        xAxis.titleDimensions.y =
-            this.viewport.height - xAxis.titleDimensions.height;
+        xAxis.titleDimensions.x = yAxis.dimensions.width + xAxis.dimensions.width / 2;
+        xAxis.titleDimensions.y = this.viewport.height - xAxis.titleDimensions.height;
     }
 
     private getYAxisFormattedTicks(yAxis: IAxisLinear): string[] {
-        return yAxis.scale
-            .ticks()
-            .map(v =>
-                this.settings.yAxis.showLabels
-                    ? yAxis.labelFormatter.format(v)
-                    : ''
-            );
+        return yAxis.scale.ticks().map(v => (this.settings.yAxis.showLabels ? yAxis.labelFormatter.format(v) : ''));
     }
 
     private setYAxisScale(yAxis: IAxisLinear): d3.scale.Linear<number, number> {
@@ -1366,10 +1199,7 @@ export class ViewModelHandler {
             .ticks(yAxis.ticks)
             .tickSize(-this.viewport.width + yAxis.dimensions.width)
             .tickFormat(d =>
-                this.settings.yAxis.showLabels &&
-                yAxis.labelDimensions.width > 0
-                    ? yAxis.labelFormatter.format(d)
-                    : ''
+                this.settings.yAxis.showLabels && yAxis.labelDimensions.width > 0 ? yAxis.labelFormatter.format(d) : ''
             );
     }
 
@@ -1384,10 +1214,7 @@ export class ViewModelHandler {
     private setViolinDimensions(xAxis: IAxisCategorical) {
         this.viewModel.violinPlot = <IViolinPlot>{
             categoryWidth: xAxis.scale.rangeBand(),
-            width:
-                xAxis.scale.rangeBand() -
-                xAxis.scale.rangeBand() *
-                    (this.settings.violin.innerPadding / 100)
+            width: xAxis.scale.rangeBand() - xAxis.scale.rangeBand() * (this.settings.violin.innerPadding / 100)
         };
     }
 
@@ -1408,12 +1235,8 @@ export class ViewModelHandler {
             xLeft: this.viewModel.boxPlot.xLeft,
             xRight: this.viewModel.boxPlot.xRight,
             tooltipWidth: this.viewModel.boxPlot.width * 1.4,
-            featureXLeft:
-                this.viewModel.violinPlot.categoryWidth / 2 -
-                (this.viewModel.boxPlot.width * 1.4) / 2,
-            featureXRight:
-                this.viewModel.violinPlot.categoryWidth / 2 +
-                (this.viewModel.boxPlot.width * 1.4) / 2
+            featureXLeft: this.viewModel.violinPlot.categoryWidth / 2 - (this.viewModel.boxPlot.width * 1.4) / 2,
+            featureXRight: this.viewModel.violinPlot.categoryWidth / 2 + (this.viewModel.boxPlot.width * 1.4) / 2
         };
     }
 
@@ -1421,51 +1244,32 @@ export class ViewModelHandler {
         this.viewModel.boxPlot = <IBoxPlot>{
             width:
                 this.viewModel.violinPlot.width -
-                this.viewModel.violinPlot.width *
-                    (this.settings.dataPoints.innerPadding / 100),
+                this.viewModel.violinPlot.width * (this.settings.dataPoints.innerPadding / 100),
             maxMeanRadius: 3
         };
-        this.viewModel.boxPlot.maxMeanDiameter =
-            this.viewModel.boxPlot.maxMeanRadius * 2;
-        this.viewModel.boxPlot.scaledMeanRadius =
-            this.viewModel.boxPlot.width / 5;
-        this.viewModel.boxPlot.scaledMeanDiameter =
-            this.viewModel.boxPlot.scaledMeanRadius * 2;
+        this.viewModel.boxPlot.maxMeanDiameter = this.viewModel.boxPlot.maxMeanRadius * 2;
+        this.viewModel.boxPlot.scaledMeanRadius = this.viewModel.boxPlot.width / 5;
+        this.viewModel.boxPlot.scaledMeanDiameter = this.viewModel.boxPlot.scaledMeanRadius * 2;
 
         if (
-            Math.min(
-                this.viewModel.boxPlot.scaledMeanDiameter,
-                this.viewModel.boxPlot.maxMeanDiameter
-            ) >= this.viewModel.boxPlot.width
+            Math.min(this.viewModel.boxPlot.scaledMeanDiameter, this.viewModel.boxPlot.maxMeanDiameter) >=
+            this.viewModel.boxPlot.width
         ) {
             this.viewModel.boxPlot.actualMeanDiameter = 0;
         } else {
             this.viewModel.boxPlot.actualMeanDiameter =
-                this.viewModel.boxPlot.scaledMeanDiameter >
-                this.viewModel.boxPlot.maxMeanDiameter
+                this.viewModel.boxPlot.scaledMeanDiameter > this.viewModel.boxPlot.maxMeanDiameter
                     ? this.viewModel.boxPlot.maxMeanDiameter
                     : this.viewModel.boxPlot.scaledMeanDiameter;
         }
-        this.viewModel.boxPlot.actualMeanRadius =
-            this.viewModel.boxPlot.actualMeanDiameter / 2;
-        this.viewModel.boxPlot.xLeft =
-            this.viewModel.violinPlot.categoryWidth / 2 -
-            this.viewModel.boxPlot.width / 2;
-        this.viewModel.boxPlot.xRight =
-            this.viewModel.violinPlot.categoryWidth / 2 +
-            this.viewModel.boxPlot.width / 2;
-        this.viewModel.boxPlot.featureXLeft =
-            this.viewModel.boxPlot.xLeft +
-            this.settings.dataPoints.strokeWidth / 2;
-        this.viewModel.boxPlot.featureXRight =
-            this.viewModel.boxPlot.xRight -
-            this.settings.dataPoints.strokeWidth / 2;
+        this.viewModel.boxPlot.actualMeanRadius = this.viewModel.boxPlot.actualMeanDiameter / 2;
+        this.viewModel.boxPlot.xLeft = this.viewModel.violinPlot.categoryWidth / 2 - this.viewModel.boxPlot.width / 2;
+        this.viewModel.boxPlot.xRight = this.viewModel.violinPlot.categoryWidth / 2 + this.viewModel.boxPlot.width / 2;
+        this.viewModel.boxPlot.featureXLeft = this.viewModel.boxPlot.xLeft + this.settings.dataPoints.strokeWidth / 2;
+        this.viewModel.boxPlot.featureXRight = this.viewModel.boxPlot.xRight - this.settings.dataPoints.strokeWidth / 2;
     }
 
-    private getYAxisTitleName(
-        yAxis: IAxisLinear,
-        yHeight: number
-    ): IDisplayName {
+    private getYAxisTitleName(yAxis: IAxisLinear, yHeight: number): IDisplayName {
         return this.getTailoredDisplayName(
             yAxis.titleDisplayName.formattedName,
             yAxis.titleDisplayName.textProperties,
@@ -1478,9 +1282,7 @@ export class ViewModelHandler {
     ): import('c:/Repos/powerbi-visuals-violin-plot/src/models').IDimensions {
         return {
             width:
-                this.settings.yAxis.show &&
-                this.settings.yAxis.showLabels &&
-                !yAxis.collapsed
+                this.settings.yAxis.show && this.settings.yAxis.showLabels && !yAxis.collapsed
                     ? Math.max(
                           textMeasurementService.measureSvgTextWidth(
                               yAxis.labelTextProperties,
@@ -1488,9 +1290,7 @@ export class ViewModelHandler {
                           ),
                           textMeasurementService.measureSvgTextWidth(
                               yAxis.labelTextProperties,
-                              yAxis.ticksFormatted[
-                                  yAxis.ticksFormatted.length - 1
-                              ]
+                              yAxis.ticksFormatted[yAxis.ticksFormatted.length - 1]
                           )
                       ) + yAxis.padding.left
                     : 0
@@ -1509,9 +1309,7 @@ export class ViewModelHandler {
                 !yAxis.titleDisplayName.collapsed &&
                 yAxis.titleDisplayName.tailoredName !== '' &&
                 !yAxis.collapsed
-                    ? textMeasurementService.measureSvgTextHeight(
-                          yAxis.titleDisplayName.textProperties
-                      )
+                    ? textMeasurementService.measureSvgTextHeight(yAxis.titleDisplayName.textProperties)
                     : 0,
             height: yHeight,
             x: -yHeight / 2,
@@ -1545,9 +1343,7 @@ export class ViewModelHandler {
                 this.settings.xAxis.showLabels &&
                 !this.viewModel.categoriesAllCollapsed &&
                 !xAxis.collapsed
-                    ? textMeasurementService.measureSvgTextHeight(
-                          xAxis.labelTextProperties
-                      )
+                    ? textMeasurementService.measureSvgTextHeight(xAxis.labelTextProperties)
                     : 0
         };
     }
@@ -1564,10 +1360,8 @@ export class ViewModelHandler {
                 xAxis.titleDisplayName.tailoredName !== '' &&
                 !xAxis.collapsed
                     ? textMeasurementService.measureSvgTextHeight({
-                          fontSize:
-                              xAxis.titleDisplayName.textProperties.fontSize,
-                          fontFamily:
-                              xAxis.titleDisplayName.textProperties.fontFamily,
+                          fontSize: xAxis.titleDisplayName.textProperties.fontSize,
+                          fontFamily: xAxis.titleDisplayName.textProperties.fontFamily,
                           text: xAxis.titleDisplayName.tailoredName
                       })
                     : 0
@@ -1584,12 +1378,8 @@ export class ViewModelHandler {
     updateYDomain(domain: [number, number], debug: VisualDebugger) {
         // If the user has supplied their own start/end values, use those
         domain = [
-            this.settings.yAxis.start === 0
-                ? 0
-                : this.settings.yAxis.start || domain[0],
-            this.settings.yAxis.end === 0
-                ? 0
-                : this.settings.yAxis.end || domain[1]
+            this.settings.yAxis.start === 0 ? 0 : this.settings.yAxis.start || domain[0],
+            this.settings.yAxis.end === 0 ? 0 : this.settings.yAxis.end || domain[1]
         ];
 
         debug.log(`Updating y-axis domain to [${domain}]`);
@@ -1610,18 +1400,11 @@ export class ViewModelHandler {
         debug.log('Formatting y-axis title...');
 
         // If we supplied a title, use that, otherwise format our measure names
-        let title = !this.settings.yAxis.titleText
-            ? this.measureMetadata.displayName
-            : this.settings.yAxis.titleText;
+        let title = !this.settings.yAxis.titleText ? this.measureMetadata.displayName : this.settings.yAxis.titleText;
 
         // Return the correct title based on our supplied settings
-        debug.log(
-            `Resolving title based on setting: ${this.settings.yAxis.titleStyle}`
-        );
-        if (
-            this.settings.yAxis.labelDisplayUnits === 1 ||
-            !this.viewModel.yAxis.labelFormatter.displayUnit
-        ) {
+        debug.log(`Resolving title based on setting: ${this.settings.yAxis.titleStyle}`);
+        if (this.settings.yAxis.labelDisplayUnits === 1 || !this.viewModel.yAxis.labelFormatter.displayUnit) {
             return title;
         }
         switch (this.settings.yAxis.titleStyle) {
@@ -1647,28 +1430,15 @@ export class ViewModelHandler {
      * @param textProperties                                - The text properties to use when calculating dimensions
      * @param boundingWidth                                 - The width to test against
      */
-    getTailoredDisplayName(
-        formattedName: string,
-        textProperties: TextProperties,
-        boundingWidth
-    ): IDisplayName {
-        let formattedWidth = textMeasurementService.measureSvgTextWidth(
-                textProperties,
-                formattedName
-            ),
+    getTailoredDisplayName(formattedName: string, textProperties: TextProperties, boundingWidth): IDisplayName {
+        let formattedWidth = textMeasurementService.measureSvgTextWidth(textProperties, formattedName),
             tailoredName =
                 formattedWidth > boundingWidth
-                    ? textMeasurementService.getTailoredTextOrDefault(
-                          textProperties,
-                          boundingWidth
-                      )
+                    ? textMeasurementService.getTailoredTextOrDefault(textProperties, boundingWidth)
                     : formattedName,
             tailoredWidth =
                 formattedWidth > boundingWidth
-                    ? textMeasurementService.measureSvgTextWidth(
-                          textProperties,
-                          tailoredName
-                      )
+                    ? textMeasurementService.measureSvgTextWidth(textProperties, tailoredName)
                     : formattedWidth;
         textProperties.text = formattedName;
 
@@ -1686,9 +1456,7 @@ export class ViewModelHandler {
         this.getTailoredDisplayName(
             this.viewModel.yAxis.titleTextProperties.text,
             this.viewModel.yAxis.titleTextProperties,
-            this.viewModel.yAxis.dimensions
-                ? this.viewModel.yAxis.dimensions.height
-                : this.viewport.height
+            this.viewModel.yAxis.dimensions ? this.viewModel.yAxis.dimensions.height : this.viewport.height
         );
 
     private xAxisTitleDisplayName(): IDisplayName {
@@ -1696,9 +1464,7 @@ export class ViewModelHandler {
             this.getXAxisTitleFormatted(),
             {
                 fontFamily: this.settings.xAxis.titleFontFamily,
-                fontSize: pixelConverter.toString(
-                    this.settings.xAxis.titleFontSize
-                ),
+                fontSize: pixelConverter.toString(this.settings.xAxis.titleFontSize),
                 text: this.getXAxisTitleFormatted()
             },
             this.viewModel.xAxis.dimensions.width

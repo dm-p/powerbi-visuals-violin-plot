@@ -13,11 +13,9 @@ import { IDataPointKde } from './models';
  * @param bandwidth     Desired bandwidth value to apply to our data
  * @param values        Array of values to calculate KDE over
  */
-export const kernelDensityEstimator = (
-    kernel: (k: number) => number,
-    bandwidth: number,
-    values: number[]
-) => (sample: number[]): IDataPointKde[] =>
+export const kernelDensityEstimator = (kernel: (k: number) => number, bandwidth: number, values: number[]) => (
+    sample: number[]
+): IDataPointKde[] =>
     values.map(x => ({
         x: x,
         y: d3.mean(sample, (v: number) => kernel((x - v) / bandwidth)),
@@ -32,11 +30,8 @@ export const kernelDensityEstimator = (
  * @param bandwidth     Desired bandwidth value to apply to our data
  * @param values        Array of values to calculate KDE over
  */
-export const kernelDensityRoot = (
-    kernel: (k: number) => number,
-    bandwidth: number,
-    values: number[]
-) => (x: number) => d3.mean(values, v => kernel((x - v) / bandwidth));
+export const kernelDensityRoot = (kernel: (k: number) => number, bandwidth: number, values: number[]) => (x: number) =>
+    d3.mean(values, v => kernel((x - v) / bandwidth));
 
 /**
  * Enum specifying which values are acceptable for using limits
@@ -54,11 +49,7 @@ export enum ELimit {
  * @param limit         Whether the limit is a `min` or `max`
  * @param kdeRoot
  */
-export function kernelDensityInterpolator(
-    value: number,
-    limit: ELimit,
-    kdeRoot: (k: number) => number
-) {
+export function kernelDensityInterpolator(value: number, limit: ELimit, kdeRoot: (k: number) => number) {
     let interY = kdeRoot(value),
         interX = value,
         count = 10; // Prevent infinite loop
@@ -110,11 +101,7 @@ export let kernels: IKernels = {
              *  which can cause the interpolation to go on forever as it will never find a zero value. To mitigate this,
              *  we cap the result at 4 decimal places, which is not great but preserves a representative violin shape.
              */
-            return parseFloat(
-                ((1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * u * u)).toFixed(
-                    4
-                )
-            );
+            return parseFloat(((1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * u * u)).toFixed(4));
         }
     },
     quartic: {

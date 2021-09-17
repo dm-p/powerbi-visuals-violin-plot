@@ -77,8 +77,9 @@ function renderViolinLine(
         .datum(d => d)
         .classed(`${EViolinSide[side]}`, true)
         .attr({
-            transform: `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() /
-                2}) ${side === EViolinSide.right ? 'scale(1, -1)' : ''}`,
+            transform: `rotate(90, 0, 0) translate(0, -${viewModel.xAxis.scale.rangeBand() / 2}) ${
+                side === EViolinSide.right ? 'scale(1, -1)' : ''
+            }`,
             'shape-rendering': 'geometricPrecision'
         });
 
@@ -123,18 +124,8 @@ export function renderViolin(
     settings: VisualSettings
 ) {
     if (settings.violin.type === 'line') {
-        renderViolinLine(
-            seriesContainer,
-            viewModel,
-            settings,
-            EViolinSide.left
-        );
-        renderViolinLine(
-            seriesContainer,
-            viewModel,
-            settings,
-            EViolinSide.right
-        );
+        renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.left);
+        renderViolinLine(seriesContainer, viewModel, settings, EViolinSide.right);
     }
 }
 
@@ -166,15 +157,11 @@ function renderBoxPlotWhisker(
             x2: viewModel.xAxis.scale.rangeBand() / 2,
             y1: d =>
                 viewModel.yAxis.scale(
-                    whisker === EBoxPlotWhisker.bottom
-                        ? d.statistics.confidenceLower
-                        : d.statistics.confidenceUpper
+                    whisker === EBoxPlotWhisker.bottom ? d.statistics.confidenceLower : d.statistics.confidenceUpper
                 ),
             y2: d =>
                 viewModel.yAxis.scale(
-                    whisker === EBoxPlotWhisker.bottom
-                        ? d.statistics.quartile1
-                        : d.statistics.quartile3
+                    whisker === EBoxPlotWhisker.bottom ? d.statistics.quartile1 : d.statistics.quartile3
                 ),
             'stroke-width': `${settings.dataPoints.strokeWidth}px`,
             stroke: `${settings.dataPoints.boxFillColour}`
@@ -188,15 +175,8 @@ function renderBoxPlotWhisker(
  * @param viewModel                                     - View model to use when calculating
  * @param settings                                      - Visual settings
  */
-function renderComboPlotMean(
-    container: d3.Selection<ICategory>,
-    viewModel: IViewModel,
-    settings: VisualSettings
-) {
-    if (
-        settings.dataPoints.showMean &&
-        viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter
-    ) {
+function renderComboPlotMean(container: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings) {
+    if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
         container
             .append('circle')
             .classed({
@@ -209,10 +189,8 @@ function renderComboPlotMean(
                 cy: d => viewModel.yAxis.scale(d.statistics.mean),
                 // Don't render if larger than the box height
                 r: d =>
-                    -(
-                        viewModel.yAxis.scale(d.statistics.quartile3) -
-                        viewModel.yAxis.scale(d.statistics.quartile1)
-                    ) < viewModel.boxPlot.actualMeanDiameter
+                    -(viewModel.yAxis.scale(d.statistics.quartile3) - viewModel.yAxis.scale(d.statistics.quartile1)) <
+                    viewModel.boxPlot.actualMeanDiameter
                         ? 0
                         : viewModel.boxPlot.actualMeanRadius
             })
@@ -231,11 +209,7 @@ function renderComboPlotMean(
  * @param viewModel                                     - View model to use when calculating
  * @param settings                                      - Visual settings
  */
-function renderComboPlotRectangle(
-    container: d3.Selection<ICategory>,
-    viewModel: IViewModel,
-    settings: VisualSettings
-) {
+function renderComboPlotRectangle(container: d3.Selection<ICategory>, viewModel: IViewModel, settings: VisualSettings) {
     container
         .append('rect')
         .classed({
@@ -261,10 +235,7 @@ function renderComboPlotRectangle(
                             viewModel.yAxis.scale(d.statistics.quartile1)
                         );
                     case 'columnPlot':
-                        return (
-                            -viewModel.yAxis.scale(d.statistics.max) +
-                            viewModel.yAxis.scale(d.statistics.min)
-                        );
+                        return -viewModel.yAxis.scale(d.statistics.max) + viewModel.yAxis.scale(d.statistics.min);
                 }
             },
             stroke: `${settings.dataPoints.boxFillColour}`,
@@ -274,11 +245,8 @@ function renderComboPlotRectangle(
         });
 }
 
-const barCodePlotCanRender = (
-    plotWidth: number,
-    strokeWidth: number,
-    comboPlotType: TComboPlotType
-) => comboPlotType === 'barcodePlot' && plotWidth > strokeWidth;
+const barCodePlotCanRender = (plotWidth: number, strokeWidth: number, comboPlotType: TComboPlotType) =>
+    comboPlotType === 'barcodePlot' && plotWidth > strokeWidth;
 
 /**
  * Handle rendering of barcode plot, which will plot a fixed-width horizontal line for each data point in the category
@@ -293,13 +261,7 @@ export function renderLinePlot(
     settings: VisualSettings,
     comboPlotType: TComboPlotType
 ) {
-    if (
-        barCodePlotCanRender(
-            viewModel.barcodePlot.width,
-            settings.dataPoints.strokeWidth,
-            comboPlotType
-        )
-    ) {
+    if (barCodePlotCanRender(viewModel.barcodePlot.width, settings.dataPoints.strokeWidth, comboPlotType)) {
         const xLeft = viewModel.barcodePlot.xLeft,
             xRight = viewModel.barcodePlot.xRight;
         // Add the container
@@ -326,16 +288,10 @@ export function renderLinePlot(
                     settings.dataPoints.strokeWidth * 2
             )
             .attr('x', xLeft)
-            .attr(
-                'y',
-                d =>
-                    viewModel.yAxis.scale(d.statistics.interpolateMax) -
-                    settings.dataPoints.strokeWidth
-            );
+            .attr('y', d => viewModel.yAxis.scale(d.statistics.interpolateMax) - settings.dataPoints.strokeWidth);
 
         // Line used to represent highlighted data point. Will be moved/hidden on mouse events
-        comboPlotType === 'barcodePlot' &&
-            applyDataPointHighlight(comboPlotContainer, viewModel, settings);
+        comboPlotType === 'barcodePlot' && applyDataPointHighlight(comboPlotContainer, viewModel, settings);
 
         // Plot data points
         comboPlotContainer
@@ -360,29 +316,11 @@ export function renderLinePlot(
 
         // Add quartile, mean and median features as appropriate
         if (settings.dataPoints.showMedian) {
-            renderFeatureLine(
-                comboPlotContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.median,
-                comboPlotType
-            );
+            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.median, comboPlotType);
         }
         if (settings.dataPoints.showQuartiles) {
-            renderFeatureLine(
-                comboPlotContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.quartile1,
-                comboPlotType
-            );
-            renderFeatureLine(
-                comboPlotContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.quartile3,
-                comboPlotType
-            );
+            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile1, comboPlotType);
+            renderFeatureLine(comboPlotContainer, viewModel, settings, EFeatureLineType.quartile3, comboPlotType);
         }
     }
 }
@@ -408,34 +346,13 @@ export function renderColumnPlot(
 
         // Mean, median & quartiles
         if (settings.dataPoints.showMedian) {
-            renderFeatureLine(
-                boxContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.median,
-                'boxPlot'
-            );
+            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, 'boxPlot');
         }
         if (settings.dataPoints.showQuartiles) {
-            renderFeatureLine(
-                boxContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.quartile1,
-                'boxPlot'
-            );
-            renderFeatureLine(
-                boxContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.quartile3,
-                'boxPlot'
-            );
+            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile1, 'boxPlot');
+            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.quartile3, 'boxPlot');
         }
-        if (
-            settings.dataPoints.showMean &&
-            viewModel.columnPlot.width > viewModel.columnPlot.actualMeanDiameter
-        ) {
+        if (settings.dataPoints.showMean && viewModel.columnPlot.width > viewModel.columnPlot.actualMeanDiameter) {
             renderComboPlotMean(boxContainer, viewModel, settings);
         }
     }
@@ -462,34 +379,15 @@ export function renderBoxPlot(
 
         // Do the whiskers, if we need them
         if (settings.dataPoints.showWhiskers) {
-            renderBoxPlotWhisker(
-                boxContainer,
-                viewModel,
-                settings,
-                EBoxPlotWhisker.bottom
-            );
-            renderBoxPlotWhisker(
-                boxContainer,
-                viewModel,
-                settings,
-                EBoxPlotWhisker.top
-            );
+            renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.bottom);
+            renderBoxPlotWhisker(boxContainer, viewModel, settings, EBoxPlotWhisker.top);
         }
 
         // Mean and median
         if (settings.dataPoints.showMedian) {
-            renderFeatureLine(
-                boxContainer,
-                viewModel,
-                settings,
-                EFeatureLineType.median,
-                'boxPlot'
-            );
+            renderFeatureLine(boxContainer, viewModel, settings, EFeatureLineType.median, 'boxPlot');
         }
-        if (
-            settings.dataPoints.showMean &&
-            viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter
-        ) {
+        if (settings.dataPoints.showMean && viewModel.boxPlot.width > viewModel.boxPlot.actualMeanDiameter) {
             renderComboPlotMean(boxContainer, viewModel, settings);
         }
     }
@@ -518,31 +416,14 @@ export function renderFeatureLine(
         .append('line')
         .classed('violinPlotComboPlotFeatureLine', true)
         .classed(`${EFeatureLineType[lineType]}`, true)
-        .classed(
-            `${
-                settings.dataPoints[
-                    `${EFeatureLineType[lineType]}StrokeLineStyle`
-                ]
-            }`,
-            true
-        )
+        .classed(`${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeLineStyle`]}`, true)
         .attr({
             x1: featureXLeft,
             x2: featureXRight,
-            y1: d =>
-                viewModel.yAxis.scale(
-                    d.statistics[`${EFeatureLineType[lineType]}`]
-                ),
-            y2: d =>
-                viewModel.yAxis.scale(
-                    d.statistics[`${EFeatureLineType[lineType]}`]
-                ),
-            stroke: `${
-                settings.dataPoints[`${EFeatureLineType[lineType]}FillColour`]
-            }`,
-            'stroke-width': `${
-                settings.dataPoints[`${EFeatureLineType[lineType]}StrokeWidth`]
-            }px`
+            y1: d => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+            y2: d => viewModel.yAxis.scale(d.statistics[`${EFeatureLineType[lineType]}`]),
+            stroke: `${settings.dataPoints[`${EFeatureLineType[lineType]}FillColour`]}`,
+            'stroke-width': `${settings.dataPoints[`${EFeatureLineType[lineType]}StrokeWidth`]}px`
         });
 }
 
@@ -553,11 +434,7 @@ export function renderFeatureLine(
  * @param host                                          - The visual host
  * @param settings                                      - Current visual instance settings
  */
-export function visualUsage(
-    containingElement: d3.Selection<{}>,
-    host: IVisualHost,
-    settings: VisualSettings
-) {
+export function visualUsage(containingElement: d3.Selection<{}>, host: IVisualHost, settings: VisualSettings) {
     let container = containingElement
         .append('div')
         .classed('card', true)
@@ -619,11 +496,7 @@ export function dataLimitLoadingStatus(
         .classed('float-right', true);
     progressIndicator
         .append('span')
-        .html(
-            `Loading more data: <strong>${rowCountFormatter.format(
-                rowCount
-            )}</strong> rows loaded so far...`
-        )
+        .html(`Loading more data: <strong>${rowCountFormatter.format(rowCount)}</strong> rows loaded so far...`)
         .classed('align-middle', true);
 
     if (settings.dataLimit.showCustomVisualNotes) {
@@ -667,8 +540,7 @@ export function getHighlightedDataPoints(
     yAxis: IAxisLinear
 ): IDataPointAggregate {
     let yData = yAxis.scale.invert(mouse[1]),
-        bisectValue = d3.bisector((d: IDataPointAggregate) => Number(d.key))
-            .left,
+        bisectValue = d3.bisector((d: IDataPointAggregate) => Number(d.key)).left,
         ttv: IDataPointAggregate;
 
     overlay.each((d, i) => {

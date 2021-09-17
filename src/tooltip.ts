@@ -15,9 +15,7 @@ export { bindSeriesTooltipEvents, getTooltipData };
 const isTouchEvent = true;
 
 const tooltipDebugger = (settings: VisualSettings) =>
-    new VisualDebugger(
-        settings.about.debugMode && settings.about.debugTooltipEvents
-    );
+    new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
 
 const bindSeriesTooltipEvents = (
     elements: d3.Selection<ICategory>,
@@ -25,15 +23,9 @@ const bindSeriesTooltipEvents = (
     settings: VisualSettings,
     viewModel: IViewModel
 ) => {
-    elements.on('mouseover', d =>
-        handleSeriesTooltip(tooltipService, settings, viewModel, d)
-    );
-    elements.on('mousemove', d =>
-        handleSeriesTooltip(tooltipService, settings, viewModel, d)
-    );
-    elements.on('mouseout', d =>
-        handleSeriesTooltip(tooltipService, settings, viewModel, d)
-    );
+    elements.on('mouseover', d => handleSeriesTooltip(tooltipService, settings, viewModel, d));
+    elements.on('mousemove', d => handleSeriesTooltip(tooltipService, settings, viewModel, d));
+    elements.on('mouseout', d => handleSeriesTooltip(tooltipService, settings, viewModel, d));
 };
 
 const getEvent = () => <MouseEvent>window.event;
@@ -61,11 +53,7 @@ const handleSeriesTooltip = (
     if (target?.classList.contains('violinPlotComboPlotOverlay')) {
         debug.log('Combo Plot Overlay Highlighted');
         dataPoint = true;
-        highlightedValue = getHighlightedDataPoints(
-            d3.select(target),
-            d3.mouse(target),
-            viewModel.yAxis
-        );
+        highlightedValue = getHighlightedDataPoints(d3.select(target), d3.mouse(target), viewModel.yAxis);
         d3.select(target.parentNode)
             .selectAll('.comboPlotToolipDataPoint')
             .attr({
@@ -82,12 +70,7 @@ const handleSeriesTooltip = (
     switch (event.type) {
         case 'mouseover':
         case 'mousemove': {
-            const dataItems = getTooltipData(
-                settings,
-                viewModel,
-                datum,
-                highlightedValue
-            );
+            const dataItems = getTooltipData(settings, viewModel, datum, highlightedValue);
             tooltipService.show({
                 coordinates,
                 isTouchEvent,
@@ -122,106 +105,23 @@ const getTooltipData = (
         tts = settings.tooltip,
         locale = viewModel.locale,
         stats = v.statistics,
+        { specifyBandwidth } = settings.violin,
         tooltips: VisualTooltipDataItem[] = [
             getTooltipCategory(v),
+            ...getTooltipValue(true, stats.count, '# Samples', tts, locale, format),
+            ...getTooltipValue(tts.showMaxMin, stats.max, 'Maximum', tts, locale, format),
+            ...getTooltipValue(tts.showMaxMin, stats.min, 'Minimum', tts, locale, format),
+            ...getTooltipValue(tts.showSpan, stats.span, 'Span (Min to Max)', tts, locale, format),
+            ...getTooltipValue(tts.showMedian, stats.median, 'Median', tts, locale, format),
+            ...getTooltipValue(tts.showMean, stats.mean, 'Mean', tts, locale, format),
+            ...getTooltipValue(tts.showDeviation, stats.deviation, 'Standard Deviation', tts, locale, format),
+            ...getTooltipValue(tts.showQuartiles, stats.quartile3, 'Upper Quartile', tts, locale, format),
+            ...getTooltipValue(tts.showQuartiles, stats.quartile1, 'Lower Quartile', tts, locale, format),
+            ...getTooltipValue(tts.showIqr, stats.iqr, 'Inter Quartile Range', tts, locale, format),
+            ...getTooltipValue(tts.showConfidence, stats.confidenceUpper, 'Upper Whisker (95%)', tts, locale, format),
+            ...getTooltipValue(tts.showConfidence, stats.confidenceLower, 'Lower Whisker (5%)', tts, locale, format),
             ...getTooltipValue(
-                true,
-                stats.count,
-                '# Samples',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showMaxMin,
-                stats.max,
-                'Maximum',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showMaxMin,
-                stats.min,
-                'Minimum',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showSpan,
-                stats.span,
-                'Span (Min to Max)',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showMedian,
-                stats.median,
-                'Median',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showMean,
-                stats.mean,
-                'Mean',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showDeviation,
-                stats.deviation,
-                'Standard Deviation',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showQuartiles,
-                stats.quartile3,
-                'Upper Quartile',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showQuartiles,
-                stats.quartile1,
-                'Lower Quartile',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showIqr,
-                stats.iqr,
-                'Inter Quartile Range',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showConfidence,
-                stats.confidenceUpper,
-                'Upper Whisker (95%)',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showConfidence,
-                stats.confidenceLower,
-                'Lower Whisker (5%)',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                settings.violin.specifyBandwidth && tts.showBandwidth,
+                specifyBandwidth && tts.showBandwidth,
                 stats.bandwidthActual,
                 'Bandwidth (Specified)',
                 tts,
@@ -231,9 +131,7 @@ const getTooltipData = (
             ...getTooltipValue(
                 tts.showBandwidth,
                 stats.bandwidthSilverman,
-                `Bandwidth (Estimated${
-                    settings.violin.specifyBandwidth ? ', N/A' : ''
-                })`,
+                `Bandwidth (Estimated${specifyBandwidth ? ', N/A' : ''})`,
                 tts,
                 locale,
                 format
@@ -261,9 +159,7 @@ const getTooltipData = (
 
 const getTooltipCategory = (v: ICategory) => ({
     displayName: 'Category',
-    value: v.displayName.formattedName
-        ? v.displayName.formattedName
-        : 'All Data',
+    value: v.displayName.formattedName ? v.displayName.formattedName : 'All Data',
     color: v.colour
 });
 
@@ -274,18 +170,7 @@ const getTooltipValue = (
     tts: TooltipSettings,
     locale: string,
     format: string
-) =>
-    (show && [
-        formatTooltipValue(
-            label,
-            format,
-            value,
-            tts.measureDisplayUnits,
-            tts.measurePrecision,
-            locale
-        )
-    ]) ||
-    [];
+) => (show && [formatTooltipValue(label, format, value, tts.measureDisplayUnits, tts.measurePrecision, locale)]) || [];
 
 const hideTooltip = (tooltipService: ITooltipService) => {
     const immediately = true;
@@ -295,10 +180,7 @@ const hideTooltip = (tooltipService: ITooltipService) => {
     });
 };
 
-const resolveCoordinates = (event: MouseEvent): [number, number] => [
-    event.clientX,
-    event.clientY
-];
+const resolveCoordinates = (event: MouseEvent): [number, number] => [event.clientX, event.clientY];
 
 /**
  *  Return a formatted `VisualTooltipDataItem` based on the supplied parameters

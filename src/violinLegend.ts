@@ -50,9 +50,7 @@ export class ViolinLegend {
         this.newViewport = viewport;
         this.settings = settings;
         this.host = host;
-        this.debug = new VisualDebugger(
-            settings.about.debugMode && settings.about.debugVisualUpdate
-        );
+        this.debug = new VisualDebugger(settings.about.debugMode && settings.about.debugVisualUpdate);
     }
 
     /**
@@ -78,9 +76,7 @@ export class ViolinLegend {
      *  @param host                                     - Visual host
      */
     private constructLegendData() {
-        const measureOnly =
-                !this.viewModel.categoryNames ||
-                !this.settings.dataColours.colourByCategory,
+        const measureOnly = !this.viewModel.categoryNames || !this.settings.dataColours.colourByCategory,
             { dataPoints, legend } = this.settings,
             { showStatisticalPoints } = legend,
             { quartilesMatch } = this.viewModel.legend,
@@ -108,12 +104,7 @@ export class ViolinLegend {
                         ),
                         ...(this.viewModel.categories
                             .map(c =>
-                                getLegendDataPoint(
-                                    !measureOnly,
-                                    c.displayName.formattedName,
-                                    c.selectionId,
-                                    c.colour
-                                )
+                                getLegendDataPoint(!measureOnly, c.displayName.formattedName, c.selectionId, c.colour)
                             )
                             .flat() || []),
                         // Spacer
@@ -124,8 +115,7 @@ export class ViolinLegend {
                         ),
                         // Data points
                         ...getLegendDataPoint(
-                            showStatisticalPoints &&
-                                dataPoints.plotType === 'barcodePlot',
+                            showStatisticalPoints && dataPoints.plotType === 'barcodePlot',
                             legend.dataPointText,
                             measureId
                         ),
@@ -164,9 +154,7 @@ export class ViolinLegend {
                         ),
                         // Mean
                         ...getLegendDataPoint(
-                            showStatisticalPoints &&
-                                dataPoints.showMean &&
-                                dataPoints.plotType !== 'barcodePlot',
+                            showStatisticalPoints && dataPoints.showMean && dataPoints.plotType !== 'barcodePlot',
                             legend.meanText,
                             measureId
                         )
@@ -213,8 +201,7 @@ export class ViolinLegend {
             case LegendPosition.Right:
             case LegendPosition.RightCenter:
                 legendBreaksViewport =
-                    this.newViewport.width - this.legend.getMargins().width <
-                        this.settings.legend.widthLimit ||
+                    this.newViewport.width - this.legend.getMargins().width < this.settings.legend.widthLimit ||
                     this.newViewport.height < this.settings.legend.heightLimit;
                 break;
             case LegendPosition.Top:
@@ -222,8 +209,7 @@ export class ViolinLegend {
             case LegendPosition.Bottom:
             case LegendPosition.BottomCenter:
                 legendBreaksViewport =
-                    this.newViewport.height - this.legend.getMargins().height <
-                        this.settings.legend.heightLimit ||
+                    this.newViewport.height - this.legend.getMargins().height < this.settings.legend.heightLimit ||
                     this.newViewport.width < this.settings.legend.widthLimit;
                 break;
         }
@@ -231,9 +217,7 @@ export class ViolinLegend {
         // Adjust viewport (and hide legend) as appropriate
         this.debug.log('Legend dimensions', this.legend.getMargins());
         if (legendBreaksViewport) {
-            this.debug.log(
-                'Legend dimensions cause the viewport to become unusable. Skipping over render...'
-            );
+            this.debug.log('Legend dimensions cause the viewport to become unusable. Skipping over render...');
             this.legend.changeOrientation(LegendPosition.None);
             this.legend.drawLegend(this.data, this.newViewport);
         } else {
@@ -282,22 +266,14 @@ export class ViolinLegend {
                 case vl.viewModel.legend.quartile3Text:
                     vl.debug.log('Line: doing further checks...');
 
-                    const {
-                        strokeLineStyle,
-                        stroke,
-                        className
-                    } = getDynamicAttributes(
+                    const { strokeLineStyle, stroke, className } = getDynamicAttributes(
                         d,
                         vl.viewModel.legend,
                         vl.settings.dataPoints
                     );
 
                     icon.call(setHidden);
-                    node.append('rect').call(
-                        setBoxAttributes,
-                        vl.viewModel.legend,
-                        itemRadius
-                    );
+                    node.append('rect').call(setBoxAttributes, vl.viewModel.legend, itemRadius);
                     node.append('line')
                         .call(setLineAttributes, stroke, className)
                         .classed(strokeLineStyle, true);
@@ -306,11 +282,7 @@ export class ViolinLegend {
                 case vl.viewModel.legend.meanText:
                     vl.debug.log('Mean info: re-style');
                     icon.call(setHidden);
-                    node.append('rect').call(
-                        setBoxAttributes,
-                        vl.viewModel.legend,
-                        itemRadius
-                    );
+                    node.append('rect').call(setBoxAttributes, vl.viewModel.legend, itemRadius);
                     node.append('circle')
                         .style({
                             fill: vl.settings.dataPoints.meanFillColourInner,
@@ -323,25 +295,14 @@ export class ViolinLegend {
                 case vl.viewModel.legend.dataPointText:
                     vl.debug.log('Data Point info: re-style');
                     icon.call(setHidden);
-                    node.append('rect').call(
-                        setBoxAttributes,
-                        vl.viewModel.legend,
-                        itemRadius
-                    );
-                    node.append('line').call(
-                        setLineAttributes,
-                        vl.settings.dataPoints.barColour,
-                        'datapoint'
-                    );
+                    node.append('rect').call(setBoxAttributes, vl.viewModel.legend, itemRadius);
+                    node.append('line').call(setLineAttributes, vl.settings.dataPoints.barColour, 'datapoint');
                     break;
 
                 default:
                     vl.debug.log('Violin series: re-style');
                     icon.call(setHidden);
-                    node.append('path').call(
-                        setViolinAttributes,
-                        icon.style('fill')
-                    );
+                    node.append('path').call(setViolinAttributes, icon.style('fill'));
                     break;
             }
         });
@@ -414,10 +375,7 @@ const setHidden = (selection: d3.Selection<LegendDataPoint>) => {
     selection.attr('visibility', 'hidden');
 };
 
-const setBoxAttributes = (
-    selection: d3.Selection<LegendDataPoint>,
-    legend: IVMLegend
-) => {
+const setBoxAttributes = (selection: d3.Selection<LegendDataPoint>, legend: IVMLegend) => {
     selection
         .classed(customIconClass, true)
         .attr('x', d => d.glyphPosition.x - itemRadius)
@@ -438,11 +396,7 @@ const setCircleAttributes = (selection: d3.Selection<LegendDataPoint>) => {
         .attr('r', itemRadius - boxStrokeWidth * 2);
 };
 
-const setLineAttributes = (
-    selection: d3.Selection<LegendDataPoint>,
-    stroke: string,
-    className: string
-) => {
+const setLineAttributes = (selection: d3.Selection<LegendDataPoint>, stroke: string, className: string) => {
     selection
         .classed(customIconClass, true)
         .classed(className, true)
@@ -454,19 +408,11 @@ const setLineAttributes = (
         .attr('stroke-width', lineStrokeWidth);
 };
 
-const setViolinAttributes = (
-    selection: d3.Selection<LegendDataPoint>,
-    fill: string
-) => {
+const setViolinAttributes = (selection: d3.Selection<LegendDataPoint>, fill: string) => {
     selection
         .classed(customIconClass, true)
         .attr('d', getViolinSvgPath(itemRadius))
-        .attr(
-            'transform',
-            d =>
-                `translate(${d.glyphPosition.x - itemRadius}, ${d.glyphPosition
-                    .y - itemRadius})`
-        )
+        .attr('transform', d => `translate(${d.glyphPosition.x - itemRadius}, ${d.glyphPosition.y - itemRadius})`)
         .attr('fill', fill)
         .attr('transform-origin', 'top center')
         .attr('width', 10)
@@ -477,5 +423,5 @@ const setViolinAttributes = (
  * Generates SVG path definition for the legeng violin shape
  */
 const getViolinSvgPath = (radius: number) =>
-    `M${radius},-${radius} C${radius},${radius} -${radius},${radius} ${radius},${radius *
-        2} C${radius * 3},${radius} ${radius},${radius} ${radius},-${radius}`;
+    `M${radius},-${radius} C${radius},${radius} -${radius},${radius} ${radius},${radius * 2} C${radius *
+        3},${radius} ${radius},${radius} ${radius},-${radius}`;

@@ -79,13 +79,7 @@ export class Visual implements IVisual {
         this.viewModelHandler = new ViewModelHandler();
 
         // Legend container
-        this.legend = createLegend(
-            options.element,
-            false,
-            null,
-            false,
-            LegendPosition.Top
-        );
+        this.legend = createLegend(options.element, false, null, false, LegendPosition.Top);
 
         // Visual container
         this.container = d3
@@ -101,9 +95,7 @@ export class Visual implements IVisual {
     public update(options: VisualUpdateOptions) {
         this.events.renderingStarted(options);
         this.options = options;
-        this.settings = Visual.parseSettings(
-            options && options.dataViews && options.dataViews[0]
-        );
+        this.settings = Visual.parseSettings(options && options.dataViews && options.dataViews[0]);
         this.errorState = false;
         this.viewModelHandler.clearProfiling();
         this.viewModelHandler.settings = this.settings;
@@ -111,8 +103,7 @@ export class Visual implements IVisual {
 
         // Initial debugging for visual update
         const { about } = this.settings;
-        this.viewModelHandler.debug =
-            about.debugMode && about.debugVisualUpdate;
+        this.viewModelHandler.debug = about.debugMode && about.debugVisualUpdate;
         const debug = new VisualDebugger(this.viewModelHandler.debug);
         debug.clear();
         debug.heading('Visual Update');
@@ -158,25 +149,16 @@ export class Visual implements IVisual {
          */
         if (this.settings.dataLimit.enabled) {
             this.updateFetchWindowDetails(options);
-            const rowCount =
-                options.dataViews[0].categorical.values[0].values.length;
+            const rowCount = options.dataViews[0].categorical.values[0].values.length;
 
-            if (
-                options.dataViews[0].metadata.segment &&
-                this.settings.dataLimit.override &&
-                this.canFetchMore
-            ) {
+            if (options.dataViews[0].metadata.segment && this.settings.dataLimit.override && this.canFetchMore) {
                 debug.log(
                     `Not all data loaded. Loading more (if we can). We have loaded ${this.windowsLoaded} times so far.`
                 );
 
                 // Handle rendering of 'help text', if enabled
                 if (this.settings.dataLimit.showInfo) {
-                    dataLimitLoadingStatus(
-                        rowCount,
-                        this.container,
-                        this.settings
-                    );
+                    dataLimitLoadingStatus(rowCount, this.container, this.settings);
                 }
                 this.canFetchMore = this.host.fetchMoreData();
                 // Clear down existing info and render if we have no more allocated memory
@@ -192,9 +174,7 @@ export class Visual implements IVisual {
                 this.renderVisual(options, debug);
             }
         } else {
-            debug.log(
-                'Data limit options disabled. Skipping over and rendering visual.'
-            );
+            debug.log('Data limit options disabled. Skipping over and rendering visual.');
             this.renderVisual(options, debug);
         }
     }
@@ -213,9 +193,7 @@ export class Visual implements IVisual {
             !options.dataViews ||
             !options.dataViews[0] ||
             !options.dataViews[0].metadata ||
-            !options.dataViews[0].metadata.columns.filter(
-                c => c.roles['sampling']
-            )[0] ||
+            !options.dataViews[0].metadata.columns.filter(c => c.roles['sampling'])[0] ||
             !options.dataViews[0].categorical.values
         );
     }
@@ -235,11 +213,7 @@ export class Visual implements IVisual {
             case VisualUpdateType.Data:
             case VisualUpdateType.All: {
                 debug.footer();
-                this.viewModelHandler.mapDataView(
-                    options,
-                    this.host,
-                    this.colourPalette
-                );
+                this.viewModelHandler.mapDataView(options, this.host, this.colourPalette);
                 this.viewModelHandler.calculateStatistics(options);
                 this.viewModelHandler.sortAndFilterData();
                 this.renderLegend();
@@ -268,17 +242,10 @@ export class Visual implements IVisual {
         } else {
             // Add our main SVG
             debug.log('Plotting SVG canvas...');
-            const violinPlotCanvas = plotCanvas(
-                this.container,
-                options.viewport
-            );
+            const violinPlotCanvas = plotCanvas(this.container, options.viewport);
 
             // Watermark for non-production use, if the dev flag is set
-            plotWatermark(
-                violinPlotCanvas,
-                this.viewModelHandler.viewport,
-                this.settings
-            );
+            plotWatermark(violinPlotCanvas, this.viewModelHandler.viewport, this.settings);
 
             // Handle category reduction, if applied
             if (viewModel.categoriesReduced) {
@@ -290,20 +257,11 @@ export class Visual implements IVisual {
 
             // Axes
             plotYAxis(violinPlotCanvas, viewModel, this.settings, debug);
-            plotXAxis(
-                violinPlotCanvas,
-                viewModel,
-                this.settings,
-                options.viewport,
-                debug
-            );
+            plotXAxis(violinPlotCanvas, viewModel, this.settings, options.viewport, debug);
 
             // Add series elements
             debug.log('Plotting category elements...');
-            const seriesContainer = plotSeriesContainer(
-                violinPlotCanvas,
-                viewModel
-            );
+            const seriesContainer = plotSeriesContainer(violinPlotCanvas, viewModel);
 
             // Tooltips
             debug.log('Adding tooltip events...');
@@ -332,10 +290,7 @@ export class Visual implements IVisual {
      * Renders the legend, based on the properties supplied in the update method
      */
     private renderLegend(): void {
-        let debug = new VisualDebugger(
-            this.settings.about.debugMode &&
-                this.settings.about.debugVisualUpdate
-        );
+        let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugVisualUpdate);
         debug.log('Starting renderLegend');
         debug.log('Checking legend position...');
         debug.profileStart();
@@ -356,9 +311,7 @@ export class Visual implements IVisual {
             height: violinLegend.newViewport.height
         };
         debug.log('Adjusted viewport:', this.viewModelHandler.viewport);
-        this.viewModelHandler.viewModel.profiling.categories.push(
-            debug.getSummary('Legend')
-        );
+        this.viewModelHandler.viewModel.profiling.categories.push(debug.getSummary('Legend'));
         debug.footer();
     }
 
@@ -374,26 +327,17 @@ export class Visual implements IVisual {
      * This function gets called for each of the objects defined in the `capabilities.json` file and allows you to select which of the
      * objects and properties you want to expose to the users in the property pane.
      */
-    public enumerateObjectInstances(
-        options: EnumerateVisualObjectInstancesOptions
-    ): VisualObjectInstance[] {
-        const instances: VisualObjectInstance[] = (<
-            VisualObjectInstanceEnumerationObject
-        >VisualSettings.enumerateObjectInstances(
-            this.settings || VisualSettings.getDefault(),
-            options
+    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] {
+        const instances: VisualObjectInstance[] = (<VisualObjectInstanceEnumerationObject>(
+            VisualSettings.enumerateObjectInstances(this.settings || VisualSettings.getDefault(), options)
         )).instances;
         let objectName = options.objectName;
-        let categories: boolean = this.options.dataViews[0].metadata.columns.filter(
-            c => c.roles['category']
-        )[0]
+        let categories: boolean = this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]
             ? true
             : false;
 
         // Initial debugging for properties update
-        let debug = new VisualDebugger(
-            this.settings.about.debugMode && this.settings.about.debugProperties
-        );
+        let debug = new VisualDebugger(this.settings.about.debugMode && this.settings.about.debugProperties);
         debug.heading(`Properties: ${objectName}`);
 
         // Apply instance-specific transformations
@@ -470,8 +414,7 @@ export class Visual implements IVisual {
             !this.settings.dataLimit.enabled ||
             (!this.options.dataViews[0].metadata.segment &&
                 this.options.dataViews[0].categorical.values &&
-                this.options.dataViews[0].categorical.values[0].values.length <=
-                    30000)
+                this.options.dataViews[0].categorical.values[0].values.length <= 30000)
         ) {
             instances[0] = null;
             // Set back to capability window cap if removed
@@ -481,9 +424,7 @@ export class Visual implements IVisual {
 
     private resolveAboutOptions(instances: powerbi.VisualObjectInstance[]) {
         // Version should always show the default
-        instances[0].properties['version'] = VisualSettings.getDefault()[
-            'about'
-        ].version;
+        instances[0].properties['version'] = VisualSettings.getDefault()['about'].version;
         // Switch off and hide debug mode if development flag is disabled
         if (!this.settings.about.development) {
             delete instances[0].properties['debugMode'];
@@ -565,20 +506,13 @@ export class Visual implements IVisual {
         }
     }
 
-    private resolveDataColourProperties(
-        instances: powerbi.VisualObjectInstance[],
-        objectName: string
-    ) {
+    private resolveDataColourProperties(instances: powerbi.VisualObjectInstance[], objectName: string) {
         // Assign default theme colour from palette if default fill colour not overridden
         if (!this.settings.dataColours.defaultFillColour) {
             instances[0].properties['defaultFillColour'] = this.defaultColour;
         }
         // If there are no categories, don't offer the option to colour by them
-        if (
-            !this.options.dataViews[0].metadata.columns.filter(
-                c => c.roles['category']
-            )[0]
-        ) {
+        if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
             delete instances[0].properties['colourByCategory'];
             this.settings.dataColours.colourByCategory = false; // This prevents us losing the default fill if we remove the field afterward
         }
@@ -605,9 +539,7 @@ export class Visual implements IVisual {
         }
     }
 
-    private resolveTooltipProperties(
-        instances: powerbi.VisualObjectInstance[]
-    ) {
+    private resolveTooltipProperties(instances: powerbi.VisualObjectInstance[]) {
         // Range validation on precision fields
         instances[0].validValues = instances[0].validValues || {};
         instances[0].validValues.numberSamplesPrecision = instances[0].validValues.measurePrecision = {
@@ -618,15 +550,9 @@ export class Visual implements IVisual {
         };
     }
 
-    private resolveSortingProperties(
-        instances: powerbi.VisualObjectInstance[]
-    ) {
+    private resolveSortingProperties(instances: powerbi.VisualObjectInstance[]) {
         // Disable/hide if not using categories
-        if (
-            !this.options.dataViews[0].metadata.columns.filter(
-                c => c.roles['category']
-            )[0]
-        ) {
+        if (!this.options.dataViews[0].metadata.columns.filter(c => c.roles['category'])[0]) {
             instances[0] = null;
         }
     }
@@ -661,34 +587,24 @@ export class Visual implements IVisual {
         }
         // Reset legend measure value items to default if blanked out
         if (!this.settings.legend.medianText) {
-            instances[0].properties['medianText'] = VisualSettings.getDefault()[
-                'legend'
-            ].medianText;
+            instances[0].properties['medianText'] = VisualSettings.getDefault()['legend'].medianText;
         }
         if (!this.settings.legend.meanText) {
-            instances[0].properties['meanText'] = VisualSettings.getDefault()[
-                'legend'
-            ].meanText;
+            instances[0].properties['meanText'] = VisualSettings.getDefault()['legend'].meanText;
         }
         if (!this.settings.legend.dataPointText) {
-            instances[0].properties[
-                'dataPointText'
-            ] = VisualSettings.getDefault()['legend'].dataPointText;
+            instances[0].properties['dataPointText'] = VisualSettings.getDefault()['legend'].dataPointText;
         }
         if (!this.settings.legend.quartileCombinedText) {
-            instances[0].properties[
-                'quartileCombinedText'
-            ] = VisualSettings.getDefault()['legend'].quartileCombinedText;
+            instances[0].properties['quartileCombinedText'] = VisualSettings.getDefault()[
+                'legend'
+            ].quartileCombinedText;
         }
         if (!this.settings.legend.quartile1Text) {
-            instances[0].properties[
-                'quartile1Text'
-            ] = VisualSettings.getDefault()['legend'].quartile1Text;
+            instances[0].properties['quartile1Text'] = VisualSettings.getDefault()['legend'].quartile1Text;
         }
         if (!this.settings.legend.quartile3Text) {
-            instances[0].properties[
-                'quartile3Text'
-            ] = VisualSettings.getDefault()['legend'].quartile3Text;
+            instances[0].properties['quartile3Text'] = VisualSettings.getDefault()['legend'].quartile3Text;
         }
     }
 
@@ -769,26 +685,18 @@ export class Visual implements IVisual {
         instances[0].validValues.start = {
             numberRange: {
                 min: safeMin,
-                max:
-                    this.settings.yAxis.end === 0
-                        ? 0
-                        : this.settings.yAxis.end || safeMax
+                max: this.settings.yAxis.end === 0 ? 0 : this.settings.yAxis.end || safeMax
             }
         };
         instances[0].validValues.end = {
             numberRange: {
-                min:
-                    this.settings.yAxis.start === 0
-                        ? 0
-                        : this.settings.yAxis.start || safeMin,
+                min: this.settings.yAxis.start === 0 ? 0 : this.settings.yAxis.start || safeMin,
                 max: safeMax
             }
         };
     }
 
-    private resolveComboPlotProperties(
-        instances: powerbi.VisualObjectInstance[]
-    ) {
+    private resolveComboPlotProperties(instances: powerbi.VisualObjectInstance[]) {
         // Range validation on stroke width
         instances[0].validValues = instances[0].validValues || {};
         instances[0].validValues.strokeWidth = instances[0].validValues.medianStrokeWidth = instances[0].validValues.meanStrokeWidth = instances[0].validValues.quartile1StrokeWidth = instances[0].validValues.quartile3StrokeWidth = {
