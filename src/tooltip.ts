@@ -9,10 +9,15 @@ import { TooltipSettings, VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 import { IViewModel, ICategory, IDataPointAggregate } from './models';
 import { getHighlightedDataPoints } from './visualHelpers';
+import { isNumberTruthy } from './utils';
 
 export { bindSeriesTooltipEvents, getTooltipData };
 
-const isTouchEvent = true;
+const isTouchEvent = true,
+    bandwidthFormat = '#0.00',
+    samplesFormat = '#,0',
+    standardTooltipColor = '#000000',
+    standardTooltipOpacity = '0';
 
 const tooltipDebugger = (settings: VisualSettings) =>
     new VisualDebugger(settings.about.debugMode && settings.about.debugTooltipEvents);
@@ -109,7 +114,7 @@ const getTooltipData = (
         { specifyBandwidth } = settings.violin,
         tooltips: VisualTooltipDataItem[] = [
             getTooltipCategory(v, categoryDisplayName),
-            ...getTooltipValue(true, stats.count, '# Samples', tts, locale, format),
+            ...[formatTooltipSamplesValue('# Samples', stats.count, tts, locale)],
             ...getTooltipValue(tts.showMaxMin, stats.max, 'Maximum', tts, locale, format),
             ...getTooltipValue(tts.showMaxMin, stats.min, 'Minimum', tts, locale, format),
             ...getTooltipValue(tts.showSpan, stats.span, 'Span (Min to Max)', tts, locale, format),
@@ -121,22 +126,19 @@ const getTooltipData = (
             ...getTooltipValue(tts.showIqr, stats.iqr, 'Inter Quartile Range', tts, locale, format),
             ...getTooltipValue(tts.showConfidence, stats.confidenceUpper, 'Upper Whisker (95%)', tts, locale, format),
             ...getTooltipValue(tts.showConfidence, stats.confidenceLower, 'Lower Whisker (5%)', tts, locale, format),
-            ...getTooltipValue(
-                specifyBandwidth && tts.showBandwidth,
-                stats.bandwidthActual,
-                'Bandwidth (Specified)',
-                tts,
-                locale,
-                format
-            ),
-            ...getTooltipValue(
-                tts.showBandwidth,
-                stats.bandwidthSilverman,
-                `Bandwidth (Estimated${specifyBandwidth ? ', N/A' : ''})`,
-                tts,
-                locale,
-                format
-            ),
+            ...([
+                specifyBandwidth &&
+                    tts.showBandwidth &&
+                    formatTooltipBandwidthValue('Bandwidth (Specified)', stats.bandwidthActual, locale)
+            ] || []),
+            ...([
+                tts.showBandwidth &&
+                    formatTooltipBandwidthValue(
+                        `Bandwidth (Estimated${specifyBandwidth ? ', N/A' : ''})`,
+                        stats.bandwidthSilverman,
+                        locale
+                    )
+            ] || []),
             ...getTooltipValue(
                 highlightedValue && true,
                 Number(highlightedValue?.key),
@@ -145,14 +147,16 @@ const getTooltipData = (
                 locale,
                 format
             ),
-            ...getTooltipValue(
-                highlightedValue && true,
-                highlightedValue?.values?.count,
-                '# Samples with Highlighted Value',
-                tts,
-                locale,
-                format
-            )
+            ...([
+                highlightedValue &&
+                    true &&
+                    formatTooltipSamplesValue(
+                        '# Samples with Highlighted Value',
+                        highlightedValue?.values?.count,
+                        tts,
+                        locale
+                    )
+            ] || [])
         ];
     debug.log('Tooltip Data', tooltips);
     return tooltips;
@@ -208,9 +212,50 @@ const formatTooltipValue = (
         cultureSelector: locale
     });
     return {
-        displayName: displayName,
-        value: formatter.format(value),
-        color: '#000000',
-        opacity: '0'
+        ...standardTooltipParams,
+        ...{
+            displayName: displayName,
+            value: formatter.format(value)
+        }
     };
+};
+
+const formatTooltipSamplesValue = (
+    displayName: string,
+    value: number,
+    settings: TooltipSettings,
+    locale: string
+): VisualTooltipDataItem => {
+    const formatter = valueFormatter.create({
+        format: samplesFormat,
+        value: (settings.numberSamplesDisplayUnits === 0 && value) || settings.numberSamplesDisplayUnits,
+        precision: (isNumberTruthy(settings.numberSamplesPrecision) && settings.numberSamplesPrecision) || null,
+        cultureSelector: locale
+    });
+    return {
+        ...standardTooltipParams,
+        ...{
+            displayName,
+            value: formatter.format(value)
+        }
+    };
+};
+
+const formatTooltipBandwidthValue = (displayName: string, value: number, locale: string): VisualTooltipDataItem => {
+    const formatter = valueFormatter.create({
+        format: bandwidthFormat,
+        cultureSelector: locale
+    });
+    return {
+        ...standardTooltipParams,
+        ...{
+            displayName,
+            value: formatter.format(value)
+        }
+    };
+};
+
+const standardTooltipParams: Partial<VisualTooltipDataItem> = {
+    color: standardTooltipColor,
+    opacity: standardTooltipOpacity
 };
