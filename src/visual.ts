@@ -26,23 +26,15 @@ import { VisualSettings } from './settings';
 import { VisualDebugger } from './visualDebugger';
 
 import { ViewModelHandler } from './viewModelHandler';
-import {
-    renderViolin,
-    renderBoxPlot,
-    renderColumnPlot,
-    renderLinePlot,
-    visualUsage,
-    dataLimitLoadingStatus,
-    visualCollapsed
-} from './visualHelpers';
+import { renderViolin, visualUsage, dataLimitLoadingStatus, visualCollapsed } from './visualHelpers';
 import {
     plotCanvas,
-    plotCategoryWarning,
     plotSeriesContainer,
     plotWatermark,
     plotXAxis,
     plotYAxis,
     renderComboPlot,
+    resolveContextMenu,
     sizeMainContainer
 } from './dom';
 import { ViolinLegend } from './violinLegend';
@@ -77,15 +69,15 @@ export class Visual implements IVisual {
         this.tooltipService = options.host.tooltipService;
         this.defaultColour = this.colourPalette['colors'][0].value;
         this.viewModelHandler = new ViewModelHandler();
-
         // Legend container
         this.legend = createLegend(options.element, false, null, false, LegendPosition.Top);
-
         // Visual container
         this.container = d3
             .select(options.element)
             .append('div')
             .classed('violinPlotContainer', true);
+        // Context menu
+        resolveContextMenu(this.container, this.host.createSelectionManager());
     }
 
     /**

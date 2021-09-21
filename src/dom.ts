@@ -1,5 +1,8 @@
 import powerbi from 'powerbi-visuals-api';
 import IViewport = powerbi.IViewport;
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
+
+import * as d3 from 'd3';
 
 import { ICategory, IViewModel } from './models';
 import { VisualSettings } from './settings';
@@ -7,6 +10,20 @@ import { VisualDebugger } from './visualDebugger';
 import { renderBoxPlot, renderColumnPlot, renderLinePlot } from './visualHelpers';
 
 const watermarkFontSize = 12;
+
+export const resolveContextMenu = (container: d3.Selection<{}>, selectionManager: ISelectionManager) => {
+    container.on('contextmenu', () => {
+        const mouseEvent: MouseEvent = <MouseEvent>d3.event;
+        selectionManager.showContextMenu(
+            {},
+            {
+                x: mouseEvent.x,
+                y: mouseEvent.y
+            }
+        );
+        mouseEvent.preventDefault();
+    });
+};
 
 /**
  *  Size our initial container to match the viewport
