@@ -438,13 +438,8 @@ export class Visual implements IVisual {
         if (!this.settings.dataLimit.showInfo) {
             delete instances[0].properties['showCustomVisualNotes'];
         }
-        // If we have less than 30K rows in our data set then we don't need to show it
-        if (
-            !this.settings.dataLimit.enabled ||
-            (!this.options.dataViews[0].metadata.segment &&
-                this.options.dataViews[0].categorical.values &&
-                this.options.dataViews[0].categorical.values[0].values.length <= 30000)
-        ) {
+        // Disable for feature
+        if (!this.settings.dataLimit.enabled) {
             instances[0] = null;
             // Set back to capability window cap if removed
             this.settings.dataLimit.override = false;
