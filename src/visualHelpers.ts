@@ -19,6 +19,7 @@ import {
 } from './models';
 import { VisualSettings } from './settings';
 import { applyDataPointHighlight } from './dom';
+import { getFormattedRowCount } from './utils';
 
 /**
  * Gets property value for a particular object in a category.
@@ -482,36 +483,31 @@ export function visualUsage(containingElement: d3.Selection<{}>, host: IVisualHo
 export function dataLimitLoadingStatus(
     rowCount: number,
     containingElement: d3.Selection<{}>,
-    settings: VisualSettings
+    settings: VisualSettings,
+    locale: string
 ) {
-    let rowCountFormatter = valueFormatter.create({
-        format: '#,##0'
-    });
-    let container = containingElement.append('div');
-
-    let progressIndicator = container.append('div');
+    let container = containingElement.append('div').classed('loading-notes', true),
+        progressIndicator = container.append('div');
     progressIndicator
         .append('span')
         .classed('spinner-grow', true)
+        .classed('spinner-grow-sm', true)
         .classed('float-right', true);
     progressIndicator
         .append('span')
-        .html(`Loading more data: <strong>${rowCountFormatter.format(rowCount)}</strong> rows loaded so far...`)
+        .html(`Loading data: <strong>${getFormattedRowCount(rowCount, locale)}</strong> rows loaded so far...`)
         .classed('align-middle', true);
 
     if (settings.dataLimit.showCustomVisualNotes) {
         container.append('hr');
-        container.append('h5').text('About Loading More Data');
-        container
-            .append('p')
-            .html(
-                "Custom visuals have a limit of 30,000 rows. Recent changes allow us to exceed this by loading  more data from the data model \
-                                    until until Power BI's memory allocation limit for the visual is reached.<br/><br/>\
-                                   This can be costly and will run for every update to your visual.<br/><br/>\
-                                   If you are making changes to your visual layout then it is recommended that you turn off <strong>Override Row Limit</strong> \
-                                    in in the <strong>Data Limit Options</strong> pane while doing so, and then enabling it when finished.<br/><br/>\
-                                   You can turn off the <strong>Show Data Loading Notes</strong> property to hide these notes for end-users."
-            );
+        container.append('p').html(
+            `Visuals have a conventional limit of 30K rows. By overriding this limit, we can request more data \
+                    in batches until until Power BI's memory allocation limit for the visual is reached. This can be \
+                    costly and will run for every update to your visual (including property changes).<br/><br/>\
+                    If you are making changes to your visual's appearance then it is recommended that you turn off <strong>\
+                    Additional Data Fetching</strong> in in the <strong>Data Fetching Options</strong> pane while doing so, and \
+                    re-enable when finished.`
+        );
     }
 }
 

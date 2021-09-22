@@ -46,6 +46,24 @@
                         "bool": true
                     }
                 },
+                "fetchWindowCap": {
+                    "displayNameKey": "Objects_DataLimit_WindowCap",
+                    "descriptionKey": "Objects_DataLimit_WindowCap_Description",
+                    "displayName": "Window Cap",
+                    "description": "Window Cap description.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fetchWindowLimit": {
+                    "displayNameKey": "Objects_DataLimit_WindowLimit",
+                    "descriptionKey": "Objects_DataLimit_WindowLimit_Description",
+                    "displayName": "Windows to Limit",
+                    "description": "Windows to Limit description.",
+                    "type": {
+                        "integer": true
+                    }
+                },
                 "showInfo": {
                     "displayNameKey": "Objects_DataLimit_ShowProgress",
                     "descriptionKey": "Objects_DataLimit_ShowProgress_Description",
@@ -1461,7 +1479,7 @@
                         }
                     ],
                     "dataReductionAlgorithm": {
-                        "top": {
+                        "window": {
                             "count": 30000
                         }
                     }

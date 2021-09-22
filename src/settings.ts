@@ -2,6 +2,7 @@ import { dataViewObjectsParser } from 'powerbi-visuals-utils-dataviewutils';
 import DataViewObjectsParser = dataViewObjectsParser.DataViewObjectsParser;
 
 import { visual } from '../pbiviz.json';
+import { dataViewMappings } from '../capabilities.json';
 
 const defaultFontSize: number = 11,
     defaultFontSizeSmall: number = 8,
@@ -13,7 +14,9 @@ const defaultFontSize: number = 11,
     defaultBoxDataColour: string = '#FFFFFF',
     defaultLineStyle: string = 'solid',
     defaultStrokeWidth: number = 2;
-export const defaultBandwidth = 10;
+export const defaultBandwidth = 10,
+    windowRows = dataViewMappings[0].categorical.categories.dataReductionAlgorithm.window.count,
+    defaultFetchWindowLimit = 10;
 
 export class VisualSettings extends DataViewObjectsParser {
     public yAxis: YAxisSettings = new YAxisSettings();
@@ -188,8 +191,10 @@ export class SortingSettings {
  */
 export class DataLimitSettings {
     // Enable feature - currently off; refer to notes in visual.ts for details
-    public enabled: boolean = false;
+    public enabled: boolean = true;
     public override: boolean = false;
+    public fetchWindowCap = true;
+    public fetchWindowLimit = defaultFetchWindowLimit;
     public showInfo: boolean = true;
     public showCustomVisualNotes: boolean = true;
     // Use to prevent the visual from rendering too many categories and breaking the browser

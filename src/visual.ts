@@ -15,6 +15,7 @@ import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import VisualUpdateType = powerbi.VisualUpdateType;
 import VisualDataChangeOperationKind = powerbi.VisualDataChangeOperationKind;
 import ITooltipService = powerbi.extensibility.ITooltipService;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import { legend, legendInterfaces } from 'powerbi-visuals-utils-chartutils';
 import createLegend = legend.createLegend;
 import ILegend = legendInterfaces.ILegend;
@@ -22,7 +23,7 @@ import LegendPosition = legendInterfaces.LegendPosition;
 
 import * as d3 from 'd3';
 
-import { VisualSettings } from './settings';
+import { VisualSettings, windowRows } from './settings';
 import { VisualDebugger } from './visualDebugger';
 
 import { ViewModelHandler } from './viewModelHandler';
@@ -39,6 +40,7 @@ import {
 } from './dom';
 import { ViolinLegend } from './violinLegend';
 import { bindSeriesTooltipEvents } from './tooltip';
+import { dataViewBreaksLimit, displayWindowCapWarning, getFormattedRowCount, i18nValue } from './utils';
 
 export class Visual implements IVisual {
     private element: HTMLElement;
@@ -48,6 +50,7 @@ export class Visual implements IVisual {
     private colourPalette: ISandboxExtendedColorPalette;
     private defaultColour: string;
     private host: IVisualHost;
+    private i18n: ILocalizationManager;
     private viewModelHandler: ViewModelHandler;
     private tooltipService: ITooltipService;
     private errorState: boolean;
@@ -69,6 +72,8 @@ export class Visual implements IVisual {
         this.tooltipService = options.host.tooltipService;
         this.defaultColour = this.colourPalette['colors'][0].value;
         this.viewModelHandler = new ViewModelHandler();
+        this.i18n = this.host.createLocalizationManager();
+        this.locale = this.host.locale;
         // Legend container
         this.legend = createLegend(options.element, false, null, false, LegendPosition.Top);
         // Visual container
@@ -117,8 +122,6 @@ export class Visual implements IVisual {
         this.container.selectAll('*').remove();
         sizeMainContainer(this.container, options.viewport);
 
-        // Things that can terminate the update process early
-
         // Validation of inputs and display a nice message
         if (this.dataViewIsValid(options)) {
             this.errorState = true;
@@ -129,40 +132,58 @@ export class Visual implements IVisual {
             debug.footer();
             return;
         }
+        this.handleDataFetch(options);
+    }
 
-        /**
-         *  Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering
-         *  while we're fetching more data.
-         *
-         *  For people viewing the source code, this option is hard-switched off in the settings, as I have observed some issues when
-         *  using categories and individual data colours (the property pane breaks), as well as resizing the visual (sometimes it just
-         *  doesn't trigger the update correctly, which is likely causing an exception somewhere in the render code). The fetchMoreData()
-         *  function has been a little sporadic in early versions of API in different ways, so I'm hoping to revist later on.
-         */
+    /**
+     *  Look for more data and load it if we can. This will trigger a subsequent update so we need to try and avoid re-rendering
+     *  while we're fetching more data.
+     */
+    private handleDataFetch(options: VisualUpdateOptions) {
+        const debug = new VisualDebugger(this.viewModelHandler.debug),
+            dataView = options.dataViews[0],
+            rowCount = dataView.categorical.values[0].values.length,
+            metadata = dataView.metadata,
+            { dataLimit } = this.settings;
         if (this.settings.dataLimit.enabled) {
             this.updateFetchWindowDetails(options);
-            const rowCount = options.dataViews[0].categorical.values[0].values.length;
-
-            if (options.dataViews[0].metadata.segment && this.settings.dataLimit.override && this.canFetchMore) {
-                debug.log(
-                    `Not all data loaded. Loading more (if we can). We have loaded ${this.windowsLoaded} times so far.`
-                );
+            const breaksDataLimit = dataViewBreaksLimit(metadata),
+                fetchWindowHit = dataLimit.fetchWindowCap && this.windowsLoaded === dataLimit.fetchWindowLimit,
+                fetchWindowCapValid = !fetchWindowHit || !dataLimit.fetchWindowCap,
+                eligibleForFetch = metadata.segment && dataLimit.override && this.canFetchMore && fetchWindowCapValid,
+                expectedRowCount = this.windowsLoaded * windowRows;
+            debug.log('Windows loaded', this.windowsLoaded, 'Window hit', fetchWindowHit);
+            if (eligibleForFetch) {
+                debug.log(`Not all data loaded. Loading more (if we can). Loaded ${this.windowsLoaded} times so far.`);
 
                 // Handle rendering of 'help text', if enabled
-                if (this.settings.dataLimit.showInfo) {
-                    dataLimitLoadingStatus(rowCount, this.container, this.settings);
+                if (dataLimit.showInfo) {
+                    dataLimitLoadingStatus(rowCount, this.container, this.settings, this.locale);
                 }
                 this.canFetchMore = this.host.fetchMoreData();
                 // Clear down existing info and render if we have no more allocated memory
-                if (!this.canFetchMore) {
-                    debug.log(
-                        `Memory limit hit after ${this.windowsLoaded} fetch(es). We managed to get ${rowCount} rows.`
-                    );
+                if (this.canFetchMore === false || fetchWindowHit) {
+                    debug.log(`Memory limit hit after ${this.windowsLoaded} fetch(es). ${rowCount} rows loaded.`);
                     this.container.selectAll('*').remove();
+                    displayWindowCapWarning(this.host, this.i18n, rowCount);
                     this.renderVisual(options, debug);
                 }
             } else {
                 debug.log('We have all the data we can get!');
+                const rowAllocationPerc = rowCount / expectedRowCount,
+                    windowConfidencePercent = 0.9999, // API doesn't always get 30K rows; usually 30K - 1 so apply confidence based on 4 9's%
+                    standardCap = rowCount === windowRows && breaksDataLimit, // Only one window loaded, but we have a segment
+                    fetchCap = fetchWindowHit && rowAllocationPerc >= windowConfidencePercent;
+                if (standardCap) {
+                    debug.log('Row count breaks limit. Displaying warning...');
+                    this.host.displayWarningIcon(
+                        i18nValue(this.i18n, 'Warning_DataLimit_Title'),
+                        i18nValue(this.i18n, 'Warning_DataLimit_Description')
+                    );
+                }
+                if (fetchCap) {
+                    displayWindowCapWarning(this.host, this.i18n, rowCount);
+                }
                 this.renderVisual(options, debug);
             }
         } else {
@@ -242,8 +263,8 @@ export class Visual implements IVisual {
             // Handle category reduction, if applied
             if (viewModel.categoriesReduced) {
                 this.host.displayWarningIcon(
-                    `Categories limited to ${this.settings.dataLimit.categoryLimit} unique values for performance reasons.`,
-                    'Not displaying all data. Filter the data or choose another field.'
+                    i18nValue(this.i18n, 'Warning_CategoryLimit_Title', [this.settings.dataLimit.categoryLimit]),
+                    i18nValue(this.i18n, 'Warning_CategoryLimit_Description')
                 );
             }
 
@@ -392,10 +413,26 @@ export class Visual implements IVisual {
     }
 
     private resolveDataLimitOptions(instances: powerbi.VisualObjectInstance[]) {
+        if (this.settings.dataLimit.fetchWindowCap && this.settings.dataLimit.fetchWindowLimit !== null) {
+            // Range validation on fetch window limit
+            instances[0].validValues = instances[0].validValues || {};
+            instances[0].validValues.fetchWindowLimit = {
+                numberRange: {
+                    min: 1,
+                    max: 1000
+                }
+            };
+        }
         // If not overriding then we don't need to show the additional info options
         if (!this.settings.dataLimit.override) {
+            delete instances[0].properties['fetchWindowCap'];
+            delete instances[0].properties['fetchWindowLimit'];
             delete instances[0].properties['showInfo'];
             delete instances[0].properties['showCustomVisualNotes'];
+        }
+        // Hide limit if we turn off cap
+        if (!this.settings.dataLimit.fetchWindowCap) {
+            delete instances[0].properties['fetchWindowLimit'];
         }
         // Developer notes won't be an option if we hide the loading progress
         if (!this.settings.dataLimit.showInfo) {
