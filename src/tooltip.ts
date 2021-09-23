@@ -107,22 +107,56 @@ const getTooltipData = (
 ): VisualTooltipDataItem[] => {
     const debug = tooltipDebugger(settings),
         format = viewModel.yAxis.labelFormatter.options.format,
-        tts = settings.tooltip,
+        { tooltip: tts, dataPoints: cs } = settings,
         locale = viewModel.locale,
         stats = v.statistics,
         { categoryDisplayName } = viewModel.dataViewMetadata,
         { specifyBandwidth } = settings.violin,
+        boxPlot = cs.plotType === 'boxPlot',
+        barPlot = cs.plotType === 'barcodePlot',
         tooltips: VisualTooltipDataItem[] = [
             getTooltipCategory(v, categoryDisplayName),
-            ...[formatTooltipSamplesValue('# Samples', stats.count, tts, locale)],
+            ...[
+                formatTooltipSamplesValue(
+                    '# Samples',
+                    stats.count,
+                    tts,
+                    locale,
+                    (barPlot && cs.barColour) || cs.boxFillColour
+                )
+            ],
             ...getTooltipValue(tts.showMaxMin, stats.max, 'Maximum', tts, locale, format),
             ...getTooltipValue(tts.showMaxMin, stats.min, 'Minimum', tts, locale, format),
             ...getTooltipValue(tts.showSpan, stats.span, 'Span (Min to Max)', tts, locale, format),
-            ...getTooltipValue(tts.showMedian, stats.median, 'Median', tts, locale, format),
-            ...getTooltipValue(tts.showMean, stats.mean, 'Mean', tts, locale, format),
+            ...getTooltipValue(
+                tts.showMedian,
+                stats.median,
+                'Median',
+                tts,
+                locale,
+                format,
+                cs.showMedian && cs.medianFillColour
+            ),
+            ...getTooltipValue(tts.showMean, stats.mean, 'Mean', tts, locale, format, cs.showMean && cs.meanFillColour),
             ...getTooltipValue(tts.showDeviation, stats.deviation, 'Standard Deviation', tts, locale, format),
-            ...getTooltipValue(tts.showQuartiles, stats.quartile3, 'Upper Quartile', tts, locale, format),
-            ...getTooltipValue(tts.showQuartiles, stats.quartile1, 'Lower Quartile', tts, locale, format),
+            ...getTooltipValue(
+                tts.showQuartiles,
+                stats.quartile3,
+                'Upper Quartile',
+                tts,
+                locale,
+                format,
+                !boxPlot && cs.showQuartiles && cs.quartile1FillColour
+            ),
+            ...getTooltipValue(
+                tts.showQuartiles,
+                stats.quartile1,
+                'Lower Quartile',
+                tts,
+                locale,
+                format,
+                !boxPlot && cs.showQuartiles && cs.quartile3FillColour
+            ),
             ...getTooltipValue(tts.showIqr, stats.iqr, 'Inter Quartile Range', tts, locale, format),
             ...getTooltipValue(tts.showConfidence, stats.confidenceUpper, 'Upper Whisker (95%)', tts, locale, format),
             ...getTooltipValue(tts.showConfidence, stats.confidenceLower, 'Lower Whisker (5%)', tts, locale, format),
@@ -145,7 +179,8 @@ const getTooltipData = (
                 `${viewModel.measure} - Highlighted`,
                 tts,
                 locale,
-                format
+                format,
+                cs.barColour
             ),
             ...([
                 highlightedValue &&
@@ -154,7 +189,8 @@ const getTooltipData = (
                         '# Samples with Highlighted Value',
                         highlightedValue?.values?.count,
                         tts,
-                        locale
+                        locale,
+                        cs.barColour
                     )
             ] || [])
         ];
@@ -174,8 +210,13 @@ const getTooltipValue = (
     label: string,
     tts: TooltipSettings,
     locale: string,
-    format: string
-) => (show && [formatTooltipValue(label, format, value, tts.measureDisplayUnits, tts.measurePrecision, locale)]) || [];
+    format: string,
+    color?: string
+) =>
+    (show && [
+        formatTooltipValue(label, format, value, tts.measureDisplayUnits, tts.measurePrecision, locale, color)
+    ]) ||
+    [];
 
 const hideTooltip = (tooltipService: ITooltipService) => {
     const immediately = true;
@@ -203,7 +244,8 @@ const formatTooltipValue = (
     value: number,
     displayUnits: number,
     precision: number,
-    locale: string
+    locale: string,
+    color?: string
 ): VisualTooltipDataItem => {
     let formatter = valueFormatter.create({
         format: measureFormat,
@@ -211,20 +253,28 @@ const formatTooltipValue = (
         precision: precision != null ? precision : null,
         cultureSelector: locale
     });
-    return {
+    const tt = {
         ...standardTooltipParams,
         ...{
             displayName: displayName,
             value: formatter.format(value)
-        }
+        },
+        ...((color && {
+            color,
+            opacity: '1'
+        }) ||
+            {})
     };
+    console.log('Tooltip', tt);
+    return tt;
 };
 
 const formatTooltipSamplesValue = (
     displayName: string,
     value: number,
     settings: TooltipSettings,
-    locale: string
+    locale: string,
+    color: string
 ): VisualTooltipDataItem => {
     const formatter = valueFormatter.create({
         format: samplesFormat,
@@ -233,11 +283,9 @@ const formatTooltipSamplesValue = (
         cultureSelector: locale
     });
     return {
-        ...standardTooltipParams,
-        ...{
-            displayName,
-            value: formatter.format(value)
-        }
+        displayName,
+        value: formatter.format(value),
+        color
     };
 };
 
