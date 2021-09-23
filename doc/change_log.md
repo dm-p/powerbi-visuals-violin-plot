@@ -21,7 +21,7 @@
 
 -   The display name of the column added to the _Category_ data role is now supplied in the tooltip, instead of `Category`. This means that you are able to customise the text of this item by renaming the field in the fields pane, like you would for any other visual (#8; formerly [#97](https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/issues/97/default-tooltip) in the old repository).
 
--   The opacity of the computed statistics provided to the default tooltip has been set to fully transparent (#12; partial fix for [#87](https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/issues/87/dot-color-in-tooltip-for-barcode-plot) in the old repository)
+-   Colors of the data points that can be colored (e.g. median, mean) will correspond to those settings in the default tooltip; opacity of the computed statistics have been set to fully transparent (#12; fix for [#87](https://bitbucket.org/dm-p/power-bi-visuals-violin-plot/issues/87/dot-color-in-tooltip-for-barcode-plot) in the old repository)
 
 ### Bugs Fixed
 

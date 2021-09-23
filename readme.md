@@ -33,7 +33,7 @@ This custom visual gives you the means to generate a violin plot, with three acc
 
 The box plot illustrates:
 
--   The range betwen the first and third quartiles (box)
+-   The range between the first and third quartiles (box)
 -   Median (white line)
 -   Mean (white circle)
 -   5% and 95% confidence ranges (whiskers)

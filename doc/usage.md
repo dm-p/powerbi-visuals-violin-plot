@@ -28,17 +28,17 @@ This is often a tricky concept to explain quickly **and often why a violin may n
 
 ### Row Limits
 
-Due to limits within custom visuals, you are conventionally limited to the top 30K samples (rows) from the filtered data set. However...
+Due to limits within custom visuals, you are conventionally limited to the top 30K samples (rows) from the filtered data set. This can be mitigated by using [Additional Data Fetching](#additional-data-fetching) options detailed below.
 
-### Additional Data Fetching
+### Category Limits
 
-From 1.4.0, if your query contains more than 30K samples, you can enable the **Additional Data Fetching** property in the **Data Fetching Options** menu.
+Categories are limited to a maximum of **100** unique values per visual instance.
 
-If enabled, the Violin Plot will request Power BI to incrementally fetch additional data from the query result and add to the dataset. Power BI will supply approximately 30K additional rows per fetch until it has determined that either all rows have been fetched, or it cannot safely supply any more rows.
+The primary reason for this is that the kernel density estimation (KDE) for each unique category is computationally expensive. This can cause the visual to become unresponsive for an undesirable amount of time if too many are added - this can be frustrating for users that might be exploring their data and have too many unique category values, or unintentionally getting the **Sampling** and **Category** values the wrong way around (it happens!).
 
-If Power BI opts to not supply any more rows, your dataset may still not contain all data. If this is the case, then a warning message will be present in the visual header and inform how many rows have been loaded.
+Note that it's also possible that the expected number of categories might not be plotted if your data exceeds the maximum number of samples (30K), or not enough data can be supplied via [Additional Data Fetching](#additional-data-fetching).
 
-\>\> TODO << additional screenshots and property doc
+In these cases, it is recommended that you filter your data accordingly and use multiple instances of the visual.
 
 ## Categories
 
@@ -66,16 +66,6 @@ Current options are:
 -   Minimum
 
 For any sort value, you can specify **Ascending** or **Descending** order.
-
-### More About Category Limitations
-
-As noted on the Getting Started page, categories are limited to a maximum of **100** unique values per visual instance.
-
-The primary reason for this is that the kernel density estimation (KDE) for each unique category is computationally expensive. This can cause the visual to become unresponsive for an undesirable amount of time if too many are added - this can be frustrating for users that might be exploring their data and have too many unique category values, or unintentionally getting the **Sampling** and **Category** values the wrong way around (it happens!).
-
-Note that it's also possible that the expected number of categories might not be plotted if your data exceeds the maximum number of samples (30K), or not enough data can be supplied via [Additional Data Fetching](#additional-data-fetching).
-
-In these cases, it is recommended that you filter your data accordingly and use multiple instances of the visual.
 
 ## Tuning Your Violin
 
@@ -216,3 +206,61 @@ Whilst violin plots should be simple to interpret, users who are new to them may
 The **Legend** menu includes a **Show Statistical Data Indicators** property (enabled by default), which allows you to configure textual descriptors for these annotations, if you want to include them. You also have the option to show/hide categories while showing the statistical indicators, e.g.:
 
 ![legend.png](./assets/png/legend.png)
+
+## Additional Data Fetching
+
+As noted above, visuals have a standard cap of 30K rows imposed by Power BI on the DAX query that generates its dataset. If your query contains more rows than this, you will see the standard warning in the visual header on hover, e.g.:
+
+![data_cap_30k.png](./assets/png/data_cap_30k.png)
+
+It is possible to break this limit, but this is still subject to how much data Power BI is prepared to provide the visual, based on current memory consumption and data model performance.
+
+### Enabling Additional Data Fetching
+
+**As of version 1.4.0**, if your query contains more than 30K samples, you can enable the **Additional Data Fetching** property in the **Data Fetching Options** menu.
+
+If enabled, the Violin Plot will request Power BI to incrementally fetch additional data from the query result and add to the dataset. Power BI will supply approximately 30K additional rows per fetch until it has determined that either all rows have been fetched, or it feels it cannot safely supply any more rows.
+
+The functionality is outlined below, but first, some things to consider...
+
+### Important Points to Note
+
+Some of this will make sense as you read on further, but please read this first to ensure that you're aware of the performance implications of Additional Data Fetching.
+
+-   **Power BI will always re-query data when properties are changed**, as they may contain conditional formatting. If you are customizing your visual's appearance, it is best to disable the **Additional Data Fetching** property.
+
+-   Enabling **Additional Data Fetching** causes Power BI to recursively run filtered queries against your dataset rather than a single `TOP N` for the standard 30K cap.
+
+    -   These can be much more expensive than the standard (limited) query.
+    -   So, even though the Violin Plot might cap the row count to something sensible via limiting the number of fetches, if your query has to scan a table of extremely high cardinality then this still may result in very slow data fetches.
+    -   There is not much more that we can do about this from the visual side of things, as all data access is delegated by Power BI (for good reason).
+
+-   Capped data may not represent the true distribution and/or modality. If it's possible to pre-emptively filter or slice your data, or use additional visual instances, this can help mitigate such challenges.
+
+### Fetch Progress
+
+During the fetch process, the Violin Plot will provide an update as to how many rows have been supplied by Power BI, e.g.:
+
+![data_fetching_message.png](./assets/png/data_fetching_message.png)
+
+Note that the notes underneath the loading progress details can be disabled by turning off the **Show Data Fetching Notes** property. They are enabled by default for your benefit as a report creator but it will most likely be beneficial to switch this off for your end users.
+
+### # of Data Fetches
+
+As Power BI fetches data in batches, the visual has the **Limit # of Data Fetches** property set to _ON_, and the **Maximum # of Data Fetches** set to _10_, effectively providing a secondary cap of approximately 300K rows. This is in-place for performance reasons, as Power BI will always supply data when a visual is affected by elgible external events, and changing visual properties is one of these events.
+
+If you want to remove the secondary cap, you can disable **Limit # of Data Fetches** and Power BI will continue as long as possible to load data into the visual. Please refer to [Important Points to Note](#important-points-to-note) above when attempting this.
+
+### Upon Completion of Additional Fetching
+
+Data fetching can end in one of two states:
+
+1. Power BI is able to supply all data to your visual, or yor specified **Maximum # of Data Fetches** has run to completion. In this case, the visual this will appear as normal, e.g.:
+   \
+   \
+   ![data_fetching_complete_normal.png](./assets/png/data_fetching_complete_normal.png)
+
+2. Due to memory or performance reasons, Power BI is not able to supply all rows. In this case the visual header will still contain a warning, and this will also inform the amount of rows that have been loaded, e.g.:
+   \
+   \
+   ![data_fetching_complete_capped.png](./assets/png/data_fetching_complete_capped.png)
