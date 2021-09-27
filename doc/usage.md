@@ -247,7 +247,7 @@ Note that the notes underneath the loading progress details can be disabled by t
 
 ### # of Data Fetches
 
-As Power BI fetches data in batches, the visual has the **Limit # of Data Fetches** property set to _ON_, and the **Maximum # of Data Fetches** set to _10_, effectively providing a secondary cap of approximately 300K rows. This is in-place for performance reasons, as Power BI will always supply data when a visual is affected by elgible external events, and changing visual properties is one of these events.
+As Power BI fetches data in batches, the visual has the **Limit # of Data Fetches** property set to _ON_, and the **Maximum # of Data Fetches** set to _10_, effectively providing a secondary cap of approximately 300K rows. This is in-place for performance reasons, as Power BI will always supply data when a visual is affected by eligible external events, and changing visual properties is one of these events.
 
 If you want to remove the secondary cap, you can disable **Limit # of Data Fetches** and Power BI will continue as long as possible to load data into the visual. Please refer to [Important Points to Note](#important-points-to-note) above when attempting this.
 
@@ -255,7 +255,7 @@ If you want to remove the secondary cap, you can disable **Limit # of Data Fetch
 
 Data fetching can end in one of two states:
 
-1. Power BI is able to supply all data to your visual, or yor specified **Maximum # of Data Fetches** has run to completion. In this case, the visual this will appear as normal, e.g.:
+1. Power BI is able to supply all data to your visual, or your specified **Maximum # of Data Fetches** has run to completion. In this case, the visual this will appear as normal, e.g.:
    \
    \
    ![data_fetching_complete_normal.png](./assets/png/data_fetching_complete_normal.png)
