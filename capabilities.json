@@ -1503,6 +1503,7 @@
         }
     },
     "tooltips": {
+        "supportEnhancedTooltips": true,
         "supportedTypes": {
             "default": true,
             "canvas": true
