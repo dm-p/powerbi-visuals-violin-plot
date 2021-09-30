@@ -253,7 +253,7 @@ const formatTooltipValue = (
         precision: precision != null ? precision : null,
         cultureSelector: locale
     });
-    const tt = {
+    return {
         ...standardTooltipParams,
         ...{
             displayName: displayName,
@@ -265,8 +265,6 @@ const formatTooltipValue = (
         }) ||
             {})
     };
-    console.log('Tooltip', tt);
-    return tt;
 };
 
 const formatTooltipSamplesValue = (

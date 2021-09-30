@@ -76,14 +76,16 @@ export class ViolinLegend {
      *  @param host                                     - Visual host
      */
     private constructLegendData() {
-        const measureOnly = !this.viewModel.categoryNames || !this.settings.dataColours.colourByCategory,
+        const measureOnly = !this.viewModel?.categoryNames || !this.settings.dataColours.colourByCategory,
             { dataPoints, legend } = this.settings,
             { showStatisticalPoints } = legend,
-            { quartilesMatch } = this.viewModel.legend,
-            measureId = this.host
-                .createSelectionIdBuilder()
-                .withMeasure(this.viewModel.measure)
-                .createSelectionId();
+            { quartilesMatch } = !this.errorState && this.viewModel?.legend,
+            measureId =
+                !this.errorState &&
+                this.host
+                    .createSelectionIdBuilder()
+                    .withMeasure(this.viewModel.measure)
+                    .createSelectionId();
 
         this.debug.log('Creating legend data...');
 
