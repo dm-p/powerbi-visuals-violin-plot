@@ -1,7 +1,11 @@
-@import (less) "node_modules/powerbi-visuals-utils-formattingutils/lib/index.css";
-@import (less) "node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css";
-@import (less) "node_modules/powerbi-visuals-utils-chartutils/lib/index.css";
-@import (less) "node_modules/bootstrap/dist/css/bootstrap.css";
+@import (less) 'node_modules/powerbi-visuals-utils-formattingutils/lib/index.css';
+@import (less) 'node_modules/powerbi-visuals-utils-interactivityutils/lib/index.css';
+@import (less) 'node_modules/powerbi-visuals-utils-chartutils/lib/index.css';
+@import '~bootstrap/dist/css/bootstrap.css';
+
+.loading-notes {
+    font-size: 0.75em;
+}
 
 .violinPlotContainer {
     position: absolute;
@@ -27,7 +31,7 @@ svg:not(:root) {
     width: 100vw;
     height: 100vh;
     text-align: center;
-    font-family: "Segoe UI", wf_segoe-ui_semibold, helvetica, arial, sans-serif;
+    font-family: 'Segoe UI', wf_segoe-ui_semibold, helvetica, arial, sans-serif;
     background-color: #f4f4f4;
     display: table-cell;
     line-height: normal;
@@ -35,7 +39,7 @@ svg:not(:root) {
     font-size: 12px;
 }
 
-.condensedWarning { 
+.condensedWarning {
     fill: #33669a;
 }
 
@@ -51,32 +55,50 @@ svg:not(:root) {
     stroke-width: 0;
 }
 
-line.customLegendIcon.median.dotted, line.customLegendIcon.median.dashed, line.customLegendIcon.median.dotdash,
-line.customLegendIcon.quartile1.dotted, line.customLegendIcon.quartile1.dashed, line.customLegendIcon.quartile1.dotdash,
-line.customLegendIcon.quartile3.dotted, line.customLegendIcon.quartile3.dashed, line.customLegendIcon.quartile3.dotdash,
-line.customLegendIcon.quartilesCombined.dotted, line.customLegendIcon.quartilesCombined.dashed, line.customLegendIcon.quartilesCombined.dotdash {
+line.customLegendIcon.median.dotted,
+line.customLegendIcon.median.dashed,
+line.customLegendIcon.median.dotdash,
+line.customLegendIcon.quartile1.dotted,
+line.customLegendIcon.quartile1.dashed,
+line.customLegendIcon.quartile1.dotdash,
+line.customLegendIcon.quartile3.dotted,
+line.customLegendIcon.quartile3.dashed,
+line.customLegendIcon.quartile3.dotdash,
+line.customLegendIcon.quartilesCombined.dotted,
+line.customLegendIcon.quartilesCombined.dashed,
+line.customLegendIcon.quartilesCombined.dotdash {
     stroke-dasharray: 1, 2;
 }
 
-.grid .tick line.dashed, line.median.dashed, line.quartile1.dashed, line.quartile3.dashed {
+.grid .tick line.dashed,
+line.median.dashed,
+line.quartile1.dashed,
+line.quartile3.dashed {
     stroke-dasharray: 5, 5;
 }
 
-.grid .tick line.dotted, line.median.dotted, line.quartile1.dotted, line.quartile3.dotted {
+.grid .tick line.dotted,
+line.median.dotted,
+line.quartile1.dotted,
+line.quartile3.dotted {
     stroke-dasharray: 1, 5;
 }
 
-.grid .tick line.dotdash, line.median.dotdash, line.quartile1.dotdash, line.quartile3.dotdash {
+.grid .tick line.dotdash,
+line.median.dotdash,
+line.quartile1.dotdash,
+line.quartile3.dotdash {
     stroke-dasharray: 5, 5, 1, 5;
 }
 
-.yAxis path, .xAxis path {
+.yAxis path,
+.xAxis path {
     fill: none;
 }
 
 /** This prevents fuzzing of the text if we have gridlines */
 .yAxis .tick text {
-    stroke: none
+    stroke: none;
 }
 
 .violinPlotComboPlotOverlay {

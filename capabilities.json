@@ -46,6 +46,24 @@
                         "bool": true
                     }
                 },
+                "fetchWindowCap": {
+                    "displayNameKey": "Objects_DataLimit_WindowCap",
+                    "descriptionKey": "Objects_DataLimit_WindowCap_Description",
+                    "displayName": "Window Cap",
+                    "description": "Window Cap description.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fetchWindowLimit": {
+                    "displayNameKey": "Objects_DataLimit_WindowLimit",
+                    "descriptionKey": "Objects_DataLimit_WindowLimit_Description",
+                    "displayName": "Windows to Limit",
+                    "description": "Windows to Limit description.",
+                    "type": {
+                        "integer": true
+                    }
+                },
                 "showInfo": {
                     "displayNameKey": "Objects_DataLimit_ShowProgress",
                     "descriptionKey": "Objects_DataLimit_ShowProgress_Description",
@@ -384,7 +402,7 @@
                             }
                         }
                     }
-                },                
+                },
                 "transparency": {
                     "displayNameKey": "Objects_DataPoints_Transparency",
                     "descriptionKey": "Objects_DataPoints_Transparency_Description",
@@ -750,128 +768,9 @@
                     "displayName": "Title Font Family",
                     "description": "Title Font Family description.",
                     "type": {
-                        "enumeration": [
-                            {
-                                "displayNameKey": "Enum_FontFamily_Default",
-                                "displayName": "Default",
-                                "value": "helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Arial",
-                                "displayName": "Arial",
-                                "value": "Arial"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialBlack",
-                                "displayName": "Arial Black",
-                                "value": "\"Arial Black\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialUnicode",
-                                "displayName": "Arial Unicode MS",
-                                "value": "\"Arial Unicode MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Calibri",
-                                "displayName": "Calibri",
-                                "value": "Calibri"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Cambria",
-                                "displayName": "Cambria",
-                                "value": "Cambria"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CambriaMath",
-                                "displayName": "Cambria Math",
-                                "value": "\"Cambria Math\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Candara",
-                                "displayName": "Candara",
-                                "value": "Candara"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ComicSans",
-                                "displayName": "Comic Sans MS",
-                                "value": "\"Comic Sans MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Consolas",
-                                "displayName": "Consolas",
-                                "value": "Consolas"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Constantia",
-                                "displayName": "Constantia",
-                                "value": "Constantia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Corbel",
-                                "displayName": "Corbel",
-                                "value": "Corbel"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CourierNew",
-                                "displayName": "Courier New",
-                                "value": "\"Courier New\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Georgia",
-                                "displayName": "Georgia",
-                                "value": "Georgia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_LucidaSansUnicode",
-                                "displayName": "Lucida Sans Unicode",
-                                "value": "\"Lucida Sans Unicode\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeBold",
-                                "displayName": "Segoe (Bold)",
-                                "value": "\"Segoe UI Bold\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUI",
-                                "displayName": "Segoe UI",
-                                "value": "\"Segoe UI\", wf_segoe-ui_normal, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUILight",
-                                "displayName": "Segoe UI Light",
-                                "value": "\"Segoe UI Light\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Symbol",
-                                "displayName": "Symbol",
-                                "value": "Symbol"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Tahoma",
-                                "displayName": "Tahoma",
-                                "value": "Tahoma"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_TimesNewRoman",
-                                "displayName": "Times New Roman",
-                                "value": "\"Times New Roman\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Trebuchet",
-                                "displayName": "Trebuchet MS",
-                                "value": "\"Trebuchet MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Verdana",
-                                "displayName": "Verdana",
-                                "value": "Verdana"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Wingdings",
-                                "displayName": "Wingdings",
-                                "value": "Wingdings"
-                            }
-                        ]
+                        "formatting": {
+                            "fontFamily": true
+                        }
                     }
                 },
                 "gridlines": {
@@ -965,128 +864,9 @@
                     "displayName": "Font Family",
                     "description": "Font Family description.",
                     "type": {
-                        "enumeration": [
-                            {
-                                "displayNameKey": "Enum_FontFamily_Default",
-                                "displayName": "Default",
-                                "value": "helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Arial",
-                                "displayName": "Arial",
-                                "value": "Arial"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialBlack",
-                                "displayName": "Arial Black",
-                                "value": "\"Arial Black\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialUnicode",
-                                "displayName": "Arial Unicode MS",
-                                "value": "\"Arial Unicode MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Calibri",
-                                "displayName": "Calibri",
-                                "value": "Calibri"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Cambria",
-                                "displayName": "Cambria",
-                                "value": "Cambria"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CambriaMath",
-                                "displayName": "Cambria Math",
-                                "value": "\"Cambria Math\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Candara",
-                                "displayName": "Candara",
-                                "value": "Candara"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ComicSans",
-                                "displayName": "Comic Sans MS",
-                                "value": "\"Comic Sans MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Consolas",
-                                "displayName": "Consolas",
-                                "value": "Consolas"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Constantia",
-                                "displayName": "Constantia",
-                                "value": "Constantia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Corbel",
-                                "displayName": "Corbel",
-                                "value": "Corbel"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CourierNew",
-                                "displayName": "Courier New",
-                                "value": "\"Courier New\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Georgia",
-                                "displayName": "Georgia",
-                                "value": "Georgia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_LucidaSansUnicode",
-                                "displayName": "Lucida Sans Unicode",
-                                "value": "\"Lucida Sans Unicode\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeBold",
-                                "displayName": "Segoe (Bold)",
-                                "value": "\"Segoe UI Bold\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUI",
-                                "displayName": "Segoe UI",
-                                "value": "\"Segoe UI\", wf_segoe-ui_normal, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUILight",
-                                "displayName": "Segoe UI Light",
-                                "value": "\"Segoe UI Light\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Symbol",
-                                "displayName": "Symbol",
-                                "value": "Symbol"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Tahoma",
-                                "displayName": "Tahoma",
-                                "value": "Tahoma"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_TimesNewRoman",
-                                "displayName": "Times New Roman",
-                                "value": "\"Times New Roman\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Trebuchet",
-                                "displayName": "Trebuchet MS",
-                                "value": "\"Trebuchet MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Verdana",
-                                "displayName": "Verdana",
-                                "value": "Verdana"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Wingdings",
-                                "displayName": "Wingdings",
-                                "value": "Wingdings"
-                            }
-                        ]
+                        "formatting": {
+                            "fontFamily": true
+                        }
                     }
                 },
                 "labelDisplayUnits": {
@@ -1109,7 +889,7 @@
                     "type": {
                         "integer": true
                     },
-                    "placeHolderText": "Auto"   
+                    "placeHolderText": "Auto"
                 }
             }
         },
@@ -1163,128 +943,9 @@
                     "displayName": "Font Family",
                     "description": "Font Family description.",
                     "type": {
-                        "enumeration": [
-                            {
-                                "displayNameKey": "Enum_FontFamily_Default",
-                                "displayName": "Default",
-                                "value": "helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Arial",
-                                "displayName": "Arial",
-                                "value": "Arial"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialBlack",
-                                "displayName": "Arial Black",
-                                "value": "\"Arial Black\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialUnicode",
-                                "displayName": "Arial Unicode MS",
-                                "value": "\"Arial Unicode MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Calibri",
-                                "displayName": "Calibri",
-                                "value": "Calibri"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Cambria",
-                                "displayName": "Cambria",
-                                "value": "Cambria"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CambriaMath",
-                                "displayName": "Cambria Math",
-                                "value": "\"Cambria Math\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Candara",
-                                "displayName": "Candara",
-                                "value": "Candara"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ComicSans",
-                                "displayName": "Comic Sans MS",
-                                "value": "\"Comic Sans MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Consolas",
-                                "displayName": "Consolas",
-                                "value": "Consolas"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Constantia",
-                                "displayName": "Constantia",
-                                "value": "Constantia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Corbel",
-                                "displayName": "Corbel",
-                                "value": "Corbel"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CourierNew",
-                                "displayName": "Courier New",
-                                "value": "\"Courier New\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Georgia",
-                                "displayName": "Georgia",
-                                "value": "Georgia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_LucidaSansUnicode",
-                                "displayName": "Lucida Sans Unicode",
-                                "value": "\"Lucida Sans Unicode\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeBold",
-                                "displayName": "Segoe (Bold)",
-                                "value": "\"Segoe UI Bold\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUI",
-                                "displayName": "Segoe UI",
-                                "value": "\"Segoe UI\", wf_segoe-ui_normal, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUILight",
-                                "displayName": "Segoe UI Light",
-                                "value": "\"Segoe UI Light\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Symbol",
-                                "displayName": "Symbol",
-                                "value": "Symbol"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Tahoma",
-                                "displayName": "Tahoma",
-                                "value": "Tahoma"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_TimesNewRoman",
-                                "displayName": "Times New Roman",
-                                "value": "\"Times New Roman\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Trebuchet",
-                                "displayName": "Trebuchet MS",
-                                "value": "\"Trebuchet MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Verdana",
-                                "displayName": "Verdana",
-                                "value": "Verdana"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Wingdings",
-                                "displayName": "Wingdings",
-                                "value": "Wingdings"
-                            }
-                        ]
+                        "formatting": {
+                            "fontFamily": true
+                        }
                     }
                 },
                 "showTitle": {
@@ -1336,128 +997,9 @@
                     "displayName": "Title Font Family",
                     "description": "Title Font Family description.",
                     "type": {
-                        "enumeration": [
-                            {
-                                "displayNameKey": "Enum_FontFamily_Default",
-                                "displayName": "Default",
-                                "value": "helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Arial",
-                                "displayName": "Arial",
-                                "value": "Arial"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialBlack",
-                                "displayName": "Arial Black",
-                                "value": "\"Arial Black\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ArialUnicode",
-                                "displayName": "Arial Unicode MS",
-                                "value": "\"Arial Unicode MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Calibri",
-                                "displayName": "Calibri",
-                                "value": "Calibri"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Cambria",
-                                "displayName": "Cambria",
-                                "value": "Cambria"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CambriaMath",
-                                "displayName": "Cambria Math",
-                                "value": "\"Cambria Math\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Candara",
-                                "displayName": "Candara",
-                                "value": "Candara"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_ComicSans",
-                                "displayName": "Comic Sans MS",
-                                "value": "\"Comic Sans MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Consolas",
-                                "displayName": "Consolas",
-                                "value": "Consolas"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Constantia",
-                                "displayName": "Constantia",
-                                "value": "Constantia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Corbel",
-                                "displayName": "Corbel",
-                                "value": "Corbel"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_CourierNew",
-                                "displayName": "Courier New",
-                                "value": "\"Courier New\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Georgia",
-                                "displayName": "Georgia",
-                                "value": "Georgia"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_LucidaSansUnicode",
-                                "displayName": "Lucida Sans Unicode",
-                                "value": "\"Lucida Sans Unicode\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeBold",
-                                "displayName": "Segoe (Bold)",
-                                "value": "\"Segoe UI Bold\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUI",
-                                "displayName": "Segoe UI",
-                                "value": "\"Segoe UI\", wf_segoe-ui_normal, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_SegoeUILight",
-                                "displayName": "Segoe UI Light",
-                                "value": "\"Segoe UI Light\", wf_segoe-ui_bold, helvetica, arial, sans-serif"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Symbol",
-                                "displayName": "Symbol",
-                                "value": "Symbol"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Tahoma",
-                                "displayName": "Tahoma",
-                                "value": "Tahoma"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_TimesNewRoman",
-                                "displayName": "Times New Roman",
-                                "value": "\"Times New Roman\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Trebuchet",
-                                "displayName": "Trebuchet MS",
-                                "value": "\"Trebuchet MS\""
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Verdana",
-                                "displayName": "Verdana",
-                                "value": "Verdana"
-                            },
-                            {
-                                "displayNameKey": "Enum_FontFamily_Wingdings",
-                                "displayName": "Wingdings",
-                                "value": "Wingdings"
-                            }
-                        ]
+                        "formatting": {
+                            "fontFamily": true
+                        }
                     }
                 },
                 "gridlines": {
@@ -1549,7 +1091,7 @@
                     "type": {
                         "integer": true
                     },
-                    "placeHolderText": "Auto"   
+                    "placeHolderText": "Auto"
                 },
                 "measureDisplayUnits": {
                     "displayNameKey": "Objects_Tooltip_MeasureDisplayUnits",
@@ -1570,7 +1112,7 @@
                     "type": {
                         "integer": true
                     },
-                    "placeHolderText": "Auto"   
+                    "placeHolderText": "Auto"
                 },
                 "showMaxMin": {
                     "displayNameKey": "Objects_Tooltip_ShowMaxMin",
@@ -1937,7 +1479,7 @@
                         }
                     ],
                     "dataReductionAlgorithm": {
-                        "top": {
+                        "window": {
                             "count": 30000
                         }
                     }
@@ -1961,6 +1503,7 @@
         }
     },
     "tooltips": {
+        "supportEnhancedTooltips": true,
         "supportedTypes": {
             "default": true,
             "canvas": true
