@@ -4,15 +4,16 @@
         "displayName": "Violin Plot",
         "guid": "violinPlot4D46EB9EB3A141D9BA2289793175D971",
         "visualClassName": "Visual",
-        "version": "1.4.0.27",
+        "version": "1.4.0.28",
         "description": "Use to visualise the distribution of your data.",
-        "supportUrl": "https://github.com/dm-p/powerbi-visuals-violin-plot",
+        "supportUrl": "https://coacervo.co/violin-plot",
         "gitHubUrl": "https://github.com/dm-p/powerbi-visuals-violin-plot"
     },
     "author": {
         "name": "Daniel Marsh-Patrick",
         "email": "daniel@coacervo.co"
     },
+    "apiVersion": "3.8.3",
     "assets": {
         "icon": "assets/desktop_icon.png"
     },
