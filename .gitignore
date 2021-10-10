@@ -87,4 +87,4 @@ typings/
 .api/
 .tmp/
 dist/
-webpack.statistics*.html
+webpack.statistics*
